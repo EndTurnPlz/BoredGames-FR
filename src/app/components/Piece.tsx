@@ -1,9 +1,10 @@
 // Piece.ts
+import { tileSize } from "@/utils/config";
 export class Piece {
   x: number;
   y: number;
   color: string;
-  radius: number = 15;
+  radius: number = tileSize/2 - 3;
 
   constructor(x: number, y: number, color: string) {
     this.x = x;
@@ -13,7 +14,7 @@ export class Piece {
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    ctx.arc(this.x + 20, this.y + 20, this.radius, 0, 2 * Math.PI);
+    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.stroke();
