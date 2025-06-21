@@ -45,20 +45,32 @@ export const coordStringToPixel = (coord: string, tileSize: number): { x: number
     // Home tile
     if (letter == "a") {
       row = 2;
-      col = 9
+      col = 8
     } else if (letter == "b") {
-      row = 9;
+      row = 8;
       col = 13;
     } else if (letter == "c") {
       row = 13;
-      col = 6;
+      col = 7;
     } else {
-      row = 6;
+      row = 7;
       col = 2;
     }
 
   } else {
-   
+    if (letter == "a") {
+      row = 4;
+      col = 13
+    } else if (letter == "b") {
+      row = 13;
+      col = 11;
+    } else if (letter == "c") {
+      row = 11;
+      col = 2;
+    } else {
+      row = 2;
+      col = 4;
+    }
   }
 
   return {

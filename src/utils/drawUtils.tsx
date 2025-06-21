@@ -55,6 +55,7 @@ export const drawStripWithTriangleAndCircle = (
 
   // Draw the strip
   ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+  ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
 
   const triangleWidth = width * 1.6;
   const triangleHeight = height * 0.15;
@@ -123,8 +124,10 @@ export const drawStripWithTriangleAndCircle = (
     circleX = x + height;
     circleY = y + width / 2;
   }
+  ctx.stroke();
 
   ctx.beginPath();
   ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI);
   ctx.fill();
+  ctx.stroke();
 }
