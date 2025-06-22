@@ -102,12 +102,13 @@ stripConfigs.forEach(cfg =>
   drawStripWithTriangleAndCircle(ctx, cfg.x, cfg.y, cfg.width, cfg.height, cfg.color, cfg.direction)
 );
 
-const cardX = canvasWidth / 2 - 1.5 * tileSize;
+const cardX = canvasWidth / 2 - 3 * tileSize;
 const cardY = canvasHeight / 2 - 2.5 * tileSize;
 const cardW = 3 * tileSize;
 const cardH = 5 * tileSize;
 
-drawCard(ctx, cardX, cardY, cardW, cardH);
+drawCard(ctx, cardX, cardY, cardW, cardH, "/file.svg");
+drawCard(ctx, cardX + 3.5 *tileSize, cardY, cardW, cardH, "/sorry_board.svg");
 deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
   };
 
@@ -259,7 +260,7 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
   useEffect(() => {
     const simulatedGameState: GameState = {
       red: [ "d_3", "d_H", "d_H", "d_H" ],
-      blue: [ "a_S", "a_H", "a_H", "a_H"],
+      blue: [ "a_S", "a_H", "a_9", "a_H"],
       green: ["c_H", "c_H", "c_H", "c_H"],
       yellow: ["c_10", "b_H", "b_H", "b_H" ]
     };

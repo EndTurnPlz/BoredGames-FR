@@ -137,10 +137,20 @@ export const drawCard = (
   y: number,
   width: number,
   height: number,
+  imgName: string
 ) => {
 
   // Draw black background
   ctx.fillStyle = "black";
   ctx.fillRect(x, y, width, height);
+  const img = new Image();
+  img.src = imgName; // Can be a relative path or full URL
 
+  img.onload = () => {
+    ctx.drawImage(img, x, y, width, height);
+  };
+
+  img.onerror = () => {
+    console.error(`Failed to load image: ${imgName}`);
+  };
 };
