@@ -13,11 +13,14 @@ type GameState = {
 };
 type Piece = { x: number; y: number; color: string; radius: number };
 type DrawnPiece = Piece & { drawX: number; drawY: number };
+type Card = { x: number; y: number, height: number, width: number };
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const drawnPiecesRef = useRef<DrawnPiece[]>([]); // Store drawn pieces here
+  const deckRef = useRef<Card | null>(null);
+  const [loading, setLoading] = useState(false);
   const [popupData, setPopupData] = useState<{
     piece: DrawnPiece;
     x: number;
@@ -88,7 +91,13 @@ stripConfigs.forEach(cfg =>
   drawStripWithTriangleAndCircle(ctx, cfg.x, cfg.y, cfg.width, cfg.height, cfg.color, cfg.direction)
 );
 
-drawCard(ctx, canvasWidth/2 - 1.5*tileSize, canvasHeight/2 - 2.5*tileSize, 3*tileSize, 5*tileSize)
+const cardX = canvasWidth / 2 - 1.5 * tileSize;
+const cardY = canvasHeight / 2 - 2.5 * tileSize;
+const cardW = 3 * tileSize;
+const cardH = 5 * tileSize;
+
+drawCard(ctx, cardX, cardY, cardW, cardH);
+deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
   };
 
   const drawAll = (color: string) => {
@@ -152,9 +161,28 @@ drawCard(ctx, canvasWidth/2 - 1.5*tileSize, canvasHeight/2 - 2.5*tileSize, 3*til
             x: event.clientX,
             y: event.clientY
           });
-          console.log(selectedPiece, piece)
           return;
         }
+      }
+      const deck = deckRef.current;
+      if (
+        deck &&
+        mouseX >= deck.x &&
+        mouseX <= deck.x + deck.width &&
+        mouseY >= deck.y &&
+        mouseY <= deck.y + deck.height
+      ) {
+        console.log("Deck clicked! Sending to backend...");
+        setLoading(true);
+
+        // Simulate backend call — replace this with actual fetch()
+        setTimeout(() => {
+          setLoading(false);
+          console.log("Backend response received!");
+          // You can update game state or show a result here
+        }, 2000); // simulate 2 second delay
+
+        return;
       }
       if (event.type == "click") {
         setPopupData(null)
@@ -191,12 +219,17 @@ drawCard(ctx, canvasWidth/2 - 1.5*tileSize, canvasHeight/2 - 2.5*tileSize, 3*til
 
   return (
     <div className="flex flex-col items-center">
-      <canvas
-        ref={canvasRef}
-        width={canvasWidth}
-        height={canvasHeight}
-        className="border-4 border-black"
-      />
+     <canvas
+    ref={canvasRef}
+    width={canvasWidth}
+    height={canvasHeight}
+    className={`border-4 border-black transition duration-300 ${loading ? "blur-sm" : ""}`}
+  />
+     {loading && (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+      <div className="text-6xl font-bold text-black">...</div>
+    </div>
+  )}
      {popupData && (
   <button
     style={{
