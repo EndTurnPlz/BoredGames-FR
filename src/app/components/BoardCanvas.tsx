@@ -21,6 +21,7 @@ export default function GameCanvas() {
   const drawnPiecesRef = useRef<DrawnPiece[]>([]); // Store drawn pieces here
   const deckRef = useRef<Card | null>(null);
   const [loading, setLoading] = useState(false);
+  const loadingRef = useRef(false);
   const [popupData, setPopupData] = useState<{
     piece: DrawnPiece;
     x: number;
@@ -148,6 +149,7 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
     if (!canvas) return;
 
     const handleClick = (event: MouseEvent) => {
+      if (loadingRef.current) return;
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
@@ -177,8 +179,8 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
 
         // Simulate backend call — replace this with actual fetch()
         setTimeout(() => {
-          setLoading(false);
           console.log("Backend response received!");
+          setLoading(false);
           // You can update game state or show a result here
         }, 2000); // simulate 2 second delay
 
@@ -217,6 +219,10 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
     drawAll("yellow");
   }, [players]);
 
+  useEffect(() => {
+  loadingRef.current = loading;
+}, [loading]);
+
   return (
     <div className="flex flex-col items-center">
      <canvas
@@ -246,7 +252,16 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
       boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
     }}
     onClick={() => {
+      if (loading) return;
       console.log("Send move to backend:", popupData.piece);
+       setLoading(true);
+
+        // Simulate backend call — replace this with actual fetch()
+        setTimeout(() => {
+          setLoading(false);
+          console.log("Backend response received!");
+          // You can update game state or show a result here
+        }, 2000); // simulate 2 second delay
       setSelectedPiece(null)
       setPopupData(null); // Close popup after confirmation
     }}
