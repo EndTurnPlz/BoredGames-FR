@@ -5,13 +5,17 @@ import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard } from "
 import { coordStringToPixel } from "@/utils/outerPath";
 import { tileSize, canvasWidth, canvasHeight } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
+import { mockCardResponse2 } from "../mockData/moveset2";
+import { mockCardResponse11 } from "../mockData/moveset11";
+import { coordMap } from "@/utils/outerPath";
+import { radius } from "@/utils/config";
 
 
 
 type GameState = {
   [color: string]: string[];
 };
-type Piece = { x: number; y: number; color: string; radius: number };
+type Piece = { x: number; y: number; color: string; radius: number; id: string };
 type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number, height: number, width: number };
 
@@ -22,12 +26,18 @@ export default function GameCanvas() {
   const deckRef = useRef<Card | null>(null);
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
+  const [possibleMoves, setPossibleMoves] = useState<{ piece: string; moves: string[] }[] >([]);
+  const [highlightedTiles, setHighlightedTiles] = useState<string[]>([]);
+  const highlightedTilesRef = useRef<string[] | null>(null);
+  const PossibleMovesRef = useRef<{ piece: string; moves: string[] }[] |null>(null);
   const [popupData, setPopupData] = useState<{
     piece: DrawnPiece;
+    destination: String;
     x: number;
     y: number;
   } | null>(null);
   const [selectedPiece, setSelectedPiece] = useState<DrawnPiece | null>(null);
+  const selectedPieceRef = useRef<DrawnPiece | null>(null)
 
   const drawBoard = (ctx: CanvasRenderingContext2D, tileSize: number) => {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -122,12 +132,21 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
         x: piece.x,
         y: piece.y,
         color: p.color,
-        radius: piece.radius
+        radius: radius,
+        id: piece.id
       }))
     );
 
     drawnPiecesRef.current = drawPiecesWithOffset(ctx, allPawns, selectedPiece);
+    highlightedTiles.forEach(coord => {
+      const { x, y, id } = coordStringToPixel(coord, tileSize);
 
+      ctx.beginPath();
+      ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+      ctx.strokeStyle = "#FF00FF"; // highlight color
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    });
     // Restore canvas state
     ctx.restore();
   };
@@ -153,16 +172,45 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
+      if (highlightedTilesRef.current) {
+        for (const tile of highlightedTilesRef.current) {
+          const pixel = coordMap[tile];
+          const dx = mouseX - pixel.x;
+          const dy = mouseY - pixel.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+            console.log(pixel, selectedPieceRef)
+            if (selectedPieceRef.current) {
+              setPopupData({
+                piece: selectedPieceRef.current,
+                destination: tile,
+                x: event.clientX,
+                y: event.clientY
+              });
+              return
+          }
+          }
+        }
+    }
       for (const piece of drawnPiecesRef.current) {
         const dx = mouseX - piece.drawX;
         const dy = mouseY - piece.drawY;
-        if (Math.sqrt(dx * dx + dy * dy) <= piece.radius) {
-          setSelectedPiece(piece);
-          setPopupData({
-            piece,
-            x: event.clientX,
-            y: event.clientY
-          });
+        if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+          let id = piece.id;
+          if ( PossibleMovesRef.current) {
+            const matching = PossibleMovesRef.current.find(m => m.piece === id);
+            // console.log(id, PossibleMovesRef.current)
+            setSelectedPiece(piece);
+            if (matching) {
+              setHighlightedTiles(matching.moves); // new state
+            } else {
+              setHighlightedTiles([]);
+            }
+          }
+          // setPopupData({
+          //   piece,
+          //   x: event.clientX,
+          //   y: event.clientY
+          // });
           return;
         }
       }
@@ -180,6 +228,8 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
         // Simulate backend call — replace this with actual fetch()
         setTimeout(() => {
           console.log("Backend response received!");
+
+          setPossibleMoves(mockCardResponse11.moveset);
           setLoading(false);
           // You can update game state or show a result here
         }, 2000); // simulate 2 second delay
@@ -189,6 +239,7 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
       if (event.type == "click") {
         setPopupData(null)
         setSelectedPiece(null);
+        setHighlightedTiles([]);
       }
     };
 
@@ -200,16 +251,17 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
 
   useEffect(() => {
     drawAll("yellow");
+    selectedPieceRef.current = selectedPiece
   }, [selectedPiece]);
 
 
   // Simulate fetching the gameState from backend
   useEffect(() => {
     const simulatedGameState: GameState = {
-      red: [ "d_H", "d_H", "d_H", "d_H" ],
-      blue: [ "a_H", "a_H", "a_H", "a_H"],
+      red: [ "d_3", "d_H", "d_H", "d_H" ],
+      blue: [ "a_S", "a_H", "a_H", "a_H"],
       green: ["c_H", "c_H", "c_H", "c_H"],
-      yellow: ["b_H", "b_H", "b_H", "b_H" ]
+      yellow: ["c_10", "b_H", "b_H", "b_H" ]
     };
 
     applyGameState(simulatedGameState);
@@ -222,6 +274,15 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
   useEffect(() => {
   loadingRef.current = loading;
 }, [loading]);
+
+ useEffect(() => {
+  PossibleMovesRef.current = possibleMoves;
+}, [possibleMoves]);
+
+useEffect(() => {
+  highlightedTilesRef.current = highlightedTiles;
+}, [highlightedTiles]);
+
 
   return (
     <div className="flex flex-col items-center">
@@ -253,7 +314,7 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
     }}
     onClick={() => {
       if (loading) return;
-      console.log("Send move to backend:", popupData.piece);
+      console.log("Send move to backend:", popupData.piece, popupData.destination);
        setLoading(true);
 
         // Simulate backend call — replace this with actual fetch()
@@ -264,6 +325,7 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
         }, 2000); // simulate 2 second delay
       setSelectedPiece(null)
       setPopupData(null); // Close popup after confirmation
+      setHighlightedTiles([])
     }}
   >
     Confirm your move

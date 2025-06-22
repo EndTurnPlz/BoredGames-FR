@@ -4,11 +4,12 @@ export class Piece {
   x: number;
   y: number;
   color: string;
-  radius: number = tileSize/2 - 3;
+  id: string
 
-  constructor(x: number, y: number, color: string) {
+  constructor(x: number, y: number, color: string, id: string) {
     this.x = x;
     this.y = y;
     this.color = color;
+    this.id = id
   }
 }

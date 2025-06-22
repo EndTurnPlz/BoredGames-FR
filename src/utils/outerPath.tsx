@@ -1,10 +1,9 @@
 // utils/outerPath.ts
+import { tileSize } from "./config";
+const letters = ["a", "b", "c", "d"];
+export const coordMap: Record<string, { x: number; y: number }> = {};
 
-const alphaToIndex = (letter: string): number => {
-  return letter.toLowerCase().charCodeAt(0) - "a".charCodeAt(0); // "a" => 0
-};
-
-export const coordStringToPixel = (coord: string, tileSize: number): { x: number; y: number } => {
+export const coordStringToPixel = (coord: string, tileSize: number): { x: number; y: number, id: string } => {
   const [letter, rowStr] = coord.split("_");
   let col = 0;
 
@@ -76,6 +75,38 @@ export const coordStringToPixel = (coord: string, tileSize: number): { x: number
   return {
     x: col * tileSize + tileSize / 2,
     y: row * tileSize + tileSize / 2,
+    id: coord
   };
 };
+
+// Outer path tiles
+for (const letter of letters) {
+  for (let i = 0; i <= 15; i++) {
+    const key = `${letter}_${i}`;
+    const { x, y } = coordStringToPixel(key, tileSize);
+    coordMap[key] = { x, y };
+  }
+}
+
+// Safety tiles (s1 to s5 for each player)
+for (const letter of letters) {
+  for (let i = 1; i <= 5; i++) {
+    const key = `${letter}_s${i}`;
+    const { x, y } = coordStringToPixel(key, tileSize);
+    coordMap[key] = { x, y };
+  }
+}
+
+// Home tile
+for (const letter of letters) {
+  const key = `${letter}_H`;
+  const { x, y } = coordStringToPixel(key, tileSize);
+  coordMap[key] = { x, y };
+}
+
+for (const letter of letters) {
+  const key = `${letter}_S'`;
+  const { x, y } = coordStringToPixel(key, tileSize);
+  coordMap[key] = { x, y };
+}
   
