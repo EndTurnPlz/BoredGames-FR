@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
-import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard, drawTurnButton } from "@/utils/drawUtils";
+import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard, drawTurnButton, drawAllCircles } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
 import { tileSize, canvasWidth, canvasHeight } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
@@ -167,52 +167,35 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
     );
 
     drawnPiecesRef.current = drawPiecesWithOffset(ctx, allPawns, selectedPiece);
+    let highlights = []
     if (!destinationRef.current) {
       highlightedTiles.forEach(coord => {
-        const { x, y, id } = coordStringToPixel(coord[0], tileSize);
-          ctx.beginPath();
-          ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-          ctx.strokeStyle = "#FF00FF"; // highlight color
-          ctx.lineWidth = 4;
-          ctx.stroke();
+        highlights.push({ coord: coord[0], color: "#FF00FF" });
       });
     } else {
       highlightedTiles.forEach(coord => {
-        const { x, y, id } = coordStringToPixel(coord[0], tileSize);
-        if (destination == coord[0]) {
-          ctx.beginPath();
-          ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-          ctx.strokeStyle = "#008000"; // highlight color
-          ctx.lineWidth = 4;
-          ctx.stroke();
+        if (destination === coord[0]) {
+          highlights.push({ coord: coord[0], color: "#008000" });
         }
       });
     }
+
     if (!secondSelectedPieceRef.current) {
       possibleSecondPawns.forEach(coord => {
-        const { x, y, id } = coordStringToPixel(coord.piece.id, tileSize);
-        ctx.beginPath();
-        ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#FF00FF"; // highlight color
-        ctx.lineWidth = 4;
-        ctx.stroke();
-      })
+        highlights.push({ coord: coord.piece.id, color: "#FF00FF" });
+      });
     } else {
-      const { x, y, id } = coordStringToPixel(secondSelectedPieceRef.current.id, tileSize);
-      ctx.beginPath();
-      ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-      ctx.strokeStyle = "gold"; // highlight color
-      ctx.lineWidth = 4;
-      ctx.stroke();
+      highlights.push({ coord: secondSelectedPieceRef.current.id, color: "gold" });
       if (secondDestination) {
-        const { x, y, id } = coordStringToPixel(secondDestination, tileSize);
-        ctx.beginPath();
-        ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#008000"; // highlight color
-        ctx.lineWidth = 4;
-        ctx.stroke();
+        highlights.push({ coord: secondDestination, color: "#008000" });
       }
     }
+
+    drawAllCircles(
+      ctx,
+      tileSize,
+      highlights,
+    )
     // Restore canvas state
     ctx.restore();
   };
@@ -235,148 +218,18 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
 
     const handleClick = (event: MouseEvent) => {
       if (loadingRef.current) return;
+
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
 
+      if (handleConfirmMoveClick(mouseX, mouseY)) return;
+      if (handleSecondPawnClick(mouseX, mouseY)) return;
+      if (handleTileHighlightClick(mouseX, mouseY)) return;
+      if (handlePieceSelection(mouseX, mouseY)) return;
+      if (handleDeckClick(mouseX, mouseY)) return;
 
-      if (destinationRef.current &&
-        mouseX >= buttonBounds.x &&
-        mouseX <= buttonBounds.x + buttonBounds.width &&
-        mouseY >= buttonBounds.y &&
-        mouseY <= buttonBounds.y + buttonBounds.height
-      ) {
-        if (isPlayerTurn) {
-          if (currentCardRef.current == 7 && currentDistanceref.current != 7) {
-            return
-          }
-          console.log("Button clicked! It's your turn.", selectedPieceRef.current?.id, destinationRef.current, secondSelectedPieceRef.current, secondSelectedDestinationRef.current);
-          setLoading(true);
-
-            // Simulate backend call — replace this with actual fetch()
-            setTimeout(() => {
-              setLoading(false);
-              console.log("Backend response received!");
-              // You can update game state or show a result here
-            }, 2000); // simulate 2 second delay
-          setSelectedPiece(null)
-          setdestination(null)
-          setHighlightedTiles([])
-          setSecondDestination(null)
-          setPossibleSecondPawns([])
-          setSecondSelectedPiece(null)
-          // Do something like play a card or send a move
-        } else {
-          console.log("Not your turn!");
-        }
-        return;
-      }
-      if (possibleSecondPawnsRef.current) {
-        for (const tile of possibleSecondPawnsRef.current) {
-          const dx = mouseX - tile.piece.drawX;
-          const dy = mouseY - tile.piece.drawY;
-          if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-            setSecondDestination(tile.move[0])
-            setSecondSelectedPiece(tile.piece);
-            if (currentDistanceref.current){
-              setCurrentDistance(currentDistanceref.current + parseInt(tile.move[1], 10))
-            } else {
-              setCurrentDistance(parseInt(tile.move[1], 10))
-              console.log(currentDistance + parseInt(tile.move[1], 10))
-            }
-            return;
-          }
-        }
-      }
-      if (highlightedTilesRef.current) {
-        for (const tile of highlightedTilesRef.current) {
-          const pixel = coordMap[tile[0]];
-          const dx = mouseX - pixel.x;
-          const dy = mouseY - pixel.y;
-          if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-            if (selectedPieceRef.current) {
-              setdestination(tile[0])
-              console.log(currentCardRef.current)
-              if (currentCardRef.current == 7) {
-                const current = parseInt(tile[1], 10)
-                setCurrentDistance(current)
-                let target = 7 - current
-                let possibleSeconds = []
-                for (const piece of drawnPiecesRef.current) {
-                  if (
-                    PossibleMovesRef.current &&
-                    selectedPieceRef.current !== piece
-                  ) {
-                    // Find matching moves for this piece
-                    const matching = PossibleMovesRef.current.find(
-                      (m) => m.piece === piece.id
-                    );
-
-                    if (matching?.moves) {
-                      const canBeSecond = matching.moves.find(
-                        (m) => parseInt(m[1], 10) === target
-                      );
-
-                      if (canBeSecond && canBeSecond.length > 0) {
-                        console.log(canBeSecond)
-                        possibleSeconds.push({piece: piece, move: canBeSecond});
-                      }
-                    }
-                  }
-                }
-                setPossibleSecondPawns(possibleSeconds);
-              }
-              return
-          }
-          }
-        }
-    }
-      for (const piece of drawnPiecesRef.current) {
-        const dx = mouseX - piece.drawX;
-        const dy = mouseY - piece.drawY;
-        if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-          let id = piece.id;
-          if ( PossibleMovesRef.current) {
-            const matching = PossibleMovesRef.current.find(m => m.piece === id);
-            setSelectedPiece(piece);
-            if (matching) {
-              setHighlightedTiles(matching.moves); // new state
-            } else {
-              setHighlightedTiles([]);
-            }
-          }
-          return;
-        }
-      }
-      const deck = deckRef.current;
-      if (
-        deck &&
-        mouseX >= deck.x &&
-        mouseX <= deck.x + deck.width &&
-        mouseY >= deck.y &&
-        mouseY <= deck.y + deck.height
-      ) {
-        console.log("Deck clicked! Sending to backend...");
-        setLoading(true);
-
-        // Simulate backend call — replace this with actual fetch()
-        setTimeout(() => {
-          console.log("Backend response received!");
-
-          setPossibleMoves(mockCardResponse7.moveset);
-          setCurrentCard(mockCardResponse7.card)
-          setLoading(false);
-          // You can update game state or show a result here
-        }, 2000); // simulate 2 second delay
-
-        return;
-      }
-        setSelectedPiece(null);
-        setdestination(null)
-        setPossibleSecondPawns([])
-        setSecondSelectedPiece(null)
-        setHighlightedTiles([]);
-        setSecondDestination(null)
+      resetSelections();
     };
 
     canvas.addEventListener("click", handleClick);
@@ -384,6 +237,143 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
       canvas.removeEventListener("click", handleClick);
     };
   }, []);
+
+  const handleConfirmMoveClick = (x: number, y: number) => {
+  if (
+    destinationRef.current &&
+    x >= buttonBounds.x && x <= buttonBounds.x + buttonBounds.width &&
+    y >= buttonBounds.y && y <= buttonBounds.y + buttonBounds.height
+  ) {
+    if (!isPlayerTurn) {
+      console.log("Not your turn!");
+      return true;
+    }
+
+    if (currentCardRef.current === 7 && currentDistanceref.current !== 7) {
+      return true;
+    }
+
+    console.log("Button clicked! It's your turn.", selectedPieceRef.current?.id, destinationRef.current, secondSelectedPieceRef.current, secondSelectedDestinationRef.current);
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      console.log("Backend response received!");
+    }, 2000);
+
+    resetSelections();
+    return true;
+  }
+  return false;
+};
+const handleSecondPawnClick = (x: number, y: number) => {
+  if (!possibleSecondPawnsRef.current) return false;
+
+  for (const tile of possibleSecondPawnsRef.current) {
+    const dx = x - tile.piece.drawX;
+    const dy = y - tile.piece.drawY;
+    if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+      setSecondDestination(tile.move[0]);
+      setSecondSelectedPiece(tile.piece);
+
+      const distance = parseInt(tile.move[1], 10);
+      const current = currentDistanceref.current ?? 0;
+      setCurrentDistance(current + distance);
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const handleTileHighlightClick = (x: number, y: number) => {
+  if (!highlightedTilesRef.current) return false;
+
+  for (const tile of highlightedTilesRef.current) {
+    const pixel = coordMap[tile[0]];
+    const dx = x - pixel.x;
+    const dy = y - pixel.y;
+    if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+      if (!selectedPieceRef.current) return false;
+
+      setdestination(tile[0]);
+
+      if (currentCardRef.current === 7) {
+        const current = parseInt(tile[1], 10);
+        setCurrentDistance(current);
+        const target = 7 - current;
+        const possibleSeconds = [];
+
+        for (const piece of drawnPiecesRef.current) {
+          if (
+            PossibleMovesRef.current &&
+            selectedPieceRef.current !== piece
+          ) {
+            const matching = PossibleMovesRef.current.find(m => m.piece === piece.id);
+            const canBeSecond = matching?.moves?.find(m => parseInt(m[1], 10) === target);
+            if (canBeSecond) {
+              possibleSeconds.push({ piece, move: canBeSecond });
+            }
+          }
+        }
+
+        setPossibleSecondPawns(possibleSeconds);
+      }
+
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const handlePieceSelection = (x: number, y: number) => {
+  for (const piece of drawnPiecesRef.current) {
+    const dx = x - piece.drawX;
+    const dy = y - piece.drawY;
+    if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+      setSelectedPiece(piece);
+
+      const matching = PossibleMovesRef.current?.find(m => m.piece === piece.id);
+      setHighlightedTiles(matching?.moves ?? []);
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const handleDeckClick = (x: number, y: number) => {
+  const deck = deckRef.current;
+  if (!deck) return false;
+
+  if (
+    x >= deck.x && x <= deck.x + deck.width &&
+    y >= deck.y && y <= deck.y + deck.height
+  ) {
+    console.log("Deck clicked! Sending to backend...");
+    setLoading(true);
+
+    setTimeout(() => {
+      console.log("Backend response received!");
+      setPossibleMoves(mockCardResponse2.moveset);
+      setCurrentCard(mockCardResponse2.card);
+      setLoading(false);
+    }, 2000);
+
+    return true;
+  }
+
+  return false;
+};
+
+const resetSelections = () => {
+  setSelectedPiece(null);
+  setdestination(null);
+  setHighlightedTiles([]);
+  setSecondDestination(null);
+  setPossibleSecondPawns([]);
+  setSecondSelectedPiece(null);
+};
 
   useEffect(() => {
     drawAll("yellow");

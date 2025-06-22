@@ -1,4 +1,5 @@
 // utils/drawUtils.ts
+import { coordStringToPixel } from "./outerPath";
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -199,4 +200,29 @@ export const drawTurnButton = ({
 
   // Save button bounds for click detection
   return { x, y, width, height };
+};
+
+
+const drawHighlightedCircles = (
+  ctx: CanvasRenderingContext2D,
+  coord: string,
+  tileSize: number,
+  color: string
+) => {
+    const { x, y } = coordStringToPixel(coord, tileSize);
+    ctx.beginPath();
+    ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+};
+
+export const drawAllCircles = (
+  ctx: CanvasRenderingContext2D,
+  tileSize: number,
+  highlights: { coord: string; color: string }[]
+) => {
+  highlights.forEach(({ coord, color }) => {
+    drawHighlightedCircles(ctx, coord, tileSize, color);
+  });
 };
