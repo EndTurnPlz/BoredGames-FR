@@ -25,29 +25,48 @@ export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   let isPlayerTurn = true
   let buttonBounds = {x: 0, y: 0, width: 0, height: 0};
+  const deckPath = "file.svg"
+  let topCardPath =  "/sorry_board.svg"
+
   const [currentCard, setCurrentCard] = useState<number>(0);
   const currentCardRef = useRef<number | null>(null);
+
   const [players, setPlayers] = useState<Player[]>([]);
-  const drawnPiecesRef = useRef<DrawnPiece[]>([]); // Store drawn pieces here
+
+  const drawnPiecesRef = useRef<DrawnPiece[]>([]); 
+
   const deckRef = useRef<Card | null>(null);
+  const topCardRef = useRef<Card | null>(null);
+
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
+
   const [possibleMoves, setPossibleMoves] = useState<{ piece: string; moves: string[][] }[] >([]);
+  const PossibleMovesRef = useRef<{ piece: string; moves: string[][] }[] |null>(null);
+
   const [possibleSecondPawns, setPossibleSecondPawns] = useState<{ piece: DrawnPiece; move: string[]; }[] >([]);
+  const possibleSecondPawnsRef = useRef<{ piece: DrawnPiece; move: string[]; }[] | null>(null);
+
   const [highlightedTiles, setHighlightedTiles] = useState<string[][]>([]);
   const highlightedTilesRef = useRef<string[][] | null>(null);
-  const PossibleMovesRef = useRef<{ piece: string; moves: string[][] }[] |null>(null);
+
   const [selectedPiece, setSelectedPiece] = useState<DrawnPiece | null>(null);
-  const [secondSelectedPiece, setSecondSelectedPiece] = useState<DrawnPiece | null>(null);
-  const [destination, setdestination] = useState<string | null>(null);
-  const [secondDestination, setSecondDestination] = useState<string | null>(null);
-  const destinationRef = useRef<string | null>(null);
   const selectedPieceRef = useRef<DrawnPiece | null>(null);
+
+  const [secondSelectedPiece, setSecondSelectedPiece] = useState<DrawnPiece | null>(null);
   const secondSelectedPieceRef = useRef<DrawnPiece | null>(null);
+
+  const [destination, setdestination] = useState<string | null>(null);
+  const destinationRef = useRef<string | null>(null);
+
+  const [secondDestination, setSecondDestination] = useState<string | null>(null);
   const secondSelectedDestinationRef = useRef<string | null>(null);
-  const possibleSecondPawnsRef = useRef<{ piece: DrawnPiece; move: string[]; }[] | null>(null);
+
   const [currentDistance, setCurrentDistance] = useState<number>(0);
   const currentDistanceref = useRef<number | null>(null);
+
+  const [showZoomedCard, setShowZoomedCard] = useState(false);
+  
   const drawBoard = (ctx: CanvasRenderingContext2D, tileSize: number) => {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -124,7 +143,7 @@ const buttonY = cardY + cardH + gap;
 
 const opponent = "ritij"
 
-drawCard(ctx, cardX1, cardY, cardW, cardH, "/file.svg");
+drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
 buttonBounds = drawTurnButton({
   ctx,
   x: (cardX1 + cardX2) / 2,
@@ -135,9 +154,10 @@ buttonBounds = drawTurnButton({
   opponent
 });
 
-drawCard(ctx, cardX2, cardY, cardW, cardH, "/sorry_board.svg");
+drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPath);
 
 deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
+topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
   };
 
   const drawAll = (color: string) => {
@@ -228,6 +248,7 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
       if (handleTileHighlightClick(mouseX, mouseY)) return;
       if (handlePieceSelection(mouseX, mouseY)) return;
       if (handleDeckClick(mouseX, mouseY)) return;
+      if (handleTopCardClick(mouseX, mouseY)) return;
 
       resetSelections();
     };
@@ -366,6 +387,24 @@ const handleDeckClick = (x: number, y: number) => {
   return false;
 };
 
+
+const handleTopCardClick = (x: number, y: number) => {
+  const topCard = topCardRef.current;
+  if (!topCard) return false;
+
+  if (
+    x >= topCard.x && x <= topCard.x + topCard.width &&
+    y >= topCard.y && y <= topCard.y + topCard.height
+  ) {
+   console.log("top card clicked! zooming in...");
+   setShowZoomedCard(true);
+   return true
+  }
+   
+
+  return false;
+};
+
 const resetSelections = () => {
   setSelectedPiece(null);
   setdestination(null);
@@ -449,7 +488,36 @@ useEffect(() => {
       <div className="text-6xl fo
       nt-bold text-black">...</div>
     </div>
+    
   )}
+  {showZoomedCard && (
+  <div
+    onClick={() => setShowZoomedCard(false)}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+    }}
+  >
+    <img
+      src={topCardPath}
+      alt="Zoomed Card"
+      style={{
+        maxWidth: "90%",
+        maxHeight: "90%",
+        borderRadius: "8px",
+        boxShadow: "0 0 20px rgba(0,0,0,0.3)"
+      }}
+    />
+  </div>
+)}
   </div>
   )
 };
