@@ -131,3 +131,16 @@ export const drawStripWithTriangleAndCircle = (
   ctx.fill();
   ctx.stroke();
 }
+export const drawCard = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) => {
+
+  // Draw black background
+  ctx.fillStyle = "black";
+  ctx.fillRect(x, y, width, height);
+
+};

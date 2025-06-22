@@ -11,12 +11,4 @@ export class Piece {
     this.y = y;
     this.color = color;
   }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-    ctx.stroke();
-  }
 }

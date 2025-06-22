@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
-import { drawCircle, fillTile, drawStripWithTriangleAndCircle } from "@/utils/drawUtils";
+import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
 import { tileSize, canvasWidth, canvasHeight } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
@@ -11,10 +11,20 @@ import { getRotationAngleForColor } from "@/utils/rotation";
 type GameState = {
   [color: string]: string[];
 };
+type Piece = { x: number; y: number; color: string; radius: number };
+type DrawnPiece = Piece & { drawX: number; drawY: number };
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const drawnPiecesRef = useRef<DrawnPiece[]>([]); // Store drawn pieces here
+  const [popupData, setPopupData] = useState<{
+    piece: DrawnPiece;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [selectedPiece, setSelectedPiece] = useState<DrawnPiece | null>(null);
+
   const drawBoard = (ctx: CanvasRenderingContext2D, tileSize: number) => {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -78,6 +88,7 @@ stripConfigs.forEach(cfg =>
   drawStripWithTriangleAndCircle(ctx, cfg.x, cfg.y, cfg.width, cfg.height, cfg.color, cfg.direction)
 );
 
+drawCard(ctx, canvasWidth/2 - 1.5*tileSize, canvasHeight/2 - 2.5*tileSize, 3*tileSize, 5*tileSize)
   };
 
   const drawAll = (color: string) => {
@@ -86,7 +97,6 @@ stripConfigs.forEach(cfg =>
     if (!canvas || !ctx) return;
 
     const angle = getRotationAngleForColor(color);
-
     // Save current state
     ctx.save();
 
@@ -106,7 +116,7 @@ stripConfigs.forEach(cfg =>
       }))
     );
 
-    drawPiecesWithOffset(ctx, allPawns);
+    drawnPiecesRef.current = drawPiecesWithOffset(ctx, allPawns, selectedPiece);
 
     // Restore canvas state
     ctx.restore();
@@ -123,6 +133,45 @@ stripConfigs.forEach(cfg =>
 
     setPlayers(newPlayers);
   };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleClick = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      for (const piece of drawnPiecesRef.current) {
+        const dx = mouseX - piece.drawX;
+        const dy = mouseY - piece.drawY;
+        if (Math.sqrt(dx * dx + dy * dy) <= piece.radius) {
+          setSelectedPiece(piece);
+          setPopupData({
+            piece,
+            x: event.clientX,
+            y: event.clientY
+          });
+          console.log(selectedPiece, piece)
+          return;
+        }
+      }
+      if (event.type == "click") {
+        setPopupData(null)
+        setSelectedPiece(null);
+      }
+    };
+
+    canvas.addEventListener("click", handleClick);
+    return () => {
+      canvas.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  useEffect(() => {
+    drawAll("yellow");
+  }, [selectedPiece]);
+
 
   // Simulate fetching the gameState from backend
   useEffect(() => {
@@ -148,13 +197,41 @@ stripConfigs.forEach(cfg =>
         height={canvasHeight}
         className="border-4 border-black"
       />
+     {popupData && (
+  <button
+    style={{
+      position: "fixed",
+      top: popupData.y + 10,
+      left: popupData.x + 10,
+      background: "#4CAF50",
+      color: "white",
+      padding: "8px 12px",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      zIndex: 1000,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+    }}
+    onClick={() => {
+      console.log("Send move to backend:", popupData.piece);
+      setSelectedPiece(null)
+      setPopupData(null); // Close popup after confirmation
+    }}
+  >
+    Confirm your move
+  </button>
+)}
     </div>
   );
 }
 
 
-function drawPiecesWithOffset(ctx: CanvasRenderingContext2D, allPieces: { x: number, y: number, color: string, radius: number }[]) {
-  const tileGroups: Record<string, { x: number, y: number, color: string, radius: number }[]> = {};
+function drawPiecesWithOffset(
+  ctx: CanvasRenderingContext2D,
+  allPieces: Piece[],
+  selectedPiece: DrawnPiece | null
+): DrawnPiece[] {
+  const tileGroups: Record<string, Piece[]> = {};
 
   for (const piece of allPieces) {
     const key = `${Math.round(piece.x)}_${Math.round(piece.y)}`;
@@ -163,29 +240,45 @@ function drawPiecesWithOffset(ctx: CanvasRenderingContext2D, allPieces: { x: num
   }
 
   const offsetDistance = tileSize * 0.5;
+  const drawnPieces: DrawnPiece[] = [];
 
   for (const group of Object.values(tileGroups)) {
     const centerX = group[0].x;
     const centerY = group[0].y;
-    let radius = group[0].radius
+    const radius = group[0].radius;
 
     group.forEach((piece, i) => {
       let offsetX = 0;
       let offsetY = 0;
 
-      // Spread in a circular pattern if more than 1 piece
       if (group.length > 1) {
         const angle = (2 * Math.PI * i) / group.length;
         offsetX = Math.cos(angle) * offsetDistance;
         offsetY = Math.sin(angle) * offsetDistance;
       }
 
+      const drawX = centerX + offsetX;
+      const drawY = centerY + offsetY;
+
+      // Draw filled piece
       ctx.beginPath();
-      ctx.arc(centerX + offsetX, centerY + offsetY, radius, 0, 2 * Math.PI);
+      ctx.arc(drawX, drawY, radius, 0, 2 * Math.PI);
       ctx.fillStyle = piece.color;
       ctx.fill();
-      ctx.strokeStyle = "#000";
+
+      // Highlight selected piece
+      const isSelected =
+        selectedPiece &&
+        selectedPiece.drawX === drawX &&
+        selectedPiece.drawY === drawY;
+
+      ctx.lineWidth = isSelected ? 4 : 1;
+      ctx.strokeStyle = isSelected ? "gold" : "#000";
       ctx.stroke();
+
+      drawnPieces.push({ ...piece, drawX, drawY });
     });
   }
+
+  return drawnPieces;
 }
