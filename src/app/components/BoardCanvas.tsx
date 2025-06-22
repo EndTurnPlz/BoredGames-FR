@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
-import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard } from "@/utils/drawUtils";
+import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard, drawTurnButton } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
 import { tileSize, canvasWidth, canvasHeight } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
+import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap } from "@/utils/outerPath";
 import { radius } from "@/utils/config";
+import { match } from "assert";
 
 
 
@@ -21,24 +23,31 @@ type Card = { x: number; y: number, height: number, width: number };
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  let isPlayerTurn = true
+  let buttonBounds = {x: 0, y: 0, width: 0, height: 0};
+  const [currentCard, setCurrentCard] = useState<number>(0);
+  const currentCardRef = useRef<number | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const drawnPiecesRef = useRef<DrawnPiece[]>([]); // Store drawn pieces here
   const deckRef = useRef<Card | null>(null);
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
-  const [possibleMoves, setPossibleMoves] = useState<{ piece: string; moves: string[] }[] >([]);
-  const [highlightedTiles, setHighlightedTiles] = useState<string[]>([]);
-  const highlightedTilesRef = useRef<string[] | null>(null);
-  const PossibleMovesRef = useRef<{ piece: string; moves: string[] }[] |null>(null);
-  const [popupData, setPopupData] = useState<{
-    piece: DrawnPiece;
-    destination: String;
-    x: number;
-    y: number;
-  } | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<{ piece: string; moves: string[][] }[] >([]);
+  const [possibleSecondPawns, setPossibleSecondPawns] = useState<{ piece: DrawnPiece; move: string; }[] >([]);
+  const [highlightedTiles, setHighlightedTiles] = useState<string[][]>([]);
+  const highlightedTilesRef = useRef<string[][] | null>(null);
+  const PossibleMovesRef = useRef<{ piece: string; moves: string[][] }[] |null>(null);
   const [selectedPiece, setSelectedPiece] = useState<DrawnPiece | null>(null);
-  const selectedPieceRef = useRef<DrawnPiece | null>(null)
-
+  const [secondSelectedPiece, setSecondSelectedPiece] = useState<DrawnPiece | null>(null);
+  const [destination, setdestination] = useState<string | null>(null);
+  const [secondDestination, setSecondDestination] = useState<string | null>(null);
+  const destinationRef = useRef<string | null>(null);
+  const selectedPieceRef = useRef<DrawnPiece | null>(null);
+  const secondSelectedPieceRef = useRef<DrawnPiece | null>(null);
+  const secondSelectedDestinationRef = useRef<string | null>(null);
+  const possibleSecondPawnsRef = useRef<{ piece: DrawnPiece; move: string; }[] | null>(null);
+  const [currentDistance, setCurrentDistance] = useState<number>(0);
+  const currentDistanceref = useRef<number | null>(null);
   const drawBoard = (ctx: CanvasRenderingContext2D, tileSize: number) => {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -74,7 +83,7 @@ export default function GameCanvas() {
           continue;
         }
 
-        const zones: [number, number][][] = [redSafetyZone, yellowSafetyZone, blueSafetyZone, greenSafetyZone];
+        const zones: number[][][] = [redSafetyZone, yellowSafetyZone, blueSafetyZone, greenSafetyZone];
         const colors = ["#D32F2F", "#FBC02D", "#1976D2", "#388E3C"];
 
         zones.forEach((zone, i) => {
@@ -102,14 +111,33 @@ stripConfigs.forEach(cfg =>
   drawStripWithTriangleAndCircle(ctx, cfg.x, cfg.y, cfg.width, cfg.height, cfg.color, cfg.direction)
 );
 
-const cardX = canvasWidth / 2 - 3 * tileSize;
+const cardX1 = canvasWidth / 2 - 3 * tileSize;
+const cardX2 = cardX1 + 3.5 * tileSize;
 const cardY = canvasHeight / 2 - 2.5 * tileSize;
 const cardW = 3 * tileSize;
 const cardH = 5 * tileSize;
+const buttonW = cardW;
+const buttonH = tileSize * 0.8;
+const gap = tileSize * 0.3; // gap between card and button
 
-drawCard(ctx, cardX, cardY, cardW, cardH, "/file.svg");
-drawCard(ctx, cardX + 3.5 *tileSize, cardY, cardW, cardH, "/sorry_board.svg");
-deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
+const buttonY = cardY + cardH + gap;
+
+const opponent = "ritij"
+
+drawCard(ctx, cardX1, cardY, cardW, cardH, "/file.svg");
+buttonBounds = drawTurnButton({
+  ctx,
+  x: (cardX1 + cardX2) / 2,
+  y: buttonY,
+  width: buttonW,
+  height: buttonH,
+  isPlayerTurn,
+  opponent
+});
+
+drawCard(ctx, cardX2, cardY, cardW, cardH, "/sorry_board.svg");
+
+deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
   };
 
   const drawAll = (color: string) => {
@@ -139,15 +167,52 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
     );
 
     drawnPiecesRef.current = drawPiecesWithOffset(ctx, allPawns, selectedPiece);
-    highlightedTiles.forEach(coord => {
-      const { x, y, id } = coordStringToPixel(coord, tileSize);
-
+    if (!destinationRef.current) {
+      highlightedTiles.forEach(coord => {
+        const { x, y, id } = coordStringToPixel(coord[0], tileSize);
+          ctx.beginPath();
+          ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+          ctx.strokeStyle = "#FF00FF"; // highlight color
+          ctx.lineWidth = 4;
+          ctx.stroke();
+      });
+    } else {
+      highlightedTiles.forEach(coord => {
+        const { x, y, id } = coordStringToPixel(coord[0], tileSize);
+        if (destination == coord[0]) {
+          ctx.beginPath();
+          ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+          ctx.strokeStyle = "#008000"; // highlight color
+          ctx.lineWidth = 4;
+          ctx.stroke();
+        }
+      });
+    }
+    if (!secondSelectedPieceRef.current) {
+      possibleSecondPawns.forEach(coord => {
+        const { x, y, id } = coordStringToPixel(coord.piece.id, tileSize);
+        ctx.beginPath();
+        ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+        ctx.strokeStyle = "#FF00FF"; // highlight color
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      })
+    } else {
+      const { x, y, id } = coordStringToPixel(secondSelectedPieceRef.current.id, tileSize);
       ctx.beginPath();
       ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-      ctx.strokeStyle = "#FF00FF"; // highlight color
+      ctx.strokeStyle = "gold"; // highlight color
       ctx.lineWidth = 4;
       ctx.stroke();
-    });
+      if (secondDestination) {
+        const { x, y, id } = coordStringToPixel(secondDestination, tileSize);
+        ctx.beginPath();
+        ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+        ctx.strokeStyle = "#008000"; // highlight color
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+    }
     // Restore canvas state
     ctx.restore();
   };
@@ -173,20 +238,85 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
+
+
+      if (destinationRef.current &&
+        mouseX >= buttonBounds.x &&
+        mouseX <= buttonBounds.x + buttonBounds.width &&
+        mouseY >= buttonBounds.y &&
+        mouseY <= buttonBounds.y + buttonBounds.height
+      ) {
+        if (isPlayerTurn) {
+          if (currentCardRef.current == 7 && currentDistanceref.current != 7) {
+            return
+          }
+          console.log("Button clicked! It's your turn.", selectedPieceRef.current?.id, destinationRef.current, secondSelectedPieceRef.current, secondSelectedDestinationRef.current);
+          setLoading(true);
+
+            // Simulate backend call — replace this with actual fetch()
+            setTimeout(() => {
+              setLoading(false);
+              console.log("Backend response received!");
+              // You can update game state or show a result here
+            }, 2000); // simulate 2 second delay
+          setSelectedPiece(null)
+          setdestination(null)
+          setHighlightedTiles([])
+          // Do something like play a card or send a move
+        } else {
+          console.log("Not your turn!");
+        }
+        return;
+      }
+      if (possibleSecondPawnsRef.current) {
+        for (const tile of possibleSecondPawnsRef.current) {
+          const dx = mouseX - tile.piece.drawX;
+          const dy = mouseY - tile.piece.drawY;
+          if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+            setSecondDestination(tile.move)
+            setSecondSelectedPiece(tile.piece);
+            setCurrentDistance(currentDistance + parseInt(tile.move[1]))
+            return;
+          }
+        }
+      }
       if (highlightedTilesRef.current) {
         for (const tile of highlightedTilesRef.current) {
-          const pixel = coordMap[tile];
+          const pixel = coordMap[tile[0]];
           const dx = mouseX - pixel.x;
           const dy = mouseY - pixel.y;
           if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-            console.log(pixel, selectedPieceRef)
             if (selectedPieceRef.current) {
-              setPopupData({
-                piece: selectedPieceRef.current,
-                destination: tile,
-                x: event.clientX,
-                y: event.clientY
-              });
+              setdestination(tile[0])
+              console.log(currentCardRef.current)
+              if (currentCardRef.current == 7) {
+                const current = parseInt(tile[1], 10)
+                setCurrentDistance(current)
+                let target = 7 - current
+                let possibleSeconds = []
+                for (const piece of drawnPiecesRef.current) {
+                  if (
+                    PossibleMovesRef.current &&
+                    selectedPieceRef.current !== piece
+                  ) {
+                    // Find matching moves for this piece
+                    const matching = PossibleMovesRef.current.find(
+                      (m) => m.piece === piece.id
+                    );
+
+                    if (matching?.moves) {
+                      const canBeSecond = matching.moves.find(
+                        (m) => parseInt(m[1], 10) === target
+                      );
+
+                      if (canBeSecond && canBeSecond.length > 0) {
+                        possibleSeconds.push({piece: piece, move: canBeSecond[0]});
+                      }
+                    }
+                  }
+                }
+                setPossibleSecondPawns(possibleSeconds);
+              }
               return
           }
           }
@@ -199,7 +329,6 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
           let id = piece.id;
           if ( PossibleMovesRef.current) {
             const matching = PossibleMovesRef.current.find(m => m.piece === id);
-            // console.log(id, PossibleMovesRef.current)
             setSelectedPiece(piece);
             if (matching) {
               setHighlightedTiles(matching.moves); // new state
@@ -207,11 +336,6 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
               setHighlightedTiles([]);
             }
           }
-          // setPopupData({
-          //   piece,
-          //   x: event.clientX,
-          //   y: event.clientY
-          // });
           return;
         }
       }
@@ -230,7 +354,8 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
         setTimeout(() => {
           console.log("Backend response received!");
 
-          setPossibleMoves(mockCardResponse11.moveset);
+          setPossibleMoves(mockCardResponse7.moveset);
+          setCurrentCard(mockCardResponse7.card)
           setLoading(false);
           // You can update game state or show a result here
         }, 2000); // simulate 2 second delay
@@ -238,9 +363,12 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
         return;
       }
       if (event.type == "click") {
-        setPopupData(null)
         setSelectedPiece(null);
+        setdestination(null)
+        setPossibleSecondPawns([])
+        setSecondSelectedPiece(null)
         setHighlightedTiles([]);
+        setSecondDestination(null)
       }
     };
 
@@ -260,9 +388,9 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
   useEffect(() => {
     const simulatedGameState: GameState = {
       red: [ "d_3", "d_H", "d_H", "d_H" ],
-      blue: [ "a_S", "a_H", "a_9", "a_H"],
+      blue: [ "a_S", "c_10", "a_9", "a_H"],
       green: ["c_H", "c_H", "c_H", "c_H"],
-      yellow: ["c_10", "b_H", "b_H", "b_H" ]
+      yellow: ["c_3", "b_H", "b_H", "b_H" ]
     };
 
     applyGameState(simulatedGameState);
@@ -283,6 +411,32 @@ deckRef.current = { x: cardX, y: cardY, width: cardW, height: cardH };
 useEffect(() => {
   highlightedTilesRef.current = highlightedTiles;
 }, [highlightedTiles]);
+useEffect(() => {
+  destinationRef.current = destination;
+  drawAll("yellow")
+}, [destination]);
+
+useEffect(() => {
+  currentCardRef.current = currentCard;
+}, [currentCard]);
+
+useEffect(() => {
+  currentDistanceref.current = currentDistance;
+}, [currentDistance]);
+
+useEffect(() => {
+  secondSelectedPieceRef.current = secondSelectedPiece;
+  drawAll("yellow")
+}, [secondSelectedPiece]);
+
+useEffect(() => {
+  secondSelectedDestinationRef.current = secondDestination;
+  drawAll("yellow")
+}, [secondDestination]);
+
+useEffect(() => {
+  possibleSecondPawnsRef.current = possibleSecondPawns;
+}, [possibleSecondPawns]);
 
 
   return (
@@ -295,47 +449,13 @@ useEffect(() => {
   />
      {loading && (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-      <div className="text-6xl font-bold text-black">...</div>
+      <div className="text-6xl fo
+      nt-bold text-black">...</div>
     </div>
   )}
-     {popupData && (
-  <button
-    style={{
-      position: "fixed",
-      top: popupData.y + 10,
-      left: popupData.x + 10,
-      background: "#4CAF50",
-      color: "white",
-      padding: "8px 12px",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer",
-      zIndex: 1000,
-      boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-    }}
-    onClick={() => {
-      if (loading) return;
-      console.log("Send move to backend:", popupData.piece, popupData.destination);
-       setLoading(true);
-
-        // Simulate backend call — replace this with actual fetch()
-        setTimeout(() => {
-          setLoading(false);
-          console.log("Backend response received!");
-          // You can update game state or show a result here
-        }, 2000); // simulate 2 second delay
-      setSelectedPiece(null)
-      setPopupData(null); // Close popup after confirmation
-      setHighlightedTiles([])
-    }}
-  >
-    Confirm your move
-  </button>
-)}
-    </div>
-  );
-}
-
+  </div>
+  )
+};
 
 function drawPiecesWithOffset(
   ctx: CanvasRenderingContext2D,

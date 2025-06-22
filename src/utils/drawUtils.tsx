@@ -39,7 +39,7 @@ export const drawStripWithTriangleAndCircle = (
   width: number,
   height: number,
   color: string,
-  direction: "up" | "down" | "left" | "right"
+  direction: string
 ) => {
   // Draw the vertical strip
   
@@ -153,4 +153,50 @@ export const drawCard = (
   img.onerror = () => {
     console.error(`Failed to load image: ${imgName}`);
   };
+};
+
+
+interface ButtonProps {
+  ctx: CanvasRenderingContext2D;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  isPlayerTurn: boolean;
+  opponent: string
+}
+
+// Store last known button bounds to detect clicks
+
+export const drawTurnButton = ({
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  isPlayerTurn,
+  opponent
+}: ButtonProps) => {
+  // Draw the button background
+  if (isPlayerTurn) {
+    ctx.fillStyle =  "#4CAF50"; // Green if it's player's turn
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+  }
+
+  // Draw text
+  ctx.fillStyle = "black";
+  ctx.font = "16px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(
+    isPlayerTurn ? "Your Turn" : opponent + " is playing...",
+    x + width / 2,
+    y + height / 2
+  );
+
+  // Save button bounds for click detection
+  return { x, y, width, height };
 };
