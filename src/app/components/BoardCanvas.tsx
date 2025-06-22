@@ -262,6 +262,9 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
           setSelectedPiece(null)
           setdestination(null)
           setHighlightedTiles([])
+          setSecondDestination(null)
+          setPossibleSecondPawns([])
+          setSecondSelectedPiece(null)
           // Do something like play a card or send a move
         } else {
           console.log("Not your turn!");
@@ -368,14 +371,12 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
 
         return;
       }
-      if (event.type == "click") {
         setSelectedPiece(null);
         setdestination(null)
         setPossibleSecondPawns([])
         setSecondSelectedPiece(null)
         setHighlightedTiles([]);
         setSecondDestination(null)
-      }
     };
 
     canvas.addEventListener("click", handleClick);
