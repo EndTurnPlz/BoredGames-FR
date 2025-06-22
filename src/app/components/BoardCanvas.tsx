@@ -33,7 +33,7 @@ export default function GameCanvas() {
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
   const [possibleMoves, setPossibleMoves] = useState<{ piece: string; moves: string[][] }[] >([]);
-  const [possibleSecondPawns, setPossibleSecondPawns] = useState<{ piece: DrawnPiece; move: string; }[] >([]);
+  const [possibleSecondPawns, setPossibleSecondPawns] = useState<{ piece: DrawnPiece; move: string[]; }[] >([]);
   const [highlightedTiles, setHighlightedTiles] = useState<string[][]>([]);
   const highlightedTilesRef = useRef<string[][] | null>(null);
   const PossibleMovesRef = useRef<{ piece: string; moves: string[][] }[] |null>(null);
@@ -45,7 +45,7 @@ export default function GameCanvas() {
   const selectedPieceRef = useRef<DrawnPiece | null>(null);
   const secondSelectedPieceRef = useRef<DrawnPiece | null>(null);
   const secondSelectedDestinationRef = useRef<string | null>(null);
-  const possibleSecondPawnsRef = useRef<{ piece: DrawnPiece; move: string; }[] | null>(null);
+  const possibleSecondPawnsRef = useRef<{ piece: DrawnPiece; move: string[]; }[] | null>(null);
   const [currentDistance, setCurrentDistance] = useState<number>(0);
   const currentDistanceref = useRef<number | null>(null);
   const drawBoard = (ctx: CanvasRenderingContext2D, tileSize: number) => {
@@ -273,9 +273,14 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
           const dx = mouseX - tile.piece.drawX;
           const dy = mouseY - tile.piece.drawY;
           if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-            setSecondDestination(tile.move)
+            setSecondDestination(tile.move[0])
             setSecondSelectedPiece(tile.piece);
-            setCurrentDistance(currentDistance + parseInt(tile.move[1]))
+            if (currentDistanceref.current){
+              setCurrentDistance(currentDistanceref.current + parseInt(tile.move[1], 10))
+            } else {
+              setCurrentDistance(parseInt(tile.move[1], 10))
+              console.log(currentDistance + parseInt(tile.move[1], 10))
+            }
             return;
           }
         }
@@ -310,7 +315,8 @@ deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
                       );
 
                       if (canBeSecond && canBeSecond.length > 0) {
-                        possibleSeconds.push({piece: piece, move: canBeSecond[0]});
+                        console.log(canBeSecond)
+                        possibleSeconds.push({piece: piece, move: canBeSecond});
                       }
                     }
                   }
