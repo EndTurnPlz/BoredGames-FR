@@ -20,7 +20,7 @@ export const drawCircle = (
   const centerX = tileX * tileSize;
   const centerY = tileY * tileSize;
   ctx.fillStyle = "Black"; // or another contrasting color
-  ctx.font = `${1.5*font_px}px sans-serif`;
+  ctx.font = `${1.5 * font_px}px sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, centerX, centerY);
@@ -41,8 +41,6 @@ export const fillTile = (
   ctx.strokeRect(x, y, tileSize, tileSize);
 };
 
-
-
 export const drawStripWithTriangleAndCircle = (
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -53,11 +51,13 @@ export const drawStripWithTriangleAndCircle = (
   direction: string
 ) => {
   // Draw the vertical strip
-  
-   ctx.fillStyle = color;
 
-  let rectX = x, rectY = y;
-  let rectWidth = width, rectHeight = height;
+  ctx.fillStyle = color;
+
+  let rectX = x,
+    rectY = y;
+  let rectWidth = width,
+    rectHeight = height;
 
   if (direction === "left" || direction === "right") {
     rectWidth = height;
@@ -79,13 +79,13 @@ export const drawStripWithTriangleAndCircle = (
   let baseRightX = 0;
   let baseRightY = 0;
 
-   if (direction === "up") {
+  if (direction === "up") {
     // Triangle BELOW the strip (tip pointing up)
     tipY = y + triangleHeight;
     baseLeftX = x - (triangleWidth - width) / 2;
-    baseLeftY = y ;
+    baseLeftY = y;
     baseRightX = x + width + (triangleWidth - width) / 2;
-    baseRightY = y ;
+    baseRightY = y;
   } else if (direction == "down") {
     // Triangle ABOVE the strip (tip pointing down)
     tipY = y - triangleHeight + height;
@@ -104,7 +104,7 @@ export const drawStripWithTriangleAndCircle = (
   } else if (direction === "right") {
     // Triangle to the LEFT of the strip (tip pointing right)
     tipX = x + triangleHeight;
-    tipY = y +  width / 2;
+    tipY = y + width / 2;
     baseLeftX = x;
     baseLeftY = y - (triangleWidth - width) / 2;
     baseRightX = x;
@@ -120,7 +120,8 @@ export const drawStripWithTriangleAndCircle = (
   ctx.fill();
 
   const circleRadius = width * 0.8;
-  let circleX = 0, circleY = 0;
+  let circleX = 0,
+    circleY = 0;
 
   if (direction === "up") {
     circleX = x + width / 2;
@@ -142,51 +143,49 @@ export const drawStripWithTriangleAndCircle = (
   ctx.fill();
   ctx.stroke();
 
+  ctx.fillStyle = "black"; // or any contrasting color
+  ctx.font = `${font_px}px sans-serif`;
 
+  const text = "Slide!";
+  const textWidth = ctx.measureText(text).width;
 
-ctx.fillStyle = "black"; // or any contrasting color
-ctx.font = `${font_px}px sans-serif`;
+  // Loop the text once it goes off the shape
+  const totalLength =
+    direction === "left" || direction === "right" ? width : height;
+  const textX = -textWidth;
 
-const text = "Slide!";
-const textWidth = ctx.measureText(text).width;
+  if (direction === "right") {
+    ctx.fillText(text, rectX + rectWidth / 2, rectY + rectHeight / 2);
+  } else if (direction === "left") {
+    ctx.save();
+    // Move origin to right edge of the rect before flipping
+    const textX = rectX + rectWidth / 4;
+    const textY = rectY + (3 * rectHeight) / 4;
+    // Move origin to the center of text
+    ctx.translate(textX, textY);
+    // Rotate 180 degrees (PI radians)
+    ctx.rotate(Math.PI);
 
-// Loop the text once it goes off the shape
-const totalLength = direction === "left" || direction === "right" ? width : height;
-const textX = - textWidth;
+    // Draw the text at 0,0 because we're already translated
+    ctx.fillText(text, -rectWidth / 4, rectHeight / 4);
 
-if (direction === "right") {
-
-  ctx.fillText(text, rectX + rectWidth/2, rectY + rectHeight/2);
-} else if  (direction === "left") {
-  ctx.save();
-  // Move origin to right edge of the rect before flipping
- const textX = rectX + rectWidth / 4;
-  const textY = rectY + 3 * rectHeight / 4;
-  // Move origin to the center of text
-  ctx.translate(textX, textY);
-  // Rotate 180 degrees (PI radians)
-  ctx.rotate(Math.PI);
-
-  // Draw the text at 0,0 because we're already translated
-  ctx.fillText(text, -rectWidth/4, rectHeight/4);
-
-  ctx.restore();
-} else if (direction === "down") {
-  const centerX = y + width / 2 + 7;
-  ctx.save();
-  ctx.translate(circleX, centerX);
-  ctx.rotate(-Math.PI / 2); // rotate text for vertical strip
-  ctx.fillText(text, textX, 0);
-  ctx.restore();
-} else {
-  const centerX = y + width / 2 + 7;
-  ctx.save();
-  ctx.translate(circleX, centerX);
-  ctx.rotate(-3*Math.PI / 2); // rotate text for vertical strip
-  ctx.fillText(text, textX + 3*height/4, 0);
-  ctx.restore();
-}
-}
+    ctx.restore();
+  } else if (direction === "down") {
+    const centerX = y + width / 2 + 7;
+    ctx.save();
+    ctx.translate(circleX, centerX);
+    ctx.rotate(-Math.PI / 2); // rotate text for vertical strip
+    ctx.fillText(text, textX, 0);
+    ctx.restore();
+  } else {
+    const centerX = y + width / 2 + 7;
+    ctx.save();
+    ctx.translate(circleX, centerX);
+    ctx.rotate((-3 * Math.PI) / 2); // rotate text for vertical strip
+    ctx.fillText(text, textX + (3 * height) / 4, 0);
+    ctx.restore();
+  }
+};
 export const drawCard = (
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -195,10 +194,6 @@ export const drawCard = (
   height: number,
   imgName: string
 ) => {
-
-  // Draw black background
-  ctx.fillStyle = "black";
-  ctx.fillRect(x, y, width, height);
   const img = new Image();
   img.src = imgName; // Can be a relative path or full URL
 
@@ -211,7 +206,6 @@ export const drawCard = (
   };
 };
 
-
 interface ButtonProps {
   ctx: CanvasRenderingContext2D;
   x: number;
@@ -219,7 +213,7 @@ interface ButtonProps {
   width: number;
   height: number;
   isPlayerTurn: boolean;
-  opponent: string
+  opponent: string;
 }
 
 // Store last known button bounds to detect clicks
@@ -231,11 +225,11 @@ export const drawTurnButton = ({
   width,
   height,
   isPlayerTurn,
-  opponent
+  opponent,
 }: ButtonProps) => {
   // Draw the button background
   if (isPlayerTurn) {
-    ctx.fillStyle =  "#4CAF50"; // Green if it's player's turn
+    ctx.fillStyle = "#4CAF50"; // Green if it's player's turn
     ctx.fillRect(x, y, width, height);
     ctx.strokeStyle = "black";
     ctx.lineWidth = 2;
@@ -257,19 +251,18 @@ export const drawTurnButton = ({
   return { x, y, width, height };
 };
 
-
 const drawHighlightedCircles = (
   ctx: CanvasRenderingContext2D,
   coord: string,
   tileSize: number,
   color: string
 ) => {
-    const { x, y } = coordStringToPixel(coord, tileSize);
-    ctx.beginPath();
-    ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.stroke();
+  const { x, y } = coordStringToPixel(coord, tileSize);
+  ctx.beginPath();
+  ctx.arc(x, y, tileSize * 0.4, 0, 2 * Math.PI);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.stroke();
 };
 
 export const drawAllCircles = (
@@ -282,13 +275,12 @@ export const drawAllCircles = (
   });
 };
 
-
 export const drawSafetyWord = (
   ctx: CanvasRenderingContext2D,
   tileSize: number,
   safetyZone: number[][],
-  rotationDeg: number = 90 ,
-  offsetX: number, 
+  rotationDeg: number = 90,
+  offsetX: number,
   offsetY: number
 ) => {
   const word = "SAFETY ZONE";
@@ -308,14 +300,13 @@ export const drawSafetyWord = (
   // Rotate the canvas
   ctx.rotate(rotationRad);
 
-  ctx.font = `${font_px*1.5}px sans-serif`;
+  ctx.font = `${font_px * 1.5}px sans-serif`;
   ctx.fillStyle = "black";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  
+
   // Draw text at origin (0,0) because we've translated to center
   ctx.fillText(word, offsetX, offsetY);
 
   ctx.restore();
 };
-
