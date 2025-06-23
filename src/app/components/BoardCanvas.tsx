@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
-import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard, drawTurnButton, drawAllCircles } from "@/utils/drawUtils";
+import { drawCircle, fillTile, drawStripWithTriangleAndCircle, drawCard, drawTurnButton, drawAllCircles, drawSafetyWord } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
 import { tileSize, canvasWidth, canvasHeight } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
@@ -76,22 +76,22 @@ export default function GameCanvas() {
 
     const redSafetyZone = [[1,2], [2,2], [3,2], [4,2], [5,2]];
     const yellowSafetyZone = [[14,13], [13,13], [12,13], [11,13], [10,13]];
-    const blueSafetyZone = [[2,14], [2,13], [2,12], [2,11], [2, 10]];
+    const blueSafetyZone = [[2,14], [2,13], [2,12], [2,11], [2,10]];
     const greenSafetyZone = [[13,1], [13,2], [13,3], [13,4], [13,5]];
 
     const zones = [
-      { x: 2.5, y: 7.3, color: "#D32F2F" },
-      { x: 4.5, y: 2.3, color: "#D32F2F" },
-      { x: 13.5, y: 8.7, color: "#FBC02D" },
-      { x: 11.5, y: 13.7, color: "#FBC02D" },
-      { x: 8.7, y: 2.5, color: "#1976D2" },
-      { x: 13.7, y: 4.5, color: "#1976D2" },
-      { x: 7.3, y: 13.5, color: "#388E3C" },
-      { x: 2.3, y: 11.5, color: "#388E3C" },
+      { x: 2.5, y: 7.3, color: "#D32F2F", text: "Home" },
+      { x: 4.5, y: 2.3, color: "#D32F2F", text: "Start" },
+      { x: 13.5, y: 8.7, color: "#FBC02D", text: "Home" },
+      { x: 11.5, y: 13.7, color: "#FBC02D", text: "Start" },
+      { x: 8.7, y: 2.5, color: "#1976D2", text: "Home" },
+      { x: 13.7, y: 4.5, color: "#1976D2", text: "Start" },
+      { x: 7.3, y: 13.5, color: "#388E3C", text: "Home" },
+      { x: 2.3, y: 11.5, color: "#388E3C", text: "Start" },
     ];
 
-    zones.forEach(({ x, y, color }) =>
-      drawCircle(ctx, x, y, circleRadius, color, tileSize)
+    zones.forEach(({ x, y, color, text }) =>
+      drawCircle(ctx, x, y, circleRadius, color, tileSize, text)
     );
 
     for (let row = 0; row < numRows; row++) {
@@ -130,6 +130,10 @@ stripConfigs.forEach(cfg =>
   drawStripWithTriangleAndCircle(ctx, cfg.x, cfg.y, cfg.width, cfg.height, cfg.color, cfg.direction)
 );
 
+drawSafetyWord(ctx, tileSize, redSafetyZone, 90, 2*tileSize, tileSize/2)
+drawSafetyWord(ctx, tileSize, blueSafetyZone, 360, 1.5*tileSize, 0)
+drawSafetyWord(ctx, tileSize, greenSafetyZone, 180, .5*tileSize, -2*tileSize)
+drawSafetyWord(ctx, tileSize, yellowSafetyZone, 270, 0, 1.5*tileSize)
 const cardX1 = canvasWidth / 2 - 3 * tileSize;
 const cardX2 = cardX1 + 3.5 * tileSize;
 const cardY = canvasHeight / 2 - 2.5 * tileSize;
@@ -423,7 +427,7 @@ const resetSelections = () => {
   // Simulate fetching the gameState from backend
   useEffect(() => {
     const simulatedGameState: GameState = {
-      red: [ "d_3", "d_H", "d_H", "d_H" ],
+      red: [ "d_3", "d_4", "d_7", "d_10" ],
       blue: [ "a_S", "c_10", "a_9", "a_H"],
       green: ["c_H", "c_H", "c_H", "c_H"],
       yellow: ["c_3", "b_H", "b_H", "b_H" ]

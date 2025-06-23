@@ -1,5 +1,6 @@
 // utils/drawUtils.ts
 import { coordStringToPixel } from "./outerPath";
+import { font_px } from "./config";
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -7,13 +8,22 @@ export const drawCircle = (
   tileY: number,
   radius: number,
   color: string,
-  tileSize: number
+  tileSize: number,
+  text: string
 ) => {
   ctx.beginPath();
   ctx.arc(tileX * tileSize, tileY * tileSize, radius, 0, 2 * Math.PI);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.stroke();
+
+  const centerX = tileX * tileSize;
+  const centerY = tileY * tileSize;
+  ctx.fillStyle = "Black"; // or another contrasting color
+  ctx.font = `${1.5*font_px}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, centerX, centerY);
 };
 
 export const fillTile = (
@@ -131,6 +141,51 @@ export const drawStripWithTriangleAndCircle = (
   ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI);
   ctx.fill();
   ctx.stroke();
+
+
+
+ctx.fillStyle = "black"; // or any contrasting color
+ctx.font = `${font_px}px sans-serif`;
+
+const text = "Slide!";
+const textWidth = ctx.measureText(text).width;
+
+// Loop the text once it goes off the shape
+const totalLength = direction === "left" || direction === "right" ? width : height;
+const textX = - textWidth;
+
+if (direction === "right") {
+
+  ctx.fillText(text, rectX + rectWidth/2, rectY + rectHeight/2);
+} else if  (direction === "left") {
+  ctx.save();
+  // Move origin to right edge of the rect before flipping
+ const textX = rectX + rectWidth / 4;
+  const textY = rectY + 3 * rectHeight / 4;
+  // Move origin to the center of text
+  ctx.translate(textX, textY);
+  // Rotate 180 degrees (PI radians)
+  ctx.rotate(Math.PI);
+
+  // Draw the text at 0,0 because we're already translated
+  ctx.fillText(text, -rectWidth/4, rectHeight/4);
+
+  ctx.restore();
+} else if (direction === "down") {
+  const centerX = y + width / 2 + 7;
+  ctx.save();
+  ctx.translate(circleX, centerX);
+  ctx.rotate(-Math.PI / 2); // rotate text for vertical strip
+  ctx.fillText(text, textX, 0);
+  ctx.restore();
+} else {
+  const centerX = y + width / 2 + 7;
+  ctx.save();
+  ctx.translate(circleX, centerX);
+  ctx.rotate(-3*Math.PI / 2); // rotate text for vertical strip
+  ctx.fillText(text, textX + 3*height/4, 0);
+  ctx.restore();
+}
 }
 export const drawCard = (
   ctx: CanvasRenderingContext2D,
@@ -226,3 +281,41 @@ export const drawAllCircles = (
     drawHighlightedCircles(ctx, coord, tileSize, color);
   });
 };
+
+
+export const drawSafetyWord = (
+  ctx: CanvasRenderingContext2D,
+  tileSize: number,
+  safetyZone: number[][],
+  rotationDeg: number = 90 ,
+  offsetX: number, 
+  offsetY: number
+) => {
+  const word = "SAFETY ZONE";
+
+  const startX = safetyZone[0][0] * tileSize;
+  const endX = safetyZone[safetyZone.length - 1][0] * tileSize;
+  const centerX = (startX + endX) / 2;
+  const centerY = safetyZone[0][1] * tileSize - tileSize / 2; // above the zone
+
+  // Convert degrees to radians
+  const rotationRad = (rotationDeg * Math.PI) / 180;
+
+  ctx.save();
+
+  // Move origin to center of text
+  ctx.translate(centerX, centerY);
+  // Rotate the canvas
+  ctx.rotate(rotationRad);
+
+  ctx.font = `${font_px*1.5}px sans-serif`;
+  ctx.fillStyle = "black";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  
+  // Draw text at origin (0,0) because we've translated to center
+  ctx.fillText(word, offsetX, offsetY);
+
+  ctx.restore();
+};
+
