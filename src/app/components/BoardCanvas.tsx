@@ -35,12 +35,13 @@ type BoardCanvasProps = {
   gameType: string | null;
   username: string | null;
   playerColor: string
+  allPlayersJoined: boolean;
 };
 
 type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "red" }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
 
