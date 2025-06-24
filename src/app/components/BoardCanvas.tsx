@@ -42,6 +42,8 @@ type Card = { x: number; y: number; height: number; width: number };
 
 export default function GameCanvas({ gameType, username, playerColor = "red" }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
+
   let angle = colorToAngleDict[playerColor]
   let isPlayerTurn = true;
   let buttonBounds = { x: 0, y: 0, width: 0, height: 0 };
@@ -299,7 +301,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
     });
   };
 
-  const drawAll = (color: string) => {
+  const drawWithRotation = (color: string) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
@@ -315,6 +317,23 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
     // Draw after rotation
     drawBoard(ctx, tileSize);
+    // Restore canvas state
+    ctx.restore();
+  };
+
+  const drawPieces = (color: string) => {
+    const canvas = piecesCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const angle = getRotationAngleForColor(color);
+    // Save current state
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+
+    // Move origin to center, rotate, then move back
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(angle);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
     const allPawns = players.flatMap((p) =>
       p.pieces.map((piece) => ({
         x: piece.x,
@@ -354,9 +373,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
     }
 
     drawAllCircles(ctx, tileSize, highlights);
-    // Restore canvas state
     ctx.restore();
-  };
+  }
 
   const applyGameState = (gameState: GameState) => {
     const newPlayers: Player[] = [];
@@ -373,13 +391,14 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = piecesCanvasRef.current;
     if (!canvas) return;
 
     const handleClick = (event: MouseEvent) => {
       if (loadingRef.current) return;
 
       const rect = canvas.getBoundingClientRect();
+
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
       let unrotatedCoords = getUnrotatedMousePosition(
@@ -574,7 +593,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   };
 
   useEffect(() => {
-    drawAll(playerColor);
+    drawPieces(playerColor);
     selectedPieceRef.current = selectedPiece;
   }, [selectedPiece]);
 
@@ -588,10 +607,12 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
     };
 
     applyGameState(simulatedGameState);
+    drawWithRotation(playerColor);
+    drawPieces(playerColor);
   }, []);
 
   useEffect(() => {
-    drawAll(playerColor);
+    drawPieces(playerColor);
   }, [players]);
 
   useEffect(() => {
@@ -607,7 +628,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   }, [highlightedTiles]);
   useEffect(() => {
     destinationRef.current = destination;
-    drawAll(playerColor);
+    drawPieces(playerColor);
   }, [destination]);
 
   useEffect(() => {
@@ -616,7 +637,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
   useEffect(() => {
     topCardPathRef.current = topCardPath
-    drawAll(playerColor);
+    drawPieces(playerColor);
     console.log(currentCard, topCardPath)
   }, [topCardPath]);
 
@@ -626,12 +647,12 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
   useEffect(() => {
     secondSelectedPieceRef.current = secondSelectedPiece;
-    drawAll(playerColor);
+    drawPieces(playerColor);
   }, [secondSelectedPiece]);
 
   useEffect(() => {
     secondSelectedDestinationRef.current = secondDestination;
-    drawAll(playerColor);
+    drawPieces(playerColor);
   }, [secondDestination]);
 
   useEffect(() => {
@@ -640,14 +661,29 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
   return (
     <div className="flex flex-col items-center">
-      <canvas
-        ref={canvasRef}
-        width={canvasWidth}
-        height={canvasHeight}
-        className={`border-4 border-black transition duration-300 ${
-          loading ? "blur-sm" : ""
-        }`}
-      />
+    <div className="min-h-screen flex items-center justify-center bg-green-200">
+  <div
+    className="relative"
+    style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
+  >
+    <canvas
+      ref={canvasRef}
+      width={canvasWidth}
+      height={canvasHeight}
+      className= {`absolute top-0 left-0 z-0 pointer-events-none ${
+          loading ? "blur-sm" : ""}`}
+      style={{ display: "block" }}
+    />
+    <canvas
+      ref={piecesCanvasRef}
+      width={canvasWidth}
+      height={canvasHeight}
+      className={`absolute top-0 left-0 z-10 ${
+          loading ? "blur-sm" : ""}`}
+      style={{ pointerEvents: "auto" }}
+    />
+  </div>
+</div>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
           <div
