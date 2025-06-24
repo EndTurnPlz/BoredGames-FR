@@ -30,10 +30,16 @@ type Piece = {
   radius: number;
   id: string;
 };
+
+type BoardCanvasProps = {
+  gameType: string | null;
+  username: string | null;
+};
+
 type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas() {
+export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   let isPlayerTurn = true;
   let buttonBounds = { x: 0, y: 0, width: 0, height: 0 };
