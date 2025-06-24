@@ -388,7 +388,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
         angle 
       );
 
-      if (handleConfirmMoveClick(unrotatedCoords.x, unrotatedCoords.y)) return;
+      if (handleConfirmMoveClick(mouseX, mouseY)) return;
       if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
