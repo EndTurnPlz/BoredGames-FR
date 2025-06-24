@@ -11,7 +11,7 @@ export default function JoinLobby() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  let playerColor = "red"
+  let playerColor = "blue"
 
   const handleJoin = () => {
     if (!username.trim() || username.length < 4) {
