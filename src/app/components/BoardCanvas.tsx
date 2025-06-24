@@ -637,8 +637,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
   useEffect(() => {
     topCardPathRef.current = topCardPath
-    drawPieces(playerColor);
     console.log(currentCard, topCardPath)
+    drawWithRotation(playerColor)
   }, [topCardPath]);
 
   useEffect(() => {
