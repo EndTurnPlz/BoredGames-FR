@@ -11,7 +11,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -38,7 +38,8 @@ export default function GameCanvas() {
   let isPlayerTurn = true;
   let buttonBounds = { x: 0, y: 0, width: 0, height: 0 };
   const deckPath = "Cards/deck.png";
-  let topCardPath = "/Cards/FaceCards/one.png";
+  const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
+  const topCardPathRef = useRef<string>("/Cards/FaceCards/one.png");
 
   const [currentCard, setCurrentCard] = useState<number>(0);
   const currentCardRef = useRef<number | null>(null);
@@ -289,7 +290,7 @@ export default function GameCanvas() {
       opponent,
     });
 
-    drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPath);
+    drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
 
     deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
     topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
@@ -530,6 +531,7 @@ export default function GameCanvas() {
         console.log("Backend response received!");
         setPossibleMoves(mockCardResponse2.moveset);
         setCurrentCard(mockCardResponse2.card);
+        setTopCardPath(`/Cards/FaceCards/${numberDict[mockCardResponse2.card]}.png`)
         setLoading(false);
       }, 2000);
 
@@ -608,6 +610,12 @@ export default function GameCanvas() {
   }, [currentCard]);
 
   useEffect(() => {
+    topCardPathRef.current = topCardPath
+    drawAll("yellow");
+    console.log(currentCard, topCardPath)
+  }, [topCardPath]);
+
+  useEffect(() => {
     currentDistanceref.current = currentDistance;
   }, [currentDistance]);
 
@@ -662,7 +670,7 @@ export default function GameCanvas() {
           }}
         >
           <img
-            src={topCardPath}
+            src={topCardPathRef.current}
             alt="Zoomed Card"
             style={{
               maxWidth: "90%",
