@@ -11,7 +11,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -34,13 +34,15 @@ type Piece = {
 type BoardCanvasProps = {
   gameType: string | null;
   username: string | null;
+  playerColor: string
 };
 
 type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "red" }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  let angle = colorToAngleDict[playerColor]
   let isPlayerTurn = true;
   let buttonBounds = { x: 0, y: 0, width: 0, height: 0 };
   const deckPath = "Cards/deck.png";
@@ -145,7 +147,7 @@ export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
     ];
 
     zones.forEach(({ x, y, color, text }) =>
-      drawCircle(ctx, x, y, circleRadius, color, tileSize, text)
+      drawCircle(ctx, x, y, circleRadius, color, tileSize, text, angle)
     );
 
     for (let row = 0; row < numRows; row++) {
@@ -575,7 +577,7 @@ export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
   };
 
   useEffect(() => {
-    drawAll("yellow");
+    drawAll(playerColor);
     selectedPieceRef.current = selectedPiece;
   }, [selectedPiece]);
 
@@ -592,7 +594,7 @@ export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
   }, []);
 
   useEffect(() => {
-    drawAll("yellow");
+    drawAll(playerColor);
   }, [players]);
 
   useEffect(() => {
@@ -608,7 +610,7 @@ export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
   }, [highlightedTiles]);
   useEffect(() => {
     destinationRef.current = destination;
-    drawAll("yellow");
+    drawAll(playerColor);
   }, [destination]);
 
   useEffect(() => {
@@ -617,7 +619,7 @@ export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
 
   useEffect(() => {
     topCardPathRef.current = topCardPath
-    drawAll("yellow");
+    drawAll(playerColor);
     console.log(currentCard, topCardPath)
   }, [topCardPath]);
 
@@ -627,12 +629,12 @@ export default function GameCanvas({ gameType, username }: BoardCanvasProps) {
 
   useEffect(() => {
     secondSelectedPieceRef.current = secondSelectedPiece;
-    drawAll("yellow");
+    drawAll(playerColor);
   }, [secondSelectedPiece]);
 
   useEffect(() => {
     secondSelectedDestinationRef.current = secondDestination;
-    drawAll("yellow");
+    drawAll(playerColor);
   }, [secondDestination]);
 
   useEffect(() => {

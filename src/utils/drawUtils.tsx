@@ -9,7 +9,8 @@ export const drawCircle = (
   radius: number,
   color: string,
   tileSize: number,
-  text: string
+  text: string,
+  angleDegrees = 90,
 ) => {
   ctx.beginPath();
   ctx.arc(tileX * tileSize, tileY * tileSize, radius, 0, 2 * Math.PI);
@@ -19,11 +20,21 @@ export const drawCircle = (
 
   const centerX = tileX * tileSize;
   const centerY = tileY * tileSize;
-  ctx.fillStyle = "Black"; // or another contrasting color
-  ctx.font = `${1.5 * font_px}px sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, centerX, centerY);
+  const angleRadians = (angleDegrees * Math.PI) / 180;
+
+    ctx.save(); // Save current state
+
+    ctx.translate(centerX, centerY); // Move origin to center of text
+    ctx.rotate(angleRadians); // Rotate context by angle
+
+    ctx.fillStyle = "black"; // Or any contrasting color
+    ctx.font = `${1.5 * font_px}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(text, 0, 0); // Draw text at origin after transform
+
+    ctx.restore(); // Restore to previous state
 };
 
 export const fillTile = (
@@ -155,12 +166,12 @@ export const drawStripWithTriangleAndCircle = (
   const textX = -textWidth;
 
   if (direction === "right") {
-    ctx.fillText(text, rectX + rectWidth / 2, rectY + rectHeight / 2);
+    ctx.fillText(text, rectX + rectWidth / 2, rectY + 3*rectHeight / 4);
   } else if (direction === "left") {
     ctx.save();
     // Move origin to right edge of the rect before flipping
     const textX = rectX + rectWidth / 4;
-    const textY = rectY + (3 * rectHeight) / 4;
+    const textY = rectY + rectHeight / 2;
     // Move origin to the center of text
     ctx.translate(textX, textY);
     // Rotate 180 degrees (PI radians)
@@ -175,14 +186,14 @@ export const drawStripWithTriangleAndCircle = (
     ctx.save();
     ctx.translate(circleX, centerX);
     ctx.rotate(-Math.PI / 2); // rotate text for vertical strip
-    ctx.fillText(text, textX, 0);
+    ctx.fillText(text, textX - rectHeight / 4, rectWidth / 4);
     ctx.restore();
   } else {
     const centerX = y + width / 2 + 7;
     ctx.save();
     ctx.translate(circleX, centerX);
     ctx.rotate((-3 * Math.PI) / 2); // rotate text for vertical strip
-    ctx.fillText(text, textX + (3 * height) / 4, 0);
+    ctx.fillText(text, textX + height / 2, rectWidth / 4);
     ctx.restore();
   }
 };

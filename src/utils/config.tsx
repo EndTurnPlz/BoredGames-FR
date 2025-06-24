@@ -19,3 +19,10 @@ export const numberDict: { [key: number]: string } = {
   10: "ten",
   11: "eleven"
 };
+
+export const colorToAngleDict: { [key: string]: number } = {
+    "yellow": 0,
+    "green": 90,
+    "red": 180,
+    "blue": 270
+} 

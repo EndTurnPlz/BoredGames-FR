@@ -7,6 +7,7 @@ export default function BoardGamePage() {
   const searchParams = useSearchParams();
   const gameType = searchParams.get("game");
   const username = searchParams.get("username");
+  const playerColor = searchParams.get("playercolor") ?? "red";
 
   let GameCanvas;
 
@@ -26,7 +27,7 @@ export default function BoardGamePage() {
       <h1 className="text-2xl font-semibold mb-4">
         {gameType} — Player: {username}
       </h1>
-      <GameCanvas gameType={gameType} username={username} />
+      <GameCanvas gameType={gameType} username={username} playerColor={playerColor} />
     </main>
   );
 }
