@@ -1,5 +1,6 @@
 // utils/outerPath.ts
 import { tileSize } from "./config";
+import { canvasHeight, canvasWidth } from "./config";
 const letters = ["a", "b", "c", "d"];
 export const coordMap: Record<string, { x: number; y: number }> = {};
 
@@ -108,5 +109,34 @@ for (const letter of letters) {
   const key = `${letter}_S'`;
   const { x, y } = coordStringToPixel(key, tileSize);
   coordMap[key] = { x, y };
+}
+
+
+export const getUnrotatedMousePosition = (
+  mouseX: number,
+  mouseY: number,
+  rotationDegrees: number
+): { x: number; y: number } => {
+  const cx = canvasWidth / 2;
+  const cy = canvasHeight / 2;
+
+  const dx = mouseX - cx;
+  const dy = mouseY - cy;
+
+  const angleRad = (rotationDegrees * Math.PI) / 180;
+
+  // Unrotate
+  const unrotatedX = dx * Math.cos(-angleRad) - dy * Math.sin(-angleRad);
+  const unrotatedY = dx * Math.sin(-angleRad) + dy * Math.cos(-angleRad);
+  if (rotationDegrees % 180 == 0) {
+    return {
+      x: unrotatedX + cx,
+      y: unrotatedY + cy,
+    };
+  }
+  return {
+      x: canvasWidth - (unrotatedX + cx),
+      y: canvasHeight - (unrotatedY + cy),
+    };
 }
   

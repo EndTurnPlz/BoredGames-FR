@@ -16,7 +16,7 @@ import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
 import { mockCardResponse7 } from "../mockData/moveset7";
-import { coordMap } from "@/utils/outerPath";
+import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { radius } from "@/utils/config";
 import { match } from "assert";
 
@@ -256,24 +256,18 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
       )
     );
 
-    drawSafetyWord(
-      ctx,
-      tileSize,
-      redSafetyZone,
-      90,
-      2 * tileSize,
-      tileSize / 2
-    );
-    drawSafetyWord(ctx, tileSize, blueSafetyZone, 360, 1.5 * tileSize, 0);
-    drawSafetyWord(
-      ctx,
-      tileSize,
-      greenSafetyZone,
-      180,
-      0.5 * tileSize,
-      -2 * tileSize
-    );
-    drawSafetyWord(ctx, tileSize, yellowSafetyZone, 270, 0, 1.5 * tileSize);
+    const safetyConfigs = [
+      { zone: redSafetyZone, angle: 90, offsetX: 2 * tileSize, offsetY: tileSize / 2 },
+      { zone: blueSafetyZone, angle: 360, offsetX: 1.5 * tileSize, offsetY: 0 },
+      { zone: greenSafetyZone, angle: 180, offsetX: 0.5 * tileSize, offsetY: -2 * tileSize },
+      { zone: yellowSafetyZone, angle: 270, offsetX: 0, offsetY: 1.5 * tileSize },
+    ];
+
+    safetyConfigs.forEach(({ zone, angle, offsetX, offsetY }) => {
+      drawSafetyWord(ctx, zone, angle, offsetX, offsetY);
+    });
+
+
     const cardX1 = canvasWidth / 2 - 3 * tileSize;
     const cardX2 = cardX1 + 3.5 * tileSize;
     const cardY = canvasHeight / 2 - 2.5 * tileSize;
@@ -288,6 +282,11 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
     const opponent = "ritij";
 
     drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
+    drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
+
+    deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
+    topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
+
     buttonBounds = drawTurnButton({
       ctx,
       x: (cardX1 + cardX2) / 2,
@@ -296,12 +295,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
       height: buttonH,
       isPlayerTurn,
       opponent,
+      angle
     });
-
-    drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
-
-    deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
-    topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
   };
 
   const drawAll = (color: string) => {
@@ -387,11 +382,16 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
+      let unrotatedCoords = getUnrotatedMousePosition(
+        mouseX,
+        mouseY,
+        angle 
+      );
 
-      if (handleConfirmMoveClick(mouseX, mouseY)) return;
-      if (handleSecondPawnClick(mouseX, mouseY)) return;
-      if (handleTileHighlightClick(mouseX, mouseY)) return;
-      if (handlePieceSelection(mouseX, mouseY)) return;
+      if (handleConfirmMoveClick(unrotatedCoords.x, unrotatedCoords.y)) return;
+      if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
+      if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y)) return;
+      if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handleDeckClick(mouseX, mouseY)) return;
       if (handleTopCardClick(mouseX, mouseY)) return;
 
@@ -405,6 +405,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   }, []);
 
   const handleConfirmMoveClick = (x: number, y: number) => {
+    console.log(x,y)
     if (
       destinationRef.current &&
       x >= buttonBounds.x &&
@@ -441,7 +442,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   };
   const handleSecondPawnClick = (x: number, y: number) => {
     if (!possibleSecondPawnsRef.current) return false;
-
     for (const tile of possibleSecondPawnsRef.current) {
       const dx = x - tile.piece.drawX;
       const dy = y - tile.piece.drawY;
@@ -461,7 +461,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
   const handleTileHighlightClick = (x: number, y: number) => {
     if (!highlightedTilesRef.current) return false;
-
     for (const tile of highlightedTilesRef.current) {
       const pixel = coordMap[tile[0]];
       const dx = x - pixel.x;
@@ -525,7 +524,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   const handleDeckClick = (x: number, y: number) => {
     const deck = deckRef.current;
     if (!deck) return false;
-
     if (
       x >= deck.x &&
       x <= deck.x + deck.width &&
@@ -537,9 +535,9 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
 
       setTimeout(() => {
         console.log("Backend response received!");
-        setPossibleMoves(mockCardResponse2.moveset);
-        setCurrentCard(mockCardResponse2.card);
-        setTopCardPath(`/Cards/FaceCards/${numberDict[mockCardResponse2.card]}.png`)
+        setPossibleMoves(mockCardResponse7.moveset);
+        setCurrentCard(mockCardResponse7.card);
+        setTopCardPath(`/Cards/FaceCards/${numberDict[mockCardResponse7.card]}.png`)
         setLoading(false);
       }, 2000);
 
@@ -552,7 +550,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red" }: 
   const handleTopCardClick = (x: number, y: number) => {
     const topCard = topCardRef.current;
     if (!topCard) return false;
-
     if (
       x >= topCard.x &&
       x <= topCard.x + topCard.width &&

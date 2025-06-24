@@ -1,6 +1,7 @@
 // utils/drawUtils.ts
 import { coordStringToPixel } from "./outerPath";
-import { font_px } from "./config";
+import { getUnrotatedMousePosition } from "./outerPath";
+import { canvasWidth, canvasHeight, tileSize, font_px } from "./config";
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -22,19 +23,19 @@ export const drawCircle = (
   const centerY = tileY * tileSize;
   const angleRadians = (angleDegrees * Math.PI) / 180;
 
-    ctx.save(); // Save current state
+  ctx.save(); // Save current state
 
-    ctx.translate(centerX, centerY); // Move origin to center of text
-    ctx.rotate(angleRadians); // Rotate context by angle
+  ctx.translate(centerX, centerY); // Move origin to center of text
+  ctx.rotate(angleRadians); // Rotate context by angle
 
-    ctx.fillStyle = "black"; // Or any contrasting color
-    ctx.font = `${1.5 * font_px}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+  ctx.fillStyle = "black"; // Or any contrasting color
+  ctx.font = `${1.5 * font_px}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
-    ctx.fillText(text, 0, 0); // Draw text at origin after transform
+  ctx.fillText(text, 0, 0); // Draw text at origin after transform
 
-    ctx.restore(); // Restore to previous state
+  ctx.restore(); // Restore to previous state
 };
 
 export const fillTile = (
@@ -225,6 +226,7 @@ interface ButtonProps {
   height: number;
   isPlayerTurn: boolean;
   opponent: string;
+  angle: number
 }
 
 // Store last known button bounds to detect clicks
@@ -237,30 +239,39 @@ export const drawTurnButton = ({
   height,
   isPlayerTurn,
   opponent,
+  angle, // degrees
 }: ButtonProps) => {
-  // Draw the button background
+
+  // Step 2: Save context and move to rotated position
+  ctx.save();
+  ctx.translate(canvasWidth / 2, canvasHeight / 2);
+  ctx.rotate(angle *Math.PI/ 180);
+  ctx.translate(-canvasWidth / 2, -canvasHeight / 2); // Now (0,0) is top-left of the button
+
+  // Draw the button
   if (isPlayerTurn) {
-    ctx.fillStyle = "#4CAF50"; // Green if it's player's turn
+    ctx.fillStyle = "#4CAF50";
     ctx.fillRect(x, y, width, height);
     ctx.strokeStyle = "black";
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, width, height);
   }
 
-  // Draw text
+  // Draw the text centered in the button
   ctx.fillStyle = "black";
   ctx.font = "16px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(
-    isPlayerTurn ? "Your Turn" : opponent + " is playing...",
-    x + width / 2,
-    y + height / 2
+    isPlayerTurn ? "Your Turn" : `${opponent} is playing...`,
+    x + width/2,
+    y + height/2,
   );
 
-  // Save button bounds for click detection
+  ctx.restore();
   return { x, y, width, height };
 };
+
 
 const drawHighlightedCircles = (
   ctx: CanvasRenderingContext2D,
@@ -288,7 +299,6 @@ export const drawAllCircles = (
 
 export const drawSafetyWord = (
   ctx: CanvasRenderingContext2D,
-  tileSize: number,
   safetyZone: number[][],
   rotationDeg: number = 90,
   offsetX: number,
@@ -321,3 +331,22 @@ export const drawSafetyWord = (
 
   ctx.restore();
 };
+
+function rotatePointBack(
+  x: number,
+  y: number,
+  angleDegrees: number
+) {
+  const angleRad = (angleDegrees * Math.PI) / 180;
+  const cx = canvasWidth / 2;
+  const cy = canvasHeight / 2;
+
+  const dx = x - cx;
+  const dy = y - cy;
+
+  // Rotate backward (negative angle)
+  const rotatedX = dx * Math.cos(-angleRad) - dy * Math.sin(-angleRad) + cx;
+  const rotatedY = dx * Math.sin(-angleRad) + dy * Math.cos(-angleRad) + cy;
+
+  return { x: rotatedX, y: rotatedY };
+}
