@@ -12,6 +12,7 @@ export default function JoinLobby() {
   const [error, setError] = useState("");
   const [isTransitioning, setIsTransitioning] = useState(false);
   let playerColor = "blue"
+  let userId = "998999100002"
 
   const handleJoin = () => {
     if (!username.trim() || username.length < 4) {
@@ -22,6 +23,8 @@ export default function JoinLobby() {
     setIsTransitioning(true);
 
     setTimeout(() => {
+
+      localStorage.setItem("userId", userId);
       router.push(
         `/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&playercolor=${playerColor}`
       );

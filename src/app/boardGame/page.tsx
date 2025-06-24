@@ -13,6 +13,8 @@ export default function BoardGamePage() {
   const [allPlayersJoined, setAllPlayersJoined] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [hostName, setHostName] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [hostId, setHostId] = useState("");
 
   let GameCanvas;
 
@@ -31,6 +33,9 @@ export default function BoardGamePage() {
     const timeout = setTimeout(() => {
       setAllPlayersJoined(true);
       setHostName("Rohit")
+      const storedId = localStorage.getItem("userId");
+      setUserId(storedId);
+      setHostId("99899910000")
     }, 3000); // fake wait for 3s
     return () => clearTimeout(timeout);
   }, []);
@@ -61,7 +66,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay: Start button (host only) */}
-    {allPlayersJoined && !gameStarted && (hostName == username) && (
+    {allPlayersJoined && !gameStarted && (userId == hostId) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black text-center">
           <p className="mb-4">All players have joined!</p>
@@ -76,7 +81,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay for non-hosts waiting */}
-    {allPlayersJoined && !gameStarted  && (hostName != username) && (
+    {allPlayersJoined && !gameStarted  && (userId != hostId) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black">
           Waiting for host to start the game...

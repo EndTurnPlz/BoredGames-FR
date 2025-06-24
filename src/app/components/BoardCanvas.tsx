@@ -44,6 +44,7 @@ type Card = { x: number; y: number; height: number; width: number };
 export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   let angle = colorToAngleDict[playerColor]
   let isPlayerTurn = true;
@@ -610,6 +611,9 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     applyGameState(simulatedGameState);
     drawWithRotation(playerColor);
     drawPieces(playerColor);
+    const storedId = localStorage.getItem("userId");
+    setUserId(storedId);
+    console.log(storedId)
   }, []);
 
   useEffect(() => {
