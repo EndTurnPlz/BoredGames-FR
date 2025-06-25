@@ -2,6 +2,9 @@
 import { coordStringToPixel } from "./outerPath";
 import { getUnrotatedMousePosition } from "./outerPath";
 import { canvasWidth, canvasHeight, tileSize, font_px } from "./config";
+import { Piece } from "@/app/components/BoardCanvas";
+import { DrawnPiece } from "@/app/components/BoardCanvas";
+import { darkColorMap } from "./config";
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -17,6 +20,10 @@ export const drawCircle = (
   ctx.arc(tileX * tileSize, tileY * tileSize, radius, 0, 2 * Math.PI);
   ctx.fillStyle = color;
   ctx.fill();
+
+  // Set stroke properties
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 2;
   ctx.stroke();
 
   const centerX = tileX * tileSize;
@@ -49,7 +56,7 @@ export const fillTile = (
   const y = row * tileSize;
   ctx.fillStyle = color;
   ctx.fillRect(x, y, tileSize, tileSize);
-  ctx.strokeStyle = "#000";
+  ctx.strokeStyle = "white";
   ctx.strokeRect(x, y, tileSize, tileSize);
 };
 
@@ -231,46 +238,6 @@ interface ButtonProps {
 
 // Store last known button bounds to detect clicks
 
-export const drawTurnButton = ({
-  ctx,
-  x,
-  y,
-  width,
-  height,
-  isPlayerTurn,
-  opponent,
-  angle, // degrees
-}: ButtonProps) => {
-
-  // Step 2: Save context and move to rotated position
-  ctx.save();
-  ctx.translate(canvasWidth / 2, canvasHeight / 2);
-  ctx.rotate(angle *Math.PI/ 180);
-  ctx.translate(-canvasWidth / 2, -canvasHeight / 2); // Now (0,0) is top-left of the button
-
-  // Draw the button
-  if (isPlayerTurn) {
-    ctx.fillStyle = "#4CAF50";
-    ctx.fillRect(x, y, width, height);
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, width, height);
-  }
-
-  // Draw the text centered in the button
-  ctx.fillStyle = "black";
-  ctx.font = "16px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(
-    isPlayerTurn ? "Your Turn" : `${opponent} is playing...`,
-    x + width/2,
-    y + height/2,
-  );
-
-  ctx.restore();
-  return { x, y, width, height };
-};
 
 
 const drawHighlightedCircles = (
@@ -332,21 +299,60 @@ export const drawSafetyWord = (
   ctx.restore();
 };
 
-function rotatePointBack(
-  x: number,
-  y: number,
-  angleDegrees: number
-) {
-  const angleRad = (angleDegrees * Math.PI) / 180;
-  const cx = canvasWidth / 2;
-  const cy = canvasHeight / 2;
 
-  const dx = x - cx;
-  const dy = y - cy;
+export const drawPiecesWithOffset = (
+  ctx: CanvasRenderingContext2D,
+  allPieces: Piece[],
+  selectedPiece: DrawnPiece | null
+): DrawnPiece[] => {
+  const tileGroups: Record<string, Piece[]> = {};
 
-  // Rotate backward (negative angle)
-  const rotatedX = dx * Math.cos(-angleRad) - dy * Math.sin(-angleRad) + cx;
-  const rotatedY = dx * Math.sin(-angleRad) + dy * Math.cos(-angleRad) + cy;
+  for (const piece of allPieces) {
+    const key = `${Math.round(piece.x)}_${Math.round(piece.y)}`;
+    if (!tileGroups[key]) tileGroups[key] = [];
+    tileGroups[key].push(piece);
+  }
 
-  return { x: rotatedX, y: rotatedY };
+  const offsetDistance = tileSize * 0.5;
+  const drawnPieces: DrawnPiece[] = [];
+
+  for (const group of Object.values(tileGroups)) {
+    const centerX = group[0].x;
+    const centerY = group[0].y;
+    const radius = group[0].radius;
+
+    group.forEach((piece, i) => {
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (group.length > 1) {
+        const angle = (2 * Math.PI * i) / group.length;
+        offsetX = Math.cos(angle) * offsetDistance;
+        offsetY = Math.sin(angle) * offsetDistance;
+      }
+
+      const drawX = centerX + offsetX;
+      const drawY = centerY + offsetY;
+
+      // Draw filled piece
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = darkColorMap[piece.color];
+      ctx.fill();
+
+      // Highlight selected piece
+      const isSelected =
+        selectedPiece &&
+        selectedPiece.drawX === drawX &&
+        selectedPiece.drawY === drawY;
+
+      ctx.lineWidth = isSelected ? 4 : 2;
+      ctx.strokeStyle = isSelected ? "gold" : "white";
+      ctx.stroke();
+
+      drawnPieces.push({ ...piece, drawX, drawY });
+    });
+  }
+
+  return drawnPieces;
 }

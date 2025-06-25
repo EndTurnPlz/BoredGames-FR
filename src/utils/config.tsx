@@ -1,5 +1,5 @@
-export const canvasWidth = 800;
-export const canvasHeight = 800;
+export const canvasWidth = 1000;
+export const canvasHeight = 1000;
 export const tileSize = canvasWidth / 16;
 
 export const radius = tileSize / 2 - 3;
@@ -26,3 +26,16 @@ export const colorToAngleDict: { [key: string]: number } = {
     "red": 180,
     "blue": 270
 } 
+
+export const darkColorMap: Record<string, string> = {
+  red: "#8B0000",
+  yellow: "#B8860B",
+  blue: "#000080",
+  green: "#006400",
+};
+
+export const cardX1 = canvasWidth / 2 - 3 * tileSize;
+export const cardX2 = cardX1 + 3.5 * tileSize;
+export const cardY = canvasHeight / 2 - 2.5 * tileSize;
+export const cardW = 3 * tileSize;
+export const cardH = 5 * tileSize;

@@ -6,7 +6,6 @@ import {
   fillTile,
   drawStripWithTriangleAndCircle,
   drawCard,
-  drawTurnButton,
   drawAllCircles,
   drawSafetyWord,
 } from "@/utils/drawUtils";
@@ -19,11 +18,13 @@ import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { radius } from "@/utils/config";
 import { match } from "assert";
+import { drawPiecesWithOffset } from "@/utils/drawUtils";
+import { cardH, cardW, cardX1, cardX2, cardY } from "@/utils/config";
 
 type GameState = {
   [color: string]: string[];
 };
-type Piece = {
+export type Piece = {
   x: number;
   y: number;
   color: string;
@@ -39,7 +40,7 @@ type BoardCanvasProps = {
   setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-type DrawnPiece = Piece & { drawX: number; drawY: number };
+export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
 export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false, setGameOver }: BoardCanvasProps) {
@@ -48,8 +49,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   const [userId, setUserId] = useState<string | null>(null);
 
   let angle = colorToAngleDict[playerColor]
-  let isPlayerTurn = true;
-  let buttonBounds = { x: 0, y: 0, width: 0, height: 0 };
+  const [isPlayerTurn, setIsPlayerTurn] = useState(false); 
+
   const deckPath = "Cards/deck.png";
   const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
   const topCardPathRef = useRef<string>("/Cards/FaceCards/one.png");
@@ -160,7 +161,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         const isOuter =
           row === 0 || row === numRows - 1 || col === 0 || col === numCols - 1;
         if (isOuter) {
-          fillTile(ctx, row, col, "#e2e8f0", tileSize);
+          fillTile(ctx, row, col, "black", tileSize);
           continue;
         }
 
@@ -273,35 +274,12 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     });
 
 
-    const cardX1 = canvasWidth / 2 - 3 * tileSize;
-    const cardX2 = cardX1 + 3.5 * tileSize;
-    const cardY = canvasHeight / 2 - 2.5 * tileSize;
-    const cardW = 3 * tileSize;
-    const cardH = 5 * tileSize;
-    const buttonW = cardW;
-    const buttonH = tileSize * 0.8;
-    const gap = tileSize * 0.3; // gap between card and button
-
-    const buttonY = cardY + cardH + gap;
-
-    const opponent = "ritij";
 
     drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
     drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
 
     deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
     topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
-
-    buttonBounds = drawTurnButton({
-      ctx,
-      x: (cardX1 + cardX2) / 2,
-      y: buttonY,
-      width: buttonW,
-      height: buttonH,
-      isPlayerTurn,
-      opponent,
-      angle
-    });
   };
 
   const drawWithRotation = (color: string) => {
@@ -411,7 +389,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         angle 
       );
 
-      if (handleConfirmMoveClick(mouseX, mouseY)) return;
       if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
@@ -427,14 +404,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     };
   }, []);
 
-  const handleConfirmMoveClick = (x: number, y: number) => {
-    if (
-      destinationRef.current &&
-      x >= buttonBounds.x &&
-      x <= buttonBounds.x + buttonBounds.width &&
-      y >= buttonBounds.y &&
-      y <= buttonBounds.y + buttonBounds.height
-    ) {
+  const handleConfirmMoveClick = () => {
+    if (destinationRef.current) {
       if (!isPlayerTurn) {
         console.log("Not your turn!");
         return true;
@@ -666,29 +637,73 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
 
   return (
     <div className="flex flex-col items-center">
-    <div className="min-h-screen flex items-center justify-center bg-green-200">
+    <div className="min-h-screen flex items-center justify-center bg-black-200">
   <div
-    className="relative"
+    className={`relative ${loading ? "blur-sm pointer-events-none" : ""}`}
     style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
   >
     <canvas
       ref={canvasRef}
       width={canvasWidth}
       height={canvasHeight}
-      className= {`absolute top-0 left-0 z-0 pointer-events-none ${
-          loading ? "blur-sm" : ""}`}
+      className= {`absolute top-0 left-0 z-0 pointer-events-none`}
       style={{ display: "block" }}
     />
     <canvas
       ref={piecesCanvasRef}
       width={canvasWidth}
       height={canvasHeight}
-      className={`absolute top-0 left-0 z-10 ${
-          loading ? "blur-sm" : ""}`}
+      className={`absolute top-0 left-0 z-10`}
       style={{ pointerEvents: "auto" }}
     />
+    {isPlayerTurn && (
+       <button
+    onClick={handleConfirmMoveClick}
+    style={{
+      position: "absolute",
+      top: cardY + cardH + 0.3 * tileSize,       // halfway down canvas
+      left: (cardX1 + cardX2) / 2 - 0.15 * tileSize,       // halfway across canvas
+      // transform: "translate(-50%, -50%)", // offset to center button on this point
+      width: canvasWidth * 0.2,    // 30% of canvas width
+      height: canvasHeight * 0.06, // 8% of canvas height
+      fontSize: canvasHeight * 0.03,
+      borderRadius: canvasHeight * 0.02,
+      backgroundColor: "white",
+      color: "black",
+      fontWeight: "bold",
+      zIndex: 20,
+      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.3)",
+      transition: "background 0.2s ease",
+    }}
+    className="hover:bg-gray-100 z-20"
+  >
+    Your Turn
+  </button>
+    )}
+    {!isPlayerTurn && (
+      <div
+        style={{
+          position: "absolute",
+          top: cardY + cardH + 0.3 * tileSize,
+          left: (cardX1 + cardX2) / 2,
+          transform: "translateX(-25%)",
+          fontSize: canvasHeight * 0.03,
+          color: "white",
+          fontWeight: "bold",
+          zIndex: 20,
+          userSelect: "none",
+          textShadow: "0 0 5px rgba(0,0,0,0.7)",
+          // whiteSpace: "nowrap", // prevent wrapping
+          padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
+        }}
+      >
+        Rohit is playing...
+      </div>
+
+    )}
   </div>
 </div>
+
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
           <div
@@ -729,61 +744,4 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
       )}
     </div>
   );
-}
-
-function drawPiecesWithOffset(
-  ctx: CanvasRenderingContext2D,
-  allPieces: Piece[],
-  selectedPiece: DrawnPiece | null
-): DrawnPiece[] {
-  const tileGroups: Record<string, Piece[]> = {};
-
-  for (const piece of allPieces) {
-    const key = `${Math.round(piece.x)}_${Math.round(piece.y)}`;
-    if (!tileGroups[key]) tileGroups[key] = [];
-    tileGroups[key].push(piece);
-  }
-
-  const offsetDistance = tileSize * 0.5;
-  const drawnPieces: DrawnPiece[] = [];
-
-  for (const group of Object.values(tileGroups)) {
-    const centerX = group[0].x;
-    const centerY = group[0].y;
-    const radius = group[0].radius;
-
-    group.forEach((piece, i) => {
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (group.length > 1) {
-        const angle = (2 * Math.PI * i) / group.length;
-        offsetX = Math.cos(angle) * offsetDistance;
-        offsetY = Math.sin(angle) * offsetDistance;
-      }
-
-      const drawX = centerX + offsetX;
-      const drawY = centerY + offsetY;
-
-      // Draw filled piece
-      ctx.beginPath();
-      ctx.arc(drawX, drawY, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = piece.color;
-      ctx.fill();
-
-      // Highlight selected piece
-      const isSelected =
-        selectedPiece &&
-        selectedPiece.drawX === drawX &&
-        selectedPiece.drawY === drawY;
-
-      ctx.lineWidth = isSelected ? 4 : 1;
-      ctx.strokeStyle = isSelected ? "gold" : "#000";
-      ctx.stroke();
-
-      drawnPieces.push({ ...piece, drawX, drawY });
-    });
-  }
-
-  return drawnPieces;
 }

@@ -52,14 +52,14 @@ export default function BoardGamePage() {
   }, [gameOver]);
 
   return (
-  <main className="relative min-h-screen bg-green-200 p-6 text-black">
+  <main className="relative min-h-screen bg-black-200 p-6 text-white">
     <div className="absolute top-4 right-4 z-60 pointer-events-auto">
       <button
         onClick={() => setShowRules(true)}
         aria-label="Game Rules"
         className="text-gray-700 hover:text-black text-3xl"
       >
-        <HiOutlineInformationCircle />
+        <HiOutlineInformationCircle className="text-white"/>
       </button>
     </div>
 
@@ -220,7 +220,7 @@ export default function BoardGamePage() {
             onClick={() => {
               window.location.href = "/lobby"; 
             }}
-            className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="mt-4 px-6 py-3 bg-black-600 text-white rounded-lg hover:bg-black-700"
           >
             🔁 Play Again
           </button>
