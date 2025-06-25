@@ -336,6 +336,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(angle);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
     const allPawns = players.flatMap((p) =>
       p.pieces.map((piece) => ({
         x: piece.x,
@@ -426,7 +427,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   }, []);
 
   const handleConfirmMoveClick = (x: number, y: number) => {
-    console.log(x,y)
     if (
       destinationRef.current &&
       x >= buttonBounds.x &&
@@ -529,6 +529,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
       const dx = x - piece.drawX;
       const dy = y - piece.drawY;
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+        if (piece.color != playerColor) return;
         setSelectedPiece(piece);
 
         const matching = PossibleMovesRef.current?.find(
@@ -613,7 +614,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     drawPieces(playerColor);
     const storedId = localStorage.getItem("userId");
     setUserId(storedId);
-    console.log(storedId)
   }, []);
 
   useEffect(() => {
@@ -642,7 +642,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
 
   useEffect(() => {
     topCardPathRef.current = topCardPath
-    console.log(currentCard, topCardPath)
     drawWithRotation(playerColor)
   }, [topCardPath]);
 
