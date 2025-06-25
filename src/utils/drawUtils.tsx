@@ -1,10 +1,9 @@
 // utils/drawUtils.ts
 import { coordStringToPixel } from "./outerPath";
-import { getUnrotatedMousePosition } from "./outerPath";
-import { canvasWidth, canvasHeight, tileSize, font_px } from "./config";
+import {  tileSize, font_px } from "./config";
 import { Piece } from "@/app/components/BoardCanvas";
 import { DrawnPiece } from "@/app/components/BoardCanvas";
-import { darkColorMap } from "./config";
+import { lightColorMap } from "./config";
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -225,17 +224,6 @@ export const drawCard = (
   };
 };
 
-interface ButtonProps {
-  ctx: CanvasRenderingContext2D;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  isPlayerTurn: boolean;
-  opponent: string;
-  angle: number
-}
-
 // Store last known button bounds to detect clicks
 
 
@@ -337,7 +325,7 @@ export const drawPiecesWithOffset = (
       // Draw filled piece
       ctx.beginPath();
       ctx.arc(drawX, drawY, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = darkColorMap[piece.color];
+      ctx.fillStyle = lightColorMap[piece.color];
       ctx.fill();
 
       // Highlight selected piece

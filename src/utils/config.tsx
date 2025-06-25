@@ -34,6 +34,13 @@ export const darkColorMap: Record<string, string> = {
   green: "#006400",
 };
 
+export const lightColorMap: Record<string, string> = {
+  red: "#D32F2F",
+  yellow: "#FBC02D",
+  blue: "#1976D2",
+  green: "#006400",
+};
+
 export const cardX1 = canvasWidth / 2 - 3 * tileSize;
 export const cardX2 = cardX1 + 3.5 * tileSize;
 export const cardY = canvasHeight / 2 - 2.5 * tileSize;

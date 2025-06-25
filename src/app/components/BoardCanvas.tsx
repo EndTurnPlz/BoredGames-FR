@@ -16,10 +16,8 @@ import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
 import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
-import { radius } from "@/utils/config";
-import { match } from "assert";
 import { drawPiecesWithOffset } from "@/utils/drawUtils";
-import { cardH, cardW, cardX1, cardX2, cardY } from "@/utils/config";
+import { cardH, cardW, cardX1, cardX2, cardY, radius, darkColorMap } from "@/utils/config";
 
 type GameState = {
   [color: string]: string[];
@@ -49,7 +47,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   const [userId, setUserId] = useState<string | null>(null);
 
   let angle = colorToAngleDict[playerColor]
-  const [isPlayerTurn, setIsPlayerTurn] = useState(false); 
+  const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
 
   const deckPath = "Cards/deck.png";
   const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
@@ -142,14 +140,14 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     ];
 
     const zones = [
-      { x: 2.5, y: 7.3, color: "#D32F2F", text: "Home" },
-      { x: 4.5, y: 2.3, color: "#D32F2F", text: "Start" },
-      { x: 13.5, y: 8.7, color: "#FBC02D", text: "Home" },
-      { x: 11.5, y: 13.7, color: "#FBC02D", text: "Start" },
-      { x: 8.7, y: 2.5, color: "#1976D2", text: "Home" },
-      { x: 13.7, y: 4.5, color: "#1976D2", text: "Start" },
-      { x: 7.3, y: 13.5, color: "#388E3C", text: "Home" },
-      { x: 2.3, y: 11.5, color: "#388E3C", text: "Start" },
+      { x: 2.5, y: 7.3, color: darkColorMap["red"], text: "Home" },
+      { x: 4.5, y: 2.3, color: darkColorMap["red"], text: "Start" },
+      { x: 13.5, y: 8.7, color: darkColorMap["yellow"], text: "Home" },
+      { x: 11.5, y: 13.7, color: darkColorMap["yellow"], text: "Start" },
+      { x: 8.7, y: 2.5, color: darkColorMap["blue"], text: "Home" },
+      { x: 13.7, y: 4.5, color: darkColorMap["blue"], text: "Start" },
+      { x: 7.3, y: 13.5, color: darkColorMap["green"], text: "Home" },
+      { x: 2.3, y: 11.5, color: darkColorMap["green"], text: "Start" },
     ];
 
     zones.forEach(({ x, y, color, text }) =>
@@ -171,7 +169,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
           blueSafetyZone,
           greenSafetyZone,
         ];
-        const colors = ["#D32F2F", "#FBC02D", "#1976D2", "#388E3C"];
+        const colors = [darkColorMap["red"], darkColorMap["yellow"], darkColorMap["blue"], darkColorMap["green"]];
 
         zones.forEach((zone, i) => {
           if (zone.some(([r, c]) => r === row && c === col)) {
@@ -186,7 +184,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: 2.5 * tileSize,
         width: tileSize / 2,
         height: 4 * tileSize,
-        color: "#388E3C",
+        color: darkColorMap["green"],
         direction: "down",
       },
       {
@@ -194,7 +192,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: 11.5 * tileSize,
         width: tileSize / 2,
         height: 3 * tileSize,
-        color: "#388E3C",
+        color: darkColorMap["green"],
         direction: "down",
       },
 
@@ -203,7 +201,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: 9.5 * tileSize,
         width: tileSize / 2,
         height: 4 * tileSize,
-        color: "#1976D2",
+        color: darkColorMap["blue"],
         direction: "up",
       },
       {
@@ -211,7 +209,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: 1.5 * tileSize,
         width: tileSize / 2,
         height: 3 * tileSize,
-        color: "#1976D2",
+        color: darkColorMap["blue"],
         direction: "up",
       },
 
@@ -220,7 +218,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: tileSize / 4,
         width: tileSize / 2,
         height: 4 * tileSize,
-        color: "#D32F2F",
+        color: darkColorMap["red"],
         direction: "right",
       },
       {
@@ -228,7 +226,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: tileSize / 4,
         width: tileSize / 2,
         height: 3 * tileSize,
-        color: "#D32F2F",
+        color: darkColorMap["red"],
         direction: "right",
       },
 
@@ -237,7 +235,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: 15 * tileSize + tileSize / 4,
         width: tileSize / 2,
         height: 3 * tileSize,
-        color: "#FBC02D",
+        color: darkColorMap["yellow"],
         direction: "left",
       },
       {
@@ -245,7 +243,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
         y: 15 * tileSize + tileSize / 4,
         width: tileSize / 2,
         height: 4 * tileSize,
-        color: "#FBC02D",
+        color: darkColorMap["yellow"],
         direction: "left",
       },
     ];
