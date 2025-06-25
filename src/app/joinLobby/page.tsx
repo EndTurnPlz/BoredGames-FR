@@ -33,7 +33,7 @@ export default function JoinLobby() {
 
   return (
     <main
-      className={`flex flex-col items-center justify-center min-h-screen bg-black-100 space-y-6 text-white p-6 transition-all duration-500 ${
+      className={`flex flex-col items-center justify-center min-h-screen bg-black-100 space-y-6 text-white p-6 ${
         isTransitioning ? "blur-sm pointer-events-none" : ""
       }`}
     >

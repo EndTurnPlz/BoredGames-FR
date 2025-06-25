@@ -1,5 +1,5 @@
-export const canvasWidth = 1000;
-export const canvasHeight = 1000;
+export const canvasWidth = 800;
+export const canvasHeight = 800;
 export const tileSize = canvasWidth / 16;
 
 export const radius = tileSize / 2 - 3;
