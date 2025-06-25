@@ -36,12 +36,13 @@ type BoardCanvasProps = {
   username: string | null;
   playerColor: string
   allPlayersJoined: boolean;
+  setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false, setGameOver }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
   const [userId, setUserId] = useState<string | null>(null);

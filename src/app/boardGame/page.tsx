@@ -21,7 +21,8 @@ export default function BoardGamePage() {
   const [hostId, setHostId] = useState("");
   const [showRules, setShowRules] = useState(false);
   const [showCards, setShowCards] = useState(false);
-
+  const [gameOver, setGameOver] = useState(false);
+  let didWin = false
   let GameCanvas;
 
   switch (gameType) {
@@ -45,6 +46,10 @@ export default function BoardGamePage() {
     }, 3000); // fake wait for 3s
     return () => clearTimeout(timeout);
   }, []);
+  
+  useEffect(() => {
+    console.log(gameOver)
+  }, [gameOver]);
 
   return (
   <main className="relative min-h-screen bg-green-200 p-6 text-black">
@@ -63,12 +68,13 @@ export default function BoardGamePage() {
     </h1>
 
     {/* Game board */}
-    <div className={`relative ${!gameStarted ? "pointer-events-none blur-sm" : ""}`}>
+    <div className={`relative ${(!gameStarted || gameOver) ? "pointer-events-none blur-sm" : ""}`}>
       <BoardCanvas
         gameType={gameType}
         username={username}
         playerColor={playerColor}
         allPlayersJoined={allPlayersJoined}
+        setGameOver={setGameOver}
       />
     </div>
 
@@ -198,6 +204,29 @@ export default function BoardGamePage() {
     </div>
   </div>
 )}
+
+ {gameOver && (
+      <div className="absolute inset-0 z-80 bg-clear bg-opacity-80 flex items-center justify-center">
+        <div className="bg-black text-black rounded-xl p-8 shadow-2xl max-w-md w-full text-center space-y-6 text-white">
+          <h2 className="text-4xl font-bold">Game Over</h2>
+          <h2 className="text-4xl font-bold">🏆 Rohit Won</h2>
+
+          <div className="text-lg space-y-2">
+            <p><strong>Moves made:</strong> 42</p>
+            <p><strong>Pawns sent back:</strong> 3</p>
+            <p><strong>Time played:</strong> 12m 30s</p>
+          </div>
+          <button
+            onClick={() => {
+              window.location.href = "/lobby"; 
+            }}
+            className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            🔁 Play Again
+          </button>
+        </div>
+      </div>
+    )}
 
 
   </main>
