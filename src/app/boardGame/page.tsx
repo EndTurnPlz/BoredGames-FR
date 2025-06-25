@@ -22,7 +22,6 @@ export default function BoardGamePage() {
   const [showRules, setShowRules] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  let didWin = false
   let GameCanvas;
 
   switch (gameType) {

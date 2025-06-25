@@ -33,7 +33,7 @@ export default function JoinLobby() {
 
   return (
     <main
-      className={`flex flex-col items-center justify-center min-h-screen bg-green-100 space-y-6 text-black p-6 transition-all duration-500 ${
+      className={`flex flex-col items-center justify-center min-h-screen bg-black-100 space-y-6 text-white p-6 transition-all duration-500 ${
         isTransitioning ? "blur-sm pointer-events-none" : ""
       }`}
     >
@@ -44,13 +44,13 @@ export default function JoinLobby() {
         placeholder="Enter your username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        className="p-3 rounded-lg border border-gray-300 text-lg w-64"
+        className="p-3 rounded-lg border border-white-300 text-lg w-64"
       />
       {error && <p className="text-red-600">{error}</p>}
 
       <button
         onClick={handleJoin}
-        className="px-6 py-3 bg-green-600 text-white rounded-xl text-lg hover:bg-green-700 transition"
+        className="px-6 py-3 bg-black-600 text-white rounded-xl text-lg hover:bg-black-700 transition border border-white-400"
       >
         Join Game
       </button>

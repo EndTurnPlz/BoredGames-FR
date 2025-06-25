@@ -18,16 +18,16 @@ export default function Home() {
 
   return (
     <main
-      className={`flex flex-col items-center justify-center min-h-screen bg-green-100 space-y-6 text-black transition-all duration-500 ${
+      className={`flex flex-col items-center justify-center min-h-screen bg-black-100 space-y-6 text-black transition-all duration-500 ${
         isTransitioning ? "blur-sm pointer-events-none" : ""
       }`}
     >
-      <h1 className="text-4xl font-bold">Choose a Game</h1>
+      <h1 className="text-4xl font-bold text-white">Choose a Game</h1>
 
       <select
         value={gameType}
         onChange={(e) => setGameType(e.target.value)}
-        className="p-3 rounded-lg border border-gray-300 text-lg text-black"
+        className="p-3 rounded-lg border border-white-300 text-lg text-white"
       >
         <option value="Apologies">Apologies</option>
         <option value="Whitejack">Whitejack</option>
@@ -35,7 +35,7 @@ export default function Home() {
 
       <button
         onClick={handleStart}
-        className="px-6 py-3 bg-green-600 text-white rounded-xl text-lg hover:bg-green-700 transition"
+        className="px-6 py-3 bg-black-600 text-white rounded-xl text-lg hover:bg-black-700 border border-white-400 transition"
       >
         Start Game
       </button>
