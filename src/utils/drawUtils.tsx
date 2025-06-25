@@ -1,9 +1,21 @@
 // utils/drawUtils.ts
 import { coordStringToPixel } from "./outerPath";
-import {  tileSize, font_px } from "./config";
+import {  tileSize, font_px, darkColorMap } from "./config";
 import { Piece } from "@/app/components/BoardCanvas";
 import { DrawnPiece } from "@/app/components/BoardCanvas";
 import { lightColorMap } from "./config";
+
+function colorDistance(current: string, target: string): number {
+  const colorOrder = [darkColorMap["blue"], darkColorMap["yellow"], darkColorMap["green"], darkColorMap["red"]];
+  const currentIndex = colorOrder.indexOf(current);
+  const targetIndex = colorOrder.indexOf(target);
+
+  if (currentIndex === -1 || targetIndex === -1) {
+    throw new Error("Invalid color input");
+  }
+
+  return (targetIndex - currentIndex + colorOrder.length) % colorOrder.length;
+}
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -14,6 +26,7 @@ export const drawCircle = (
   tileSize: number,
   text: string,
   angleDegrees = 90,
+  playerColor: string,
 ) => {
   ctx.beginPath();
   ctx.arc(tileX * tileSize, tileY * tileSize, radius, 0, 2 * Math.PI);
@@ -27,6 +40,15 @@ export const drawCircle = (
 
   const centerX = tileX * tileSize;
   const centerY = tileY * tileSize;
+  console.log(color)
+  angleDegrees += (colorDistance(darkColorMap[playerColor], color) * 90)
+  // if (color == darkColorMap["yellow"]) {
+  //   angleDegrees = angleDegrees + 90
+  // } else if (color == darkColorMap["red"]) {
+  //   angleDegrees = angleDegrees - 90
+  // } else if (color == darkColorMap["green"]) {
+  //   angleDegrees = angleDegrees + 180
+  // }
   const angleRadians = (angleDegrees * Math.PI) / 180;
 
   ctx.save(); // Save current state

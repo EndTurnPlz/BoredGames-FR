@@ -151,7 +151,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     ];
 
     zones.forEach(({ x, y, color, text }) =>
-      drawCircle(ctx, x, y, circleRadius, color, tileSize, text, angle)
+      drawCircle(ctx, x, y, circleRadius, color, tileSize, text, angle, playerColor)
     );
 
     for (let row = 0; row < numRows; row++) {
