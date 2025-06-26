@@ -48,3 +48,6 @@ export const cardW = 3 * tileSize;
 export const cardH = 5 * tileSize;
 
 export const API_STRING = "http://localhost:5000"
+
+export const CREATE_GAME = "/createGame"
+export const JOIN_GAME = "/joinGame"

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { API_STRING } from "@/utils/config";
+import { API_STRING, CREATE_GAME } from "@/utils/config";
 
 export default function Home() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function Home() {
 
     try {
       setIsTransitioning(true);
-      const res = await fetch(API_STRING + "/createGame", {
+      const res = await fetch(API_STRING + CREATE_GAME, {
         method: "PUT",
       });
 
@@ -27,7 +27,7 @@ export default function Home() {
 
       const response = await res.json();
       localStorage.setItem("userId", response.playerId);
-      localStorage.setItem("gameId", response.lobbyId);
+      localStorage.setItem("lobbyId", response.lobbyId);
 
       // Only after successful response
       setTimeout(() => {
