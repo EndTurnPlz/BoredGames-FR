@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { API_STRING } from "@/utils/config";
 
 export default function JoinLobby() {
   const router = useRouter();
@@ -14,21 +15,35 @@ export default function JoinLobby() {
   let playerColor = "yellow"
   let userId = "99899910000"
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!username.trim() || username.length < 4) {
       setError("Please enter a valid username more than 3 characters");
       return;
     }
+    try {
+        setIsTransitioning(true);
+        const res = await fetch(API_STRING + "/openapi/v1.json");
+    
+        if (!res.ok) {
+          setError("Failed to connect to server");
+          setIsTransitioning(false);
+          return;
+        }
+    
+        const data = await res.json();
+        setError("");
+    
+        setTimeout(() => {
 
-    setIsTransitioning(true);
-
-    setTimeout(() => {
-
-      localStorage.setItem("userId", userId);
-      router.push(
-        `/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&playercolor=${playerColor}`
-      );
-    }, 500);
+          router.push(
+            `/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&playercolor=${playerColor}`
+          );
+        }, 500);
+      } catch (err) {
+        setIsTransitioning(false);
+        console.error("Error contacting backend:", err);
+        // Optionally show an error message
+      }
   };
 
   return (

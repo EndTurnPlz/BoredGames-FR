@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import BoardCanvas from "../components/BoardCanvas";
 import { HiOutlineInformationCircle } from "react-icons/hi";
 import { HiArrowRight, HiArrowLeft } from "react-icons/hi";
+import { API_STRING } from "@/utils/config";
 
 
 
@@ -36,14 +37,33 @@ export default function BoardGamePage() {
   }
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setAllPlayersJoined(true);
-      setHostName("Rohit")
-      const storedId = localStorage.getItem("userId");
-      setUserId(storedId);
-      setHostId("99899910000")
-    }, 3000); // fake wait for 3s
-    return () => clearTimeout(timeout);
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(API_STRING + "/openapi/v1.json");
+
+        if (!res.ok) {
+          return;
+        }
+
+        const data = await res.json();
+
+        // fake wait for 3s
+       let timeout = setTimeout(() => {
+          setAllPlayersJoined(true);
+          setHostName("Rohit");
+          const storedId = localStorage.getItem("userId");
+          setUserId(storedId);
+          setHostId("99899910000");
+        }, 3000);
+        return () => clearTimeout(timeout);
+      } catch (err) {
+        console.error("Error contacting backend:", err);
+      }
+    };
+
+    fetchData();
+
   }, []);
   
   useEffect(() => {

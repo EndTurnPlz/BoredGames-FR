@@ -46,3 +46,5 @@ export const cardX2 = cardX1 + 3.5 * tileSize;
 export const cardY = canvasHeight / 2 - 2.5 * tileSize;
 export const cardW = 3 * tileSize;
 export const cardH = 5 * tileSize;
+
+export const API_STRING = "http://localhost:5000"
