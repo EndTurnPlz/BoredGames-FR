@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import BoardCanvas from "../components/BoardCanvas";
 import { HiOutlineInformationCircle } from "react-icons/hi";
 import { HiArrowRight, HiArrowLeft } from "react-icons/hi";
-import { API_STRING } from "@/utils/config";
+import { API_STRING, START_GAME } from "@/utils/config";
 
 
 
@@ -18,11 +18,11 @@ export default function BoardGamePage() {
   const [allPlayersJoined, setAllPlayersJoined] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [hostName, setHostName] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
   const [hostId, setHostId] = useState("");
   const [showRules, setShowRules] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [playerId, setPlayerId] = useState("");
   let GameCanvas;
 
   switch (gameType) {
@@ -36,39 +36,36 @@ export default function BoardGamePage() {
       GameCanvas = () => <p>Unknown game type: {gameType}</p>;
   }
 
-  useEffect(() => {
+  const handleStart = async () => {
+     try {
+      let lobbyId = localStorage.getItem("lobbyId")
+      const res = await fetch(API_STRING + "/" + playerId + START_GAME, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(lobbyId), // Note: not an object, just a GUID string
+        });
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch(API_STRING + "/openapi/v1.json");
-
-        if (!res.ok) {
-          return;
-        }
-
-        const data = await res.json();
-
-        // fake wait for 3s
-       let timeout = setTimeout(() => {
-          setAllPlayersJoined(true);
-          setHostName("Rohit");
-          const storedId = localStorage.getItem("userId");
-          setUserId(storedId);
-          setHostId("99899910000");
-        }, 3000);
-        return () => clearTimeout(timeout);
-      } catch (err) {
-        console.error("Error contacting backend:", err);
+      if (!res.ok) {
+        return;
       }
-    };
 
-    fetchData();
+      // fake wait for 3s
+      setGameStarted(true)
+    } catch (err) {
+      console.error("Error contacting backend:", err);
+    }
+  };
+
+  useEffect(() => {
+    setPlayerId(localStorage.getItem("userId") ?? "")
+    setHostId(localStorage.getItem("userId") ?? "")
+    let timeout = setTimeout(() => {
+      setAllPlayersJoined(true);
+    }, 3000);
 
   }, []);
-  
-  useEffect(() => {
-    console.log(gameOver)
-  }, [gameOver]);
 
   return (
   <main className="relative min-h-screen bg-black-200 p-6 text-white">
@@ -107,12 +104,12 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay: Start button (host only) */}
-    {allPlayersJoined && !gameStarted && (userId == hostId) && (
+    {allPlayersJoined && !gameStarted && (playerId == hostId) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black text-center">
           <p className="mb-4">All players have joined!</p>
           <button
-            onClick={() => setGameStarted(true)}
+            onClick={handleStart}
             className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700"
           >
             Start Game
@@ -122,7 +119,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay for non-hosts waiting */}
-    {allPlayersJoined && !gameStarted  && (userId != hostId) && (
+    {allPlayersJoined && !gameStarted  && (playerId != hostId) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black">
           Waiting for host to start the game...

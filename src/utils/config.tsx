@@ -51,3 +51,4 @@ export const API_STRING = "http://localhost:5000"
 
 export const CREATE_GAME = "/createGame"
 export const JOIN_GAME = "/joinGame"
+export const START_GAME = "/startGame"

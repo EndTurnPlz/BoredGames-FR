@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { API_STRING } from "@/utils/config";
+import { API_STRING, JOIN_GAME } from "@/utils/config";
 
 export default function JoinLobby() {
   const router = useRouter();
@@ -21,8 +21,11 @@ export default function JoinLobby() {
       return;
     }
     try {
+        let lobbyID = localStorage.getItem("lobbyId")
         setIsTransitioning(true);
-        const res = await fetch(API_STRING + "/openapi/v1.json");
+        const res = await fetch(API_STRING + JOIN_GAME + "?lobbyId="+ lobbyID, {
+          method: "PUT",
+        });
     
         if (!res.ok) {
           setError("Failed to connect to server");
