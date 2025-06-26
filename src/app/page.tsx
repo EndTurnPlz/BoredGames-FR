@@ -8,23 +8,26 @@ export default function Home() {
   const router = useRouter();
   const [gameType, setGameType] = useState("Apologies");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [data, setData] = useState("")
+  const [error, setError] = useState("")
 
   const handleStart = async () => {
     console.log("Sending to backend...");
 
     try {
       setIsTransitioning(true);
-      const res = await fetch(API_STRING + "/openapi/v1.json");
+      const res = await fetch(API_STRING + "/createGame", {
+        method: "PUT",
+      });
 
       if (!res.ok) {
-        setData("Failed to connect to server");
+        setError("Failed to connect to server");
         setIsTransitioning(false);
         return;
       }
 
-      const data = await res.json();
-      setData("");
+      const response = await res.json();
+      localStorage.setItem("userId", response.playerId);
+      localStorage.setItem("gameId", response.lobbyId);
 
       // Only after successful response
       setTimeout(() => {
@@ -54,7 +57,7 @@ export default function Home() {
         <option value="Apologies">Apologies</option>
         <option value="Whitejack">Whitejack</option>
       </select>
-      {data && <p className="text-red-600">{data}</p>}
+      {error && <p className="text-red-600">{error}</p>}
       <button
         onClick={handleStart}
         className="px-6 py-3 bg-black-600 text-white rounded-xl text-lg hover:bg-black-700 border border-white-400 transition"
