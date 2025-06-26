@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import BoardCanvas from "../components/BoardCanvas";
 import { HiOutlineInformationCircle } from "react-icons/hi";
 import { HiArrowRight, HiArrowLeft } from "react-icons/hi";
-import { API_STRING, START_GAME } from "@/utils/config";
+import { API_STRING, START_GAME, JOIN_LOBBY } from "@/utils/config";
 
 
 
@@ -23,6 +23,10 @@ export default function BoardGamePage() {
   const [showCards, setShowCards] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [playerId, setPlayerId] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [lobbyId, setLobbyId] = useState("")
+  const [shareLink, setShareLink] = useState("");
+
   let GameCanvas;
 
   switch (gameType) {
@@ -61,6 +65,12 @@ export default function BoardGamePage() {
   useEffect(() => {
     setPlayerId(localStorage.getItem("userId") ?? "")
     setHostId(localStorage.getItem("userId") ?? "")
+    let lobbyId = localStorage.getItem("lobbyId") ?? ""
+    if (lobbyId) {
+      const link = `${JOIN_LOBBY}${lobbyId}`;
+      setShareLink(link);
+    }
+
     let timeout = setTimeout(() => {
       setAllPlayersJoined(true);
     }, 3000);
@@ -97,8 +107,25 @@ export default function BoardGamePage() {
     {/* Overlay: Waiting for players */}
     {!allPlayersJoined && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
-        <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black">
-          Waiting for 4 players to join...
+        <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-black text-center space-y-4 max-w-lg">
+          <p className="text-xl font-bold">Waiting for 4 players to join...</p>
+          {(playerId == hostId) && (
+            <>
+              <div className="text-sm break-all bg-gray-100 p-2 rounded-md">
+                <span className="text-gray-700">{shareLink}</span>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(shareLink);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {copied ? "Copied!" : "Copy Invite Link"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     )}

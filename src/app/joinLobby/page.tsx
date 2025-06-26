@@ -8,12 +8,12 @@ export default function JoinLobby() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const gameType = searchParams.get("game") || "unknown";
+  const lobbyID = searchParams.get("lobbyId") || "unkown"
 
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [isTransitioning, setIsTransitioning] = useState(false);
   let playerColor = "yellow"
-  let userId = "99899910000"
 
   const handleJoin = async () => {
     if (!username.trim() || username.length < 4) {
@@ -21,10 +21,13 @@ export default function JoinLobby() {
       return;
     }
     try {
-        let lobbyID = localStorage.getItem("lobbyId")
         setIsTransitioning(true);
         const res = await fetch(API_STRING + JOIN_GAME + "?lobbyId="+ lobbyID, {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(username), // Note: not an object, just a GUID string
         });
     
         if (!res.ok) {

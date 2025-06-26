@@ -9,15 +9,24 @@ export default function Home() {
   const [gameType, setGameType] = useState("Apologies");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [error, setError] = useState("")
+  const [username, setUsername] = useState("");
+  let playerColor = "yellow"
 
   const handleStart = async () => {
     console.log("Sending to backend...");
-
+    if (!username.trim() || username.length < 4) {
+      setError("Please enter a valid username more than 3 characters");
+      return;
+    }
     try {
       setIsTransitioning(true);
       const res = await fetch(API_STRING + CREATE_GAME, {
         method: "PUT",
-      });
+        headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(username), // Note: not an object, just a GUID string
+        });
 
       if (!res.ok) {
         setError("Failed to connect to server");
@@ -28,10 +37,10 @@ export default function Home() {
       const response = await res.json();
       localStorage.setItem("userId", response.playerId);
       localStorage.setItem("lobbyId", response.lobbyId);
-
+      setError("")
       // Only after successful response
       setTimeout(() => {
-        router.push(`/joinLobby?game=${gameType}`);
+        router.push(`/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&playercolor=${playerColor}`);
       }, 500);
     } catch (err) {
       setIsTransitioning(false);
@@ -43,12 +52,11 @@ export default function Home() {
 
   return (
     <main
-      className={`flex flex-col items-center justify-center min-h-screen bg-black-100 space-y-6 text-black ${
+      className={`flex flex-col items-center justify-center min-h-screen bg-black-100 space-y-6 text-white ${
         isTransitioning ? "blur-sm pointer-events-none" : ""
       }`}
     >
       <h1 className="text-4xl font-bold text-white">Choose a Game</h1>
-
       <select
         value={gameType}
         onChange={(e) => setGameType(e.target.value)}
@@ -58,6 +66,13 @@ export default function Home() {
         <option value="Whitejack">Whitejack</option>
       </select>
       {error && <p className="text-red-600">{error}</p>}
+       <input
+        type="text"
+        placeholder="Enter your username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="p-3 rounded-lg border border-white-300 text-lg w-64"
+      />
       <button
         onClick={handleStart}
         className="px-6 py-3 bg-black-600 text-white rounded-xl text-lg hover:bg-black-700 border border-white-400 transition"
