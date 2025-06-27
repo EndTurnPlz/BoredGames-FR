@@ -53,3 +53,10 @@ export const CREATE_GAME = "/createGame"
 export const JOIN_GAME = "/joinGame"
 export const START_GAME = "/startGame"
 export const JOIN_LOBBY = "http://localhost:3000/joinLobby?game=Apologies&lobbyId="
+export const GET_GAMESTATE = (playerId: string)  => {
+  return `${API_STRING}/games/Apologies/${playerId}/pullGameState`
+}
+
+export const GET_HEARTBEAT= (playerId: string)  => {
+  return `${API_STRING}/${playerId}/heartbeat`
+}

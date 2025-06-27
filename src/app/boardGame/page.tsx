@@ -17,14 +17,12 @@ export default function BoardGamePage() {
 
   const [allPlayersJoined, setAllPlayersJoined] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const [hostName, setHostName] = useState("");
-  const [hostId, setHostId] = useState("");
+  const [hostId, setHostId] = useState(-1);
   const [showRules, setShowRules] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [playerId, setPlayerId] = useState("");
   const [copied, setCopied] = useState(false);
-  const [lobbyId, setLobbyId] = useState("")
   const [shareLink, setShareLink] = useState("");
 
   let GameCanvas;
@@ -63,17 +61,13 @@ export default function BoardGamePage() {
   };
 
   useEffect(() => {
-    setPlayerId(localStorage.getItem("userId") ?? "")
-    setHostId(localStorage.getItem("userId") ?? "")
+    let playerId = localStorage.getItem("userId") ?? ""
+    setPlayerId(playerId)
     let lobbyId = localStorage.getItem("lobbyId") ?? ""
     if (lobbyId) {
       const link = `${JOIN_LOBBY}${lobbyId}`;
       setShareLink(link);
     }
-
-    let timeout = setTimeout(() => {
-      setAllPlayersJoined(true);
-    }, 3000);
 
   }, []);
 
@@ -101,6 +95,9 @@ export default function BoardGamePage() {
         playerColor={playerColor}
         allPlayersJoined={allPlayersJoined}
         setGameOver={setGameOver}
+        setAllPlayerJoined={setAllPlayersJoined}
+        setHostId={setHostId}
+        setGameStarted={setGameStarted}
       />
     </div>
 
@@ -109,7 +106,7 @@ export default function BoardGamePage() {
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-black text-center space-y-4 max-w-lg">
           <p className="text-xl font-bold">Waiting for 4 players to join...</p>
-          {(playerId == hostId) && (
+          {(hostId == 0) && (
             <>
               <div className="text-sm break-all bg-gray-100 p-2 rounded-md">
                 <span className="text-gray-700">{shareLink}</span>
@@ -131,7 +128,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay: Start button (host only) */}
-    {allPlayersJoined && !gameStarted && (playerId == hostId) && (
+    {allPlayersJoined && !gameStarted && (hostId == 0) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black text-center">
           <p className="mb-4">All players have joined!</p>
@@ -146,7 +143,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay for non-hosts waiting */}
-    {allPlayersJoined && !gameStarted  && (playerId != hostId) && (
+    {allPlayersJoined && !gameStarted  && (hostId != 0) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black">
           Waiting for host to start the game...

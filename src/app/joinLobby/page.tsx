@@ -38,7 +38,7 @@ export default function JoinLobby() {
     
         const data = await res.json();
         setError("");
-    
+        localStorage.setItem("userId", data.playerId);
         setTimeout(() => {
 
           router.push(

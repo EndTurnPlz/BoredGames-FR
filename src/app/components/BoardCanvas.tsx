@@ -10,7 +10,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -36,18 +36,23 @@ type BoardCanvasProps = {
   playerColor: string
   allPlayersJoined: boolean;
   setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
+  setAllPlayerJoined: React.Dispatch<React.SetStateAction<boolean>>
+  setHostId: React.Dispatch<React.SetStateAction<number>>
+  setGameStarted: React.Dispatch<React.SetStateAction<boolean>>
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false, setGameOver }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false, setGameOver, setAllPlayerJoined, setHostId, setGameStarted }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(localStorage.getItem("userId"));
 
   let angle = colorToAngleDict[playerColor]
   const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
+  const [turnOrder, setTurnOrder] = useState<string[]>([])
+  const turnOrderRef = useRef<string[] | null>(null);
 
   const deckPath = "Cards/deck.png";
   const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
@@ -65,6 +70,11 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
+
+  const [view, setView] = useState(-1)
+  const viewRef = useRef<number | null>(null)
+
+  const [pullGameState, setPullGamestate] = useState(false)
 
   const [possibleMoves, setPossibleMoves] = useState<
     { piece: string; moves: string[][] }[]
@@ -524,12 +534,11 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     ) {
       console.log("Deck clicked! Sending to backend...");
       setLoading(true);
-
       setTimeout(() => {
         console.log("Backend response received!");
         setPossibleMoves(mockCardResponse7.moveset);
-        setCurrentCard(mockCardResponse7.card);
-        setTopCardPath(`/Cards/FaceCards/${numberDict[mockCardResponse7.card]}.png`)
+        // setCurrentCard(mockCardResponse7.card);
+        // setTopCardPath(`/Cards/FaceCards/${numberDict[mockCardResponse7.card]}.png`)
         setLoading(false);
       }, 2000);
 
@@ -570,20 +579,91 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     selectedPieceRef.current = selectedPiece;
   }, [selectedPiece]);
 
-  // Simulate fetching the gameState from backend
   useEffect(() => {
-    const simulatedGameState: GameState = {
-      red: ["d_3", "d_4", "d_7", "d_10"],
-      blue: ["a_S", "c_10", "a_9", "a_H"],
-      green: ["c_H", "c_H", "c_H", "c_H"],
-      yellow: ["c_3", "b_H", "b_H", "b_H"],
-    };
+    viewRef.current = view
+  }, [view]);
 
-    applyGameState(simulatedGameState);
-    drawWithRotation(playerColor);
-    drawPieces(playerColor);
+  useEffect(() => {
+    turnOrderRef.current = turnOrder
+    const index = turnOrder.indexOf(username ?? "");
+    setHostId(index);
+    if (turnOrder.length == 4) {
+      setAllPlayerJoined(true)
+    }
+  }, [turnOrder]);
+
+  const fetchGameState = async (playerId: string) => {
+    try {
+      const res = await fetch(GET_GAMESTATE(playerId));
+
+      if (!res.ok) {
+        throw new Error("Failed to pull game state");
+      }
+
+      const gameState = await res.json();
+      console.log("Game State:", gameState, gameState.currentView);
+      if (gameState.gamePhase == 0) {
+        setGameStarted(true)
+      }
+      setView(gameState.currentView)
+      setTopCardPath(`/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+      console.log(viewRef, topCardPathRef)
+      let pieces = gameState.pieces
+      const colorOrder = ["red", "green", "yellow", "blue"];
+      const colorToPieces: Record<string, string[]> = {};
+
+      for (let row = 0; row < pieces.length; row++) {
+        const color = colorOrder[row];
+        colorToPieces[color] = pieces[row].slice(); 
+      }
+      applyGameState(colorToPieces)
+      setTurnOrder(gameState.turnOrder)
+    } catch (err) {
+      console.error("Error fetching game state:", err);
+      return null;
+    }
+  };
+
+  // Simulate fetching the gameState from backend
+  const heartbeat = async (playerId: string) => {
+    try {
+      console.log(GET_HEARTBEAT(playerId))
+      console.log(viewRef)
+      const res = await fetch(GET_HEARTBEAT(playerId), {
+        method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(viewRef.current)
+        });
+      console.log(res)
+      // if (res.ok) {
+        setPullGamestate(true)
+      // }
+
+      // applyGameState(gameState);
+    } catch (err) {
+      console.error("Error fetching game state:", err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (pullGameState) {
+      fetchGameState(userId ?? "")
+    }
+    setPullGamestate(false)
+  }, [pullGameState])
+
+  useEffect(() => {
     const storedId = localStorage.getItem("userId");
     setUserId(storedId);
+    const interval = setInterval(() => {
+      heartbeat(userId ?? "");
+    }, 10000); // every 2 seconds
+
+    drawWithRotation(playerColor);
+    drawPieces(playerColor);
   }, []);
 
   useEffect(() => {
