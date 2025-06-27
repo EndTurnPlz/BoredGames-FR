@@ -60,3 +60,11 @@ export const GET_GAMESTATE = (playerId: string)  => {
 export const GET_HEARTBEAT= (playerId: string)  => {
   return `${API_STRING}/${playerId}/heartbeat`
 }
+
+export const indexToColor: Record<number, string> = {
+  0: "red",
+  1: "yellow",
+  2: "blue",
+  3: "green",
+};
+

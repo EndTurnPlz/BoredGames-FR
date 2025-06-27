@@ -40,7 +40,7 @@ export default function Home() {
       setError("")
       // Only after successful response
       setTimeout(() => {
-        router.push(`/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&playercolor=${playerColor}`);
+        router.push(`/boardGame?game=${gameType}&username=${encodeURIComponent(username)}`);
       }, 500);
     } catch (err) {
       setIsTransitioning(false);

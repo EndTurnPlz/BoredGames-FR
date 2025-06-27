@@ -1,4 +1,5 @@
 export function getRotationAngleForColor(color: string): number {
+  if (!color) return 0
   switch (color.toLowerCase()) {
     case "red":
         return Math.PI;

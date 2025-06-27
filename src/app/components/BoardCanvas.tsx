@@ -33,26 +33,21 @@ export type Piece = {
 type BoardCanvasProps = {
   gameType: string | null;
   username: string | null;
-  playerColor: string
-  allPlayersJoined: boolean;
+  playerColor: string;
   setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
-  setAllPlayerJoined: React.Dispatch<React.SetStateAction<boolean>>
-  setHostId: React.Dispatch<React.SetStateAction<number>>
-  setGameStarted: React.Dispatch<React.SetStateAction<boolean>>
+  setTurnOrder: React.Dispatch<React.SetStateAction<string[]>>;
+  setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "red", allPlayersJoined = false, setGameOver, setAllPlayerJoined, setHostId, setGameStarted }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "red", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [userId, setUserId] = useState<string | null>(localStorage.getItem("userId"));
 
   let angle = colorToAngleDict[playerColor]
   const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
-  const [turnOrder, setTurnOrder] = useState<string[]>([])
-  const turnOrderRef = useRef<string[] | null>(null);
 
   const deckPath = "Cards/deck.png";
   const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
@@ -62,6 +57,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   const currentCardRef = useRef<number | null>(null);
 
   const [players, setPlayers] = useState<Player[]>([]);
+  const playerColorRef = useRef<string>("red")
 
   const drawnPiecesRef = useRef<DrawnPiece[]>([]);
 
@@ -161,7 +157,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     ];
 
     zones.forEach(({ x, y, color, text }) =>
-      drawCircle(ctx, x, y, circleRadius, color, tileSize, text, angle, playerColor)
+      drawCircle(ctx, x, y, circleRadius, color, tileSize, text, angle, playerColorRef.current)
     );
 
     for (let row = 0; row < numRows; row++) {
@@ -294,7 +290,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-
+    ctx.clearRect(0,0, canvasWidth, canvasHeight)
     const angle = getRotationAngleForColor(color);
     // Save current state
     ctx.save();
@@ -366,19 +362,33 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     ctx.restore();
   }
 
-  const applyGameState = (gameState: GameState) => {
-    const newPlayers: Player[] = [];
+const applyGameState = (gameState: GameState) => {
+  const oldPieces = drawnPiecesRef.current;
 
-    for (const color in gameState) {
-      const coordStrings = gameState[color];
-      const positions = coordStrings.map((coord) =>
-        coordStringToPixel(coord, tileSize)
-      );
-      newPlayers.push(new Player(color, positions));
+  const newPlayers: Player[] = [];
+
+  for (const color in gameState) {
+    const coordStrings = gameState[color];
+    const positions = coordStrings.map((coord) =>
+      coordStringToPixel(coord, tileSize)
+    );
+    const player = new Player(color, positions);
+    newPlayers.push(player);
+
+    for (let i = 0; i < positions.length; i++) {
+      const target = positions[i];
+      const pieceId = player.pieces[i].id;
+      const currentPiece = oldPieces.find(p => p.id === pieceId);
+
+      if (currentPiece && (pieceId != target.id)) {
+        animatePieceMove(pieceId, target.x, target.y);
+      }
     }
+  }
 
-    setPlayers(newPlayers);
-  };
+  setPlayers(newPlayers); // Update logical positions
+};
+
 
   useEffect(() => {
     const canvas = piecesCanvasRef.current;
@@ -509,7 +519,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
       const dx = x - piece.drawX;
       const dy = y - piece.drawY;
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-        if (piece.color != playerColor) return;
+        if (piece.color != playerColorRef.current) return;
         setSelectedPiece(piece);
 
         const matching = PossibleMovesRef.current?.find(
@@ -575,22 +585,19 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   };
 
   useEffect(() => {
-    drawPieces(playerColor);
+    drawPieces(playerColorRef.current);
     selectedPieceRef.current = selectedPiece;
   }, [selectedPiece]);
 
   useEffect(() => {
-    viewRef.current = view
-  }, [view]);
+    console.log("color change: " + playerColor)
+    drawWithRotation(playerColor)
+    drawPieces(playerColor)
+  }, [playerColor]);
 
   useEffect(() => {
-    turnOrderRef.current = turnOrder
-    const index = turnOrder.indexOf(username ?? "");
-    setHostId(index);
-    if (turnOrder.length == 4) {
-      setAllPlayerJoined(true)
-    }
-  }, [turnOrder]);
+    viewRef.current = view
+  }, [view]);
 
   const fetchGameState = async (playerId: string) => {
     try {
@@ -648,7 +655,38 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
     }
   };
 
+  const animatePieceMove = (
+  pieceId: string,
+  targetX: number,
+  targetY: number,
+  duration = 500
+) => {
+  const piece = drawnPiecesRef.current.find(p => p.id === pieceId);
+  if (!piece) return;
+
+  const startX = piece.drawX;
+  const startY = piece.drawY;
+  const startTime = performance.now();
+
+  const step = (currentTime: number) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    piece.drawX = startX + (targetX - startX) * progress;
+    piece.drawY = startY + (targetY - startY) * progress;
+
+    drawPieces(playerColorRef.current);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  };
+
+  requestAnimationFrame(step);
+};
+
   useEffect(() => {
+    let userId = localStorage.getItem("userId")
     if (pullGameState) {
       fetchGameState(userId ?? "")
     }
@@ -656,18 +694,19 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   }, [pullGameState])
 
   useEffect(() => {
+    console.log(playerColorRef.current)
     const storedId = localStorage.getItem("userId");
-    setUserId(storedId);
     const interval = setInterval(() => {
-      heartbeat(userId ?? "");
+      heartbeat(storedId ?? "");
     }, 10000); // every 2 seconds
 
-    drawWithRotation(playerColor);
-    drawPieces(playerColor);
+    drawWithRotation(playerColorRef.current);
+    drawPieces(playerColorRef.current);
   }, []);
 
+
   useEffect(() => {
-    drawPieces(playerColor);
+    drawPieces(playerColorRef.current);
   }, [players]);
 
   useEffect(() => {
@@ -683,7 +722,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
   }, [highlightedTiles]);
   useEffect(() => {
     destinationRef.current = destination;
-    drawPieces(playerColor);
+    drawPieces(playerColorRef.current);
   }, [destination]);
 
   useEffect(() => {
@@ -692,7 +731,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
 
   useEffect(() => {
     topCardPathRef.current = topCardPath
-    drawWithRotation(playerColor)
+    drawWithRotation(playerColorRef.current)
   }, [topCardPath]);
 
   useEffect(() => {
@@ -701,12 +740,12 @@ export default function GameCanvas({ gameType, username, playerColor = "red", al
 
   useEffect(() => {
     secondSelectedPieceRef.current = secondSelectedPiece;
-    drawPieces(playerColor);
+    drawPieces(playerColorRef.current);
   }, [secondSelectedPiece]);
 
   useEffect(() => {
     secondSelectedDestinationRef.current = secondDestination;
-    drawPieces(playerColor);
+    drawPieces(playerColorRef.current);
   }, [secondDestination]);
 
   useEffect(() => {

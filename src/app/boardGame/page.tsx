@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import BoardCanvas from "../components/BoardCanvas";
 import { HiOutlineInformationCircle } from "react-icons/hi";
 import { HiArrowRight, HiArrowLeft } from "react-icons/hi";
-import { API_STRING, START_GAME, JOIN_LOBBY } from "@/utils/config";
+import { API_STRING, START_GAME, JOIN_LOBBY, indexToColor } from "@/utils/config";
 
 
 
@@ -13,9 +13,11 @@ export default function BoardGamePage() {
   const searchParams = useSearchParams();
   const gameType = searchParams.get("game");
   const username = searchParams.get("username");
-  const playerColor = searchParams.get("playercolor") ?? "red";
-
-  const [allPlayersJoined, setAllPlayersJoined] = useState(false);
+  const [playerColor, setPlayerColor] = useState("")
+  const playerColorRef = useRef<string>("red")
+  const [players, setPlayers] = useState([
+    "Player 1", "Player 2", "Player 3", "Player 4"
+  ]);
   const [gameStarted, setGameStarted] = useState(false);
   const [hostId, setHostId] = useState(-1);
   const [showRules, setShowRules] = useState(false);
@@ -71,6 +73,14 @@ export default function BoardGamePage() {
 
   }, []);
 
+  useEffect(() => {
+    const index = players.indexOf(username ?? "");
+    setHostId(index);
+    if (index != -1 && playerColor == "") {
+      setPlayerColor(indexToColor[index])
+    }
+  }, [players]);
+
   return (
   <main className="relative min-h-screen bg-black-200 p-6 text-white">
     <div className="absolute top-4 right-4 z-60 pointer-events-auto">
@@ -93,16 +103,28 @@ export default function BoardGamePage() {
         gameType={gameType}
         username={username}
         playerColor={playerColor}
-        allPlayersJoined={allPlayersJoined}
         setGameOver={setGameOver}
-        setAllPlayerJoined={setAllPlayersJoined}
-        setHostId={setHostId}
+        setTurnOrder={setPlayers}
         setGameStarted={setGameStarted}
       />
+      <div className="w-48 bg-gray-800 rounded-lg p-4 text-white">
+        <h2 className="text-lg font-semibold mb-4">Players</h2>
+        <ul className="space-y-3">
+          {players.map((name, index) => (
+            <li key={index} className="flex items-center space-x-2">
+              <div
+                className={`w-4 h-4 rounded-full`}
+                style={{ backgroundColor: indexToColor[index] }}
+              ></div>
+              <span>{name}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
 
     {/* Overlay: Waiting for players */}
-    {!allPlayersJoined && (
+    {!(players.length == 4) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-black text-center space-y-4 max-w-lg">
           <p className="text-xl font-bold">Waiting for 4 players to join...</p>
@@ -128,7 +150,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay: Start button (host only) */}
-    {allPlayersJoined && !gameStarted && (hostId == 0) && (
+    {(players.length == 4) && !gameStarted && (hostId == 0) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black text-center">
           <p className="mb-4">All players have joined!</p>
@@ -143,7 +165,7 @@ export default function BoardGamePage() {
     )}
 
     {/* Overlay for non-hosts waiting */}
-    {allPlayersJoined && !gameStarted  && (hostId != 0) && (
+    {(players.length == 4) && !gameStarted  && (hostId != 0) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-xl font-bold text-black">
           Waiting for host to start the game...
