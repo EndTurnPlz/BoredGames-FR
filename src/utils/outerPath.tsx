@@ -9,7 +9,6 @@ export const coordStringToPixel = (coord: string, tileSize: number): { x: number
   let col = 0;
 
   let row = 0;
-
   if (/^\d+$/.test(rowStr)) {
     // Regular tile, like "a_5"
     let number = parseInt(rowStr, 10);
@@ -72,7 +71,6 @@ export const coordStringToPixel = (coord: string, tileSize: number): { x: number
       col = 4;
     }
   }
-
   return {
     x: col * tileSize + tileSize / 2,
     y: row * tileSize + tileSize / 2,
@@ -106,7 +104,7 @@ for (const letter of letters) {
 }
 
 for (const letter of letters) {
-  const key = `${letter}_S'`;
+  const key = `${letter}_S`;
   const { x, y } = coordStringToPixel(key, tileSize);
   coordMap[key] = { x, y };
 }
@@ -138,5 +136,75 @@ export const getUnrotatedMousePosition = (
       x: canvasWidth - (unrotatedX + cx),
       y: canvasHeight - (unrotatedY + cy),
     };
+}
+
+const mainLoop = [
+  ...Array.from({ length: 15 }, (_, i) => `a_${i + 1}`),
+  ...Array.from({ length: 15 }, (_, i) => `b_${i + 1}`),
+  ...Array.from({ length: 15 }, (_, i) => `c_${i + 1}`),
+  ...Array.from({ length: 15 }, (_, i) => `d_${i + 1}`),
+];
+
+const buildBoardGraph = () => {
+  const graph: Record<string, string[]> = {};
+
+  const colors = ["a", "b", "c", "d"];
+  const nextColor: Record<string, string> = {
+    "a": "b",
+    "b": "c",
+    "c": "d",
+    "d": "a"
+  };
+
+  const addEdge = (a: string, b: string) => {
+    if (!graph[a]) graph[a] = [];
+    if (!graph[b]) graph[b] = [];
+    graph[a].push(b);
+    graph[b].push(a);
+  };
+
+  for (const color of colors) {
+    for (let i = 1; i <= 15; i++) {
+      const current = `${color}_${i}`;
+      const next = i === 15 ? `${nextColor[color]}_1` : `${color}_${i + 1}`;
+      addEdge(current, next);
+    }
+
+    // Start to entry
+    addEdge(`${color}_S`, `${color}_4`);
+
+    // Fork to safety from _2
+    addEdge(`${color}_2`, `${color}_s1`);
+
+    // Safety zone
+    for (let i = 1; i < 5; i++) {
+      addEdge(`${color}_s${i}`, `${color}_s${i + 1}`);
+    }
+
+    // Last safety to home
+    addEdge(`${color}_s5`, `${color}_H`);
+  }
+
+  return graph;
+};
+
+export function findPath(start: string, end: string): string[] {
+  const graph = buildBoardGraph();
+  const queue: [string, string[]][] = [[start, [start]]];
+  const visited = new Set<string>();
+  while (queue.length > 0) {
+    const [node, path] = queue.shift()!;
+    console.log(node, path)
+    if (node === end) return path;
+
+    for (const neighbor of graph[node] || []) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push([neighbor, [...path, neighbor]]);
+      }
+    }
+  }
+
+  return []; // No path
 }
   

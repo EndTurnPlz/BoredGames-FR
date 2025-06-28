@@ -9,7 +9,7 @@ import {
   drawAllCircles,
   drawSafetyWord,
 } from "@/utils/drawUtils";
-import { coordStringToPixel } from "@/utils/outerPath";
+import { coordStringToPixel, findPath } from "@/utils/outerPath";
 import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
@@ -42,7 +42,7 @@ type BoardCanvasProps = {
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "red", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "green", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -57,7 +57,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   const currentCardRef = useRef<number | null>(null);
 
   const [players, setPlayers] = useState<Player[]>([]);
-  const playerColorRef = useRef<string>("red")
+  const playersref = useRef<Player[]>([]);
+  const playerColorRef = useRef<string>("green")
 
   const drawnPiecesRef = useRef<DrawnPiece[]>([]);
 
@@ -66,6 +67,8 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
+
+  let devMode = true
 
   const [view, setView] = useState(-1)
   const viewRef = useRef<number | null>(null)
@@ -362,13 +365,15 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
     ctx.restore();
   }
 
-const applyGameState = (gameState: GameState) => {
-  const oldPieces = drawnPiecesRef.current;
+const applyGameState = async (gameState: GameState) => {
+  const oldPlayers = playersref.current
 
   const newPlayers: Player[] = [];
+  const animationPromises: Promise<void>[] = [];
 
   for (const color in gameState) {
     const coordStrings = gameState[color];
+    const oldPlayer = oldPlayers.find((player) => player.color === color)
     const positions = coordStrings.map((coord) =>
       coordStringToPixel(coord, tileSize)
     );
@@ -377,16 +382,18 @@ const applyGameState = (gameState: GameState) => {
 
     for (let i = 0; i < positions.length; i++) {
       const target = positions[i];
-      const pieceId = player.pieces[i].id;
-      const currentPiece = oldPieces.find(p => p.id === pieceId);
-
+      const pieceId = oldPlayer?.pieces[i].id ?? "";
+      const currentPiece = oldPlayer?.pieces[i];
       if (currentPiece && (pieceId != target.id)) {
-        animatePieceMove(pieceId, target.x, target.y);
+        // console.log(currentPiece, pieceId, target.id)
+        animationPromises.push(
+          animatePieceAlongPath(pieceId, findPath(pieceId, target.id))
+        );
       }
     }
   }
-  console.log()
-  setPlayers(newPlayers); // Update logical positions
+  await Promise.all(animationPromises); 
+  setPlayers(newPlayers);
 };
 
 
@@ -614,18 +621,6 @@ const applyGameState = (gameState: GameState) => {
     viewRef.current = view
   }, [view]);
 
-  function rotateUntilLast(arr: string[], playerColor: string): string[] {
-    let result = [...arr];
-    while (result[result.length - 1] !== playerColor) {
-      console.log(result, playerColor)
-      const first = result.shift(); // remove first element
-      if (first !== undefined) {
-        result.push(first);         // add it to the end
-      }
-    }
-    return result;
-  }
-
   const fetchGameState = async (playerId: string) => {
     try {
       const res = await fetch(GET_GAMESTATE(playerId));
@@ -662,6 +657,7 @@ const applyGameState = (gameState: GameState) => {
 
   // Simulate fetching the gameState from backend
   const heartbeat = async (playerId: string) => {
+    if (devMode) return;
     try {
       console.log(GET_HEARTBEAT(playerId))
       console.log(viewRef)
@@ -684,35 +680,59 @@ const applyGameState = (gameState: GameState) => {
     }
   };
 
-  const animatePieceMove = (
+const animatePieceAlongPath = (
   pieceId: string,
-  targetX: number,
-  targetY: number,
-  duration = 500
-) => {
-  const piece = drawnPiecesRef.current.find(p => p.id === pieceId);
-  if (!piece) return;
-
-  const startX = piece.drawX;
-  const startY = piece.drawY;
-  const startTime = performance.now();
-
-  const step = (currentTime: number) => {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-
-    piece.drawX = startX + (targetX - startX) * progress;
-    piece.drawY = startY + (targetY - startY) * progress;
-
-    drawPieces(playerColorRef.current);
-
-    if (progress < 1) {
-      requestAnimationFrame(step);
+  path: string[],
+  speed: number = 300
+): Promise<void> => {
+  return new Promise((resolve) => {
+    console.log(path)
+    const allPlayers = [...playersref.current];
+    const targetPlayer = allPlayers.find(p => p.pieces.some(pc => pc.id === pieceId));
+    if (!targetPlayer)  {
+      resolve(); 
+      return;
     }
-  };
+    const pieceIndex = targetPlayer.pieces.findIndex(pc => pc.id === pieceId);
+    if (pieceIndex === -1) {
+      resolve();
+      return;
+    }
 
-  requestAnimationFrame(step);
+    let stepIndex = 1;
+
+    const moveToNext = () => {
+      console.log(stepIndex)
+      if (stepIndex >= path.length) {
+        // Final update to state after full path
+        setPlayers(allPlayers);
+        resolve();
+        return;
+      }
+
+      const coord = path[stepIndex];
+      const pixel = coordMap[coord];
+      console.log(pixel, coord)
+      if (!pixel) {
+        return;
+        resolve();
+      }
+
+      // Update the logical position
+      targetPlayer.pieces[pieceIndex].x = pixel.x;
+      targetPlayer.pieces[pieceIndex].y = pixel.y;
+      console.log(allPlayers)
+      setPlayers([...allPlayers]); // trigger state update for redraw
+
+      stepIndex++;
+      setTimeout(moveToNext, speed);
+    };
+
+    moveToNext();
+  });
 };
+
+
 
   useEffect(() => {
     let userId = localStorage.getItem("userId")
@@ -730,11 +750,12 @@ const applyGameState = (gameState: GameState) => {
     }, 10000); // every 2 seconds
 
     drawWithRotation(playerColorRef.current);
-    setAngle(colorToAngleDict[playerColor])
+    setAngle(colorToAngleDict[playerColorRef.current])
     drawPieces(playerColorRef.current);
   }, []);
 
   useEffect(() => {
+    playersref.current = players
     drawPieces(playerColorRef.current);
   }, [players]);
 
@@ -780,6 +801,31 @@ const applyGameState = (gameState: GameState) => {
   useEffect(() => {
     possibleSecondPawnsRef.current = possibleSecondPawns;
   }, [possibleSecondPawns]);
+
+  useEffect(() => {
+    if (!devMode) return;
+
+    const dummyGameState: GameState = {
+      red: ["d_S", "d_S", "d_S", "d_S"],
+      blue: ["a_S", "a_S", "a_8", "a_S"],
+      yellow: ["b_S", "b_S", "b_S", "b_S"],
+      green: ["c_S", "c_S", "c_S", "c_S"]
+    };
+
+    setGameStarted(true);
+    applyGameState(dummyGameState);
+    const nextDummyGameState: GameState = {
+      red: ["d_S", "d_S", "d_S", "d_S"],
+      blue: ["a_S", "a_S", "a_S", "a_S"],
+      yellow: ["b_S", "b_S", "b_S", "b_S"],
+      green: ["c_S", "c_S", "c_S", "c_S"]
+    };
+
+    // Optional: trigger an animation after mount
+    setTimeout(() => {
+      applyGameState(nextDummyGameState)
+    }, 3000);
+  }, []);
 
   return (
     <div className="flex flex-col items-center">

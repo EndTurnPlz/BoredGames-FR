@@ -25,7 +25,7 @@ export const drawCircle = (
   color: string,
   tileSize: number,
   text: string,
-  angleDegrees = 90,
+  angleDegrees: number,
   playerColor: string,
 ) => {
   ctx.beginPath();
