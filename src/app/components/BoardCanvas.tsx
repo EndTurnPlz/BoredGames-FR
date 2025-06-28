@@ -10,7 +10,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -46,7 +46,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  let angle = colorToAngleDict[playerColor]
+  const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
 
   const deckPath = "Cards/deck.png";
@@ -385,7 +385,7 @@ const applyGameState = (gameState: GameState) => {
       }
     }
   }
-
+  console.log()
   setPlayers(newPlayers); // Update logical positions
 };
 
@@ -394,7 +394,7 @@ const applyGameState = (gameState: GameState) => {
     const canvas = piecesCanvasRef.current;
     if (!canvas) return;
 
-    const handleClick = (event: MouseEvent) => {
+    const handleClick = async (event: MouseEvent) => {
       if (loadingRef.current) return;
 
       const rect = canvas.getBoundingClientRect();
@@ -404,13 +404,13 @@ const applyGameState = (gameState: GameState) => {
       let unrotatedCoords = getUnrotatedMousePosition(
         mouseX,
         mouseY,
-        angle 
+        colorToAngleDict[playerColorRef.current] 
       );
 
       if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
-      if (handleDeckClick(mouseX, mouseY)) return;
+      if (await handleDeckClick(mouseX, mouseY)) return;
       if (handleTopCardClick(mouseX, mouseY)) return;
 
       resetSelections();
@@ -533,7 +533,7 @@ const applyGameState = (gameState: GameState) => {
     return false;
   };
 
-  const handleDeckClick = (x: number, y: number) => {
+  const handleDeckClick = async (x: number, y: number) => {
     const deck = deckRef.current;
     if (!deck) return false;
     if (
@@ -544,16 +544,23 @@ const applyGameState = (gameState: GameState) => {
     ) {
       console.log("Deck clicked! Sending to backend...");
       setLoading(true);
-      setTimeout(() => {
-        console.log("Backend response received!");
-        setPossibleMoves(mockCardResponse7.moveset);
-        // setCurrentCard(mockCardResponse7.card);
-        // setTopCardPath(`/Cards/FaceCards/${numberDict[mockCardResponse7.card]}.png`)
-        setLoading(false);
-      }, 2000);
+      try {
+        let player_Id = localStorage.getItem("userId") ?? ""
+        const res = await fetch(DRAW_CARD(player_Id))
+        const response = await res.json()
 
-      return true;
-    }
+        setPossibleMoves(response.movesets);
+        setCurrentCard(response.lastDrawnCard);
+        setTopCardPath(`/Cards/FaceCards/${numberDict[response.lastDrawnCard]}.png`)
+        setLoading(false)
+        return true;
+      }
+      catch(err) {
+        console.error("Error fetching game state:", err);
+        setLoading(false)
+        return null;
+        }
+      }
 
     return false;
   };
@@ -590,14 +597,29 @@ const applyGameState = (gameState: GameState) => {
   }, [selectedPiece]);
 
   useEffect(() => {
-    console.log("color change: " + playerColor)
+    // console.log("color change: " + playerColor)
     drawWithRotation(playerColor)
     drawPieces(playerColor)
+    if (playerColor != "") {
+      playerColorRef.current = playerColor
+    }
   }, [playerColor]);
 
   useEffect(() => {
     viewRef.current = view
   }, [view]);
+
+  function rotateUntilLast(arr: string[], playerColor: string): string[] {
+    let result = [...arr];
+    while (result[result.length - 1] !== playerColor) {
+      console.log(result, playerColor)
+      const first = result.shift(); // remove first element
+      if (first !== undefined) {
+        result.push(first);         // add it to the end
+      }
+    }
+    return result;
+  }
 
   const fetchGameState = async (playerId: string) => {
     try {
@@ -614,15 +636,14 @@ const applyGameState = (gameState: GameState) => {
       }
       setView(gameState.currentView)
       setTopCardPath(`/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
-      console.log(viewRef, topCardPathRef)
       let pieces = gameState.pieces
-      const colorOrder = ["red", "green", "yellow", "blue"];
+      const colorOrder = ["blue", "yellow", "green", "red"];
       const colorToPieces: Record<string, string[]> = {};
-
       for (let row = 0; row < pieces.length; row++) {
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row].slice(); 
       }
+      console.log(colorToPieces)
       applyGameState(colorToPieces)
       setTurnOrder(gameState.turnOrder)
     } catch (err) {
@@ -694,16 +715,16 @@ const applyGameState = (gameState: GameState) => {
   }, [pullGameState])
 
   useEffect(() => {
-    console.log(playerColorRef.current)
+    // console.log(playerColorRef.current)
     const storedId = localStorage.getItem("userId");
     const interval = setInterval(() => {
       heartbeat(storedId ?? "");
     }, 10000); // every 2 seconds
 
     drawWithRotation(playerColorRef.current);
+    setAngle(colorToAngleDict[playerColor])
     drawPieces(playerColorRef.current);
   }, []);
-
 
   useEffect(() => {
     drawPieces(playerColorRef.current);

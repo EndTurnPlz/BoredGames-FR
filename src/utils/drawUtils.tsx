@@ -40,15 +40,7 @@ export const drawCircle = (
 
   const centerX = tileX * tileSize;
   const centerY = tileY * tileSize;
-  console.log(color)
   angleDegrees += (colorDistance(darkColorMap[playerColor], color) * 90)
-  // if (color == darkColorMap["yellow"]) {
-  //   angleDegrees = angleDegrees + 90
-  // } else if (color == darkColorMap["red"]) {
-  //   angleDegrees = angleDegrees - 90
-  // } else if (color == darkColorMap["green"]) {
-  //   angleDegrees = angleDegrees + 180
-  // }
   const angleRadians = (angleDegrees * Math.PI) / 180;
 
   ctx.save(); // Save current state

@@ -98,37 +98,40 @@ export default function BoardGamePage() {
     </h1>
 
     {/* Game board */}
-    <div
-      className={`relative flex flex-row gap-6 ${
-        (!gameStarted || gameOver) ? "pointer-events-none blur-sm" : ""
-      }`}
-    >
-      {/* Canvas on the left */}
-      <BoardCanvas
-        gameType={gameType}
-        username={username}
-        playerColor={playerColor}
-        setGameOver={setGameOver}
-        setTurnOrder={setPlayers}
-        setGameStarted={setGameStarted}
-      />
+  <div className="flex justify-center items-start w-full">
+  <div
+    className={`relative flex flex-row gap-6 ${
+      (!gameStarted || gameOver) ? "pointer-events-none blur-sm" : ""
+    }`}
+  >
+    {/* Canvas on the left */}
+    <BoardCanvas
+      gameType={gameType}
+      username={username}
+      playerColor={playerColor}
+      setGameOver={setGameOver}
+      setTurnOrder={setPlayers}
+      setGameStarted={setGameStarted}
+    />
 
-      {/* Player Table on the right */}
-      <div className="w-48 bg-gray-800 rounded-lg p-4 text-white self-start">
-        <h2 className="text-lg font-semibold mb-4">Players</h2>
-        <ul className="space-y-3">
-          {players.map((name, index) => (
-            <li key={index} className="flex items-center space-x-2">
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: indexToColor[index] }}
-              ></div>
-              <span>{name}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+    {/* Player Table on the right */}
+    <div className="w-48 bg-gray-800 rounded-lg p-4 text-white self-start">
+      <h2 className="text-lg font-semibold mb-4">Players</h2>
+      <ul className="space-y-3">
+        {players.map((name, index) => (
+          <li key={index} className="flex items-center space-x-2">
+            <div
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: indexToColor[index] }}
+            ></div>
+            <span>{name}</span>
+          </li>
+        ))}
+      </ul>
     </div>
+  </div>
+</div>
+
 
 
     {/* Overlay: Waiting for players */}

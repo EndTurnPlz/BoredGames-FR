@@ -7,6 +7,7 @@ export const radius = tileSize / 2 - 3;
 export const font_px = canvasWidth / 40;
 
 export const numberDict: { [key: number]: string } = {
+  0: "apologies",
   1: "one",
   2: "two",
   3: "three",
@@ -17,7 +18,8 @@ export const numberDict: { [key: number]: string } = {
   8: "eight",
   9: "nine",
   10: "ten",
-  11: "eleven"
+  11: "eleven",
+  12: "twelve"
 };
 
 export const colorToAngleDict: { [key: string]: number } = {
@@ -59,6 +61,10 @@ export const GET_GAMESTATE = (playerId: string)  => {
 
 export const GET_HEARTBEAT= (playerId: string)  => {
   return `${API_STRING}/${playerId}/heartbeat`
+}
+
+export const DRAW_CARD = (playerId: string)  => {
+  return `${API_STRING}/games/Apologies/${playerId}/drawCard`
 }
 
 export const indexToColor: Record<number, string> = {
