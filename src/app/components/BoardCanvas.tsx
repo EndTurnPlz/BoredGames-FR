@@ -548,10 +548,15 @@ const applyGameState = (gameState: GameState) => {
         let player_Id = localStorage.getItem("userId") ?? ""
         const res = await fetch(DRAW_CARD(player_Id))
         const response = await res.json()
-
+        if (!res.ok) {
+          throw Error("failed to draw card")
+        }
         setPossibleMoves(response.movesets);
-        setCurrentCard(response.lastDrawnCard);
-        setTopCardPath(`/Cards/FaceCards/${numberDict[response.lastDrawnCard]}.png`)
+        if (currentCardRef.current != response.lastDrawnCard) {
+          setCurrentCard(response.lastDrawnCard);
+          setTopCardPath(`/Cards/FaceCards/${numberDict[response.lastDrawnCard]}.png`)
+          setView(response.view)
+        }
         setLoading(false)
         return true;
       }
@@ -635,7 +640,10 @@ const applyGameState = (gameState: GameState) => {
         setGameStarted(true)
       }
       setView(gameState.currentView)
-      setTopCardPath(`/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+      if (currentCardRef.current != gameState.lastDrawnCard) {
+        setCurrentCard(gameState.lastDrawnCard)
+        setTopCardPath(`/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+      }
       let pieces = gameState.pieces
       const colorOrder = ["blue", "yellow", "green", "red"];
       const colorToPieces: Record<string, string[]> = {};
