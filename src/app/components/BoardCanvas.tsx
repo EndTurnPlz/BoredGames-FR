@@ -703,16 +703,8 @@ const applyGameState = async (gameState: GameState) => {
   };
 
   const animateCardSwap = (oldSrc: string, newSrc: string) => {
-  setFloatingCard({ oldSrc, newSrc, x:cardX1, y: cardY, phase: "start" });
-
-  // Start animation on next frame
-  // setTimeout(() => {
-  //   setFloatingCard((prev) => {
-  //     if (!prev) return null;
-  //     return { ...prev, x: cardX2, phase: "animate" };
-  //   });
-  // }, 2500);
-};
+    setFloatingCard({ oldSrc, newSrc, x:cardX1, y: cardY, phase: "start" });
+  };
   
 const animatePieceAlongPath = (
   pieceId: string,
