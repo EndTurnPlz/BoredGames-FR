@@ -40,11 +40,11 @@ type BoardCanvasProps = {
 };
 
 type FloatingCard = {
-  src: string;
-  dest: string;
+  oldSrc: string
+  newSrc: string;
   x: number;
   y: number;
-  phase: "start" | "rise" | "fall";
+  phase: "start" | "animate" | "done";
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
@@ -702,14 +702,17 @@ const applyGameState = async (gameState: GameState) => {
     }
   };
 
-  const animateTopCardSwap = (newPath: string) => {
-    // 1. Start with not-popped (initial position)
-    setFloatingCard({ src: "/Cards/deck.png", dest:newPath, x: cardX1, y: cardY, phase: "start" });
-    
-    setTimeout(() => {
-      setFloatingCard({ src: "/Cards/deck.png", dest: newPath, x: (cardX1 + cardX2) / 2, y: cardY, phase: "rise" });
-    }, 2000); 
-  };
+  const animateCardSwap = (oldSrc: string, newSrc: string) => {
+  setFloatingCard({ oldSrc, newSrc, x:cardX1, y: cardY, phase: "start" });
+
+  // Start animation on next frame
+  // setTimeout(() => {
+  //   setFloatingCard((prev) => {
+  //     if (!prev) return null;
+  //     return { ...prev, x: cardX2, phase: "animate" };
+  //   });
+  // }, 2500);
+};
   
 const animatePieceAlongPath = (
   pieceId: string,
@@ -866,7 +869,7 @@ useEffect(() => {
     // Optional: trigger an animation after mount
     setTimeout(() => {
       // applyGameState(nextDummyGameState)
-      animateTopCardSwap("/Cards/FaceCards/two.png")
+      animateCardSwap("Cards/deck.png", "/Cards/FaceCards/two.png")
     }, 3000);
   }, []);
 
@@ -915,39 +918,47 @@ useEffect(() => {
     Your Turn
   </button>
     )}
-   {floatingCard && (
-  <img
-    src={floatingCard.src}
+{floatingCard && (
+  <div
     style={{
       position: "absolute",
       left: floatingCard.x,
       top: floatingCard.y,
       width: cardW,
       height: cardH,
-      transform:
-        floatingCard.phase === "start"
-          ? "scale(1) translateY(0)"
-          : floatingCard.phase === "rise"
-          ? "scale(1.5) translateY(-30px)"
-          : "scale(1) translateY(0)", // fall phase returns to normal
-      transition: "transform 1.25s ease",
-      zIndex: 1000,
       pointerEvents: "none",
+      zIndex: 1000,
     }}
-    onTransitionEnd={() => {
-      if (floatingCard.phase === "rise") {
-        // After rise animation ends, trigger fall animation
-        setFloatingCard(prev => prev ? {src: prev.dest, dest: prev.dest, x: prev.x, y: prev.y, phase: "fall" } : null);
-      } else if (floatingCard.phase === "fall") {
-        // After fall animation ends, cleanup floating card & update top card
-        setTopCardPath(floatingCard.dest);
-        setFloatingCard(null);
-      }
-    }}
-  />
+  >
+    {/* Old card: rising and fading out */}
+<img
+  src={floatingCard.oldSrc}
+  alt="Old card"
+  style={{
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    opacity: floatingCard.phase === "animate" ? 0 : 1,
+    animation:
+      floatingCard.phase === "start"
+        ? "riseThenRight 2s forwards ease-in-out"
+        : (floatingCard.phase === "animate" ? "fallThenLeft 2s forwards ease-in-out" : "none"),
+  }}
+  onAnimationEnd={() => {
+    if (floatingCard.phase === "start") {
+      setFloatingCard((prev) => {
+        if (!prev) return null;
+        return { ...prev, oldSrc: prev.newSrc, phase: "animate" };
+      });
+    }
+    if (floatingCard.phase === "animate") {
+      setTopCardPath(floatingCard.oldSrc);
+      setFloatingCard(null);
+    }
+  }}
+/>
+  </div>
 )}
-
-
 
     {!isPlayerTurn && (
       <div
