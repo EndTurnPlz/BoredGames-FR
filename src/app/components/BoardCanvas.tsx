@@ -39,6 +39,14 @@ type BoardCanvasProps = {
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+type FloatingCard = {
+  src: string;
+  dest: string;
+  x: number;
+  y: number;
+  phase: "start" | "rise" | "fall";
+};
+
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
@@ -70,7 +78,7 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
 
-  let devMode = false
+  let devMode = true
 
   const [view, setView] = useState(-1)
   const viewRef = useRef<number | null>(null)
@@ -90,6 +98,10 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const possibleSecondPawnsRef = useRef<
     { piece: DrawnPiece; move: string[] }[] | null
   >(null);
+
+  const [floatingCard, setFloatingCard] = useState<FloatingCard | null>(null);
+  const floatingCardRef = useRef<FloatingCard | null>(null);
+
 
   const [highlightedTiles, setHighlightedTiles] = useState<string[][]>([]);
   const highlightedTilesRef = useRef<string[][] | null>(null);
@@ -366,6 +378,7 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
     drawAllCircles(ctx, tileSize, highlights);
     ctx.restore();
   }
+  
 
 const applyGameState = async (gameState: GameState) => {
   const oldPlayers = playersref.current
@@ -689,6 +702,15 @@ const applyGameState = async (gameState: GameState) => {
     }
   };
 
+  const animateTopCardSwap = (newPath: string) => {
+    // 1. Start with not-popped (initial position)
+    setFloatingCard({ src: "/Cards/deck.png", dest:newPath, x: cardX1, y: cardY, phase: "start" });
+    
+    setTimeout(() => {
+      setFloatingCard({ src: "/Cards/deck.png", dest: newPath, x: (cardX1 + cardX2) / 2, y: cardY, phase: "rise" });
+    }, 2000); 
+  };
+  
 const animatePieceAlongPath = (
   pieceId: string,
   path: string[],
@@ -742,6 +764,13 @@ const animatePieceAlongPath = (
 };
 
 
+useEffect(() => {
+  const cardPaths = Object.values(numberDict).map(n => `/Cards/FaceCards/${n}.png`);
+  cardPaths.forEach(path => {
+    const img = new Image();
+    img.src = path;
+  });
+}, []);
 
   useEffect(() => {
     let userId = localStorage.getItem("userId")
@@ -836,7 +865,8 @@ const animatePieceAlongPath = (
 
     // Optional: trigger an animation after mount
     setTimeout(() => {
-      applyGameState(nextDummyGameState)
+      // applyGameState(nextDummyGameState)
+      animateTopCardSwap("/Cards/FaceCards/two.png")
     }, 3000);
   }, []);
 
@@ -885,6 +915,40 @@ const animatePieceAlongPath = (
     Your Turn
   </button>
     )}
+   {floatingCard && (
+  <img
+    src={floatingCard.src}
+    style={{
+      position: "absolute",
+      left: floatingCard.x,
+      top: floatingCard.y,
+      width: cardW,
+      height: cardH,
+      transform:
+        floatingCard.phase === "start"
+          ? "scale(1) translateY(0)"
+          : floatingCard.phase === "rise"
+          ? "scale(1.5) translateY(-30px)"
+          : "scale(1) translateY(0)", // fall phase returns to normal
+      transition: "transform 1.25s ease",
+      zIndex: 1000,
+      pointerEvents: "none",
+    }}
+    onTransitionEnd={() => {
+      if (floatingCard.phase === "rise") {
+        // After rise animation ends, trigger fall animation
+        setFloatingCard(prev => prev ? {src: prev.dest, dest: prev.dest, x: prev.x, y: prev.y, phase: "fall" } : null);
+      } else if (floatingCard.phase === "fall") {
+        // After fall animation ends, cleanup floating card & update top card
+        setTopCardPath(floatingCard.dest);
+        setFloatingCard(null);
+      }
+    }}
+  />
+)}
+
+
+
     {!isPlayerTurn && (
       <div
         style={{
