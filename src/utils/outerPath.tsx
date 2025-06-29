@@ -194,7 +194,7 @@ export function findPath(start: string, end: string): string[] {
   const visited = new Set<string>();
   while (queue.length > 0) {
     const [node, path] = queue.shift()!;
-    console.log(node, path)
+    // console.log(node, path)
     if (node === end) return path;
 
     for (const neighbor of graph[node] || []) {

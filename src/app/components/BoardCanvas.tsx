@@ -45,9 +45,11 @@ type Card = { x: number; y: number; height: number; width: number };
 export default function GameCanvas({ gameType, username, playerColor = "green", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
-
   const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
+
+  const [canPull, setCanPull] = useState(true);
+  const canPullRef = useRef(true);
 
   const deckPath = "Cards/deck.png";
   const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
@@ -68,7 +70,7 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
 
-  let devMode = true
+  let devMode = false
 
   const [view, setView] = useState(-1)
   const viewRef = useRef<number | null>(null)
@@ -553,15 +555,21 @@ const applyGameState = async (gameState: GameState) => {
       setLoading(true);
       try {
         let player_Id = localStorage.getItem("userId") ?? ""
-        const res = await fetch(DRAW_CARD(player_Id))
+        const res = await fetch(DRAW_CARD(player_Id),  {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+      })
         const response = await res.json()
         if (!res.ok) {
           throw Error("failed to draw card")
         }
+        console.log(response)
         setPossibleMoves(response.movesets);
-        if (currentCardRef.current != response.lastDrawnCard) {
-          setCurrentCard(response.lastDrawnCard);
-          setTopCardPath(`/Cards/FaceCards/${numberDict[response.lastDrawnCard]}.png`)
+        if (currentCardRef.current != response.cardDrawn) {
+          setCurrentCard(response.cardDrawn);
+          setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
           setView(response.view)
         }
         setLoading(false)
@@ -633,6 +641,7 @@ const applyGameState = async (gameState: GameState) => {
       console.log("Game State:", gameState, gameState.currentView);
       if (gameState.gamePhase == 0) {
         setGameStarted(true)
+        setCanPull(false)
       }
       setView(gameState.currentView)
       if (currentCardRef.current != gameState.lastDrawnCard) {
@@ -659,7 +668,7 @@ const applyGameState = async (gameState: GameState) => {
   const heartbeat = async (playerId: string) => {
     if (devMode) return;
     try {
-      console.log(GET_HEARTBEAT(playerId))
+      // console.log(GET_HEARTBEAT(playerId))
       console.log(viewRef)
       const res = await fetch(GET_HEARTBEAT(playerId), {
         method: "PUT",
@@ -669,9 +678,9 @@ const applyGameState = async (gameState: GameState) => {
           body: JSON.stringify(viewRef.current)
         });
       console.log(res)
-      // if (res.ok) {
+      if (!res.ok || canPullRef) {
         setPullGamestate(true)
-      // }
+      }
 
       // applyGameState(gameState);
     } catch (err) {
@@ -686,7 +695,7 @@ const animatePieceAlongPath = (
   speed: number = 300
 ): Promise<void> => {
   return new Promise((resolve) => {
-    console.log(path)
+    // console.log(path)
     const allPlayers = [...playersref.current];
     const targetPlayer = allPlayers.find(p => p.pieces.some(pc => pc.id === pieceId));
     if (!targetPlayer)  {
@@ -702,7 +711,7 @@ const animatePieceAlongPath = (
     let stepIndex = 1;
 
     const moveToNext = () => {
-      console.log(stepIndex)
+      // console.log(stepIndex)
       if (stepIndex >= path.length) {
         // Final update to state after full path
         setPlayers(allPlayers);
@@ -712,7 +721,7 @@ const animatePieceAlongPath = (
 
       const coord = path[stepIndex];
       const pixel = coordMap[coord];
-      console.log(pixel, coord)
+      // console.log(pixel, coord)
       if (!pixel) {
         return;
         resolve();
@@ -721,7 +730,7 @@ const animatePieceAlongPath = (
       // Update the logical position
       targetPlayer.pieces[pieceIndex].x = pixel.x;
       targetPlayer.pieces[pieceIndex].y = pixel.y;
-      console.log(allPlayers)
+      // console.log(allPlayers)
       setPlayers([...allPlayers]); // trigger state update for redraw
 
       stepIndex++;
@@ -745,8 +754,8 @@ const animatePieceAlongPath = (
   useEffect(() => {
     // console.log(playerColorRef.current)
     const storedId = localStorage.getItem("userId");
-    const interval = setInterval(() => {
-      heartbeat(storedId ?? "");
+    const interval = setInterval(async () => {
+      await heartbeat(storedId ?? "");
     }, 10000); // every 2 seconds
 
     drawWithRotation(playerColorRef.current);
@@ -762,6 +771,10 @@ const animatePieceAlongPath = (
   useEffect(() => {
     loadingRef.current = loading;
   }, [loading]);
+
+  useEffect(() => {
+    canPullRef.current = canPull;
+  }, [canPull]);
 
   useEffect(() => {
     PossibleMovesRef.current = possibleMoves;
