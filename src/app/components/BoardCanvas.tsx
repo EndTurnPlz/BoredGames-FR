@@ -109,7 +109,6 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   >(null);
 
   const [floatingCard, setFloatingCard] = useState<FloatingCard | null>(null);
-  const floatingCardRef = useRef<FloatingCard | null>(null);
 
 
   const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
@@ -617,8 +616,9 @@ const applyGameState = async (gameState: GameState) => {
         console.log(response)
         setPossibleMoves(response.movesets);
         if (currentCardRef.current != response.cardDrawn) {
+          animateCardSwap("/Cards/deck.png", `/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
           setCurrentCard(response.cardDrawn);
-          setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
+          // setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
           setView(response.view)
         }
         setLoading(false)
@@ -666,8 +666,9 @@ const applyGameState = async (gameState: GameState) => {
   }, [selectedPiece]);
 
   useEffect(() => {
-    // console.log("color change: " + playerColor)
+    console.log("color change: " + playerColor)
     drawWithRotation(playerColor)
+    setAngle(colorToAngleDict[playerColor])
     drawPieces(playerColor)
     if (playerColor != "") {
       playerColorRef.current = playerColor
