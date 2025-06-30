@@ -228,7 +228,6 @@ export const drawCard = (
 ) => {
   const img = new Image();
   img.src = imgName; // Can be a relative path or full URL
-
   img.onload = () => {
     ctx.drawImage(img, x, y, width, height);
   };

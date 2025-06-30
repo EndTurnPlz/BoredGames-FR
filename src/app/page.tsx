@@ -35,12 +35,13 @@ export default function Home() {
       }
 
       const response = await res.json();
-      localStorage.setItem("userId", response.playerId);
+      const randomId = Math.random().toString(36).substring(2, 10);
+      localStorage.setItem("userId"+randomId, response.playerId);
       localStorage.setItem("lobbyId", response.lobbyId);
       setError("")
       // Only after successful response
       setTimeout(() => {
-        router.push(`/boardGame?game=${gameType}&username=${encodeURIComponent(username)}`);
+        router.push(`/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&randomId=${randomId}`);
       }, 500);
     } catch (err) {
       setIsTransitioning(false);

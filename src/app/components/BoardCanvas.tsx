@@ -10,7 +10,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor, MOVE_PAWN } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -18,6 +18,7 @@ import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { drawPiecesWithOffset } from "@/utils/drawUtils";
 import { cardH, cardW, cardX1, cardX2, cardY, radius, darkColorMap } from "@/utils/config";
+import { useSearchParams } from "next/navigation";
 
 type GameState = {
   [color: string]: string[];
@@ -28,6 +29,15 @@ export type Piece = {
   color: string;
   radius: number;
   id: string;
+};
+type MoveSet = {
+  pawn: string;
+  move: Move[];
+}
+type Move = {
+  from: string;
+  to: string;
+  effects: number[];
 };
 
 type BoardCanvasProps = {
@@ -51,13 +61,12 @@ export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
 export default function GameCanvas({ gameType, username, playerColor = "green", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
+  const searchParams = useSearchParams();
+  const randomId = searchParams.get("randomId");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
   const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
-
-  const [canPull, setCanPull] = useState(true);
-  const canPullRef = useRef(true);
 
   const deckPath = "Cards/deck.png";
   const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
@@ -78,7 +87,7 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
 
-  let devMode = true
+  let devMode = false
 
   const [view, setView] = useState(-1)
   const viewRef = useRef<number | null>(null)
@@ -86,25 +95,25 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const [pullGameState, setPullGamestate] = useState(false)
 
   const [possibleMoves, setPossibleMoves] = useState<
-    { piece: string; moves: string[][] }[]
+   MoveSet[]
   >([]);
   const PossibleMovesRef = useRef<
-    { piece: string; moves: string[][] }[] | null
+   MoveSet[] | null
   >(null);
 
   const [possibleSecondPawns, setPossibleSecondPawns] = useState<
-    { piece: DrawnPiece; move: string[] }[]
+    { piece: DrawnPiece; move: Move }[]
   >([]);
   const possibleSecondPawnsRef = useRef<
-    { piece: DrawnPiece; move: string[] }[] | null
+    { piece: DrawnPiece; move: Move }[] | null
   >(null);
 
   const [floatingCard, setFloatingCard] = useState<FloatingCard | null>(null);
   const floatingCardRef = useRef<FloatingCard | null>(null);
 
 
-  const [highlightedTiles, setHighlightedTiles] = useState<string[][]>([]);
-  const highlightedTilesRef = useRef<string[][] | null>(null);
+  const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
+  const highlightedTilesRef = useRef<Move[] | null>(null);
 
   const [selectedPiece, setSelectedPiece] = useState<DrawnPiece | null>(null);
   const selectedPieceRef = useRef<DrawnPiece | null>(null);
@@ -351,12 +360,12 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
     let highlights = [];
     if (!destinationRef.current) {
       highlightedTiles.forEach((coord) => {
-        highlights.push({ coord: coord[0], color: "#FF00FF" });
+        highlights.push({ coord: coord.to, color: "#FF00FF" });
       });
     } else {
       highlightedTiles.forEach((coord) => {
-        if (destination === coord[0]) {
-          highlights.push({ coord: coord[0], color: "#008000" });
+        if (destination === coord.to) {
+          highlights.push({ coord: coord.to, color: "#008000" });
         }
       });
     }
@@ -444,7 +453,7 @@ const applyGameState = async (gameState: GameState) => {
     };
   }, []);
 
-  const handleConfirmMoveClick = () => {
+  const handleConfirmMoveClick = async () => {
     if (destinationRef.current) {
       if (!isPlayerTurn) {
         console.log("Not your turn!");
@@ -454,22 +463,49 @@ const applyGameState = async (gameState: GameState) => {
       if (currentCardRef.current === 7 && currentDistanceref.current !== 7) {
         return true;
       }
+      try {
+        let player_Id = localStorage.getItem("userId" + randomId) ?? ""
+        const body = currentCardRef.current === 7
+      ? {
+          move1: {
+            pawn: selectedPieceRef.current?.id,
+            from: selectedPieceRef.current?.id,
+            to: destinationRef.current,
+          },
+          move2: {
+            pawn: secondSelectedPieceRef.current?.id,
+            from: secondSelectedPieceRef.current?.id,
+            to: secondSelectedDestinationRef.current,
+          },
+        }
+      : {
+          move1: {
+            pawn: selectedPieceRef.current?.id,
+            from: selectedPieceRef.current?.id,
+            to: destinationRef.current,
+          },
+        };
 
-      console.log(
-        "Button clicked! It's your turn.",
-        selectedPieceRef.current?.id,
-        destinationRef.current,
-        secondSelectedPieceRef.current,
-        secondSelectedDestinationRef.current
-      );
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        console.log("Backend response received!");
-      }, 2000);
 
-      resetSelections();
-      return true;
+        const res = await fetch(MOVE_PAWN(player_Id),  {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body)
+        })
+        if (!res.ok) {
+          throw Error("failed to post move")
+        }
+        
+        setLoading(false)
+        return true;
+      }
+      catch(err) {
+        console.error("Error fetching game state:", err);
+        setLoading(false)
+        return false;
+      }
     }
     return false;
   };
@@ -479,10 +515,10 @@ const applyGameState = async (gameState: GameState) => {
       const dx = x - tile.piece.drawX;
       const dy = y - tile.piece.drawY;
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-        setSecondDestination(tile.move[0]);
+        setSecondDestination(tile.move.to);
         setSecondSelectedPiece(tile.piece);
 
-        const distance = parseInt(tile.move[1], 10);
+        const distance = findPath(tile.move.from, tile.move.to).length;
         const current = currentDistanceref.current ?? 0;
         setCurrentDistance(current + distance);
         return true;
@@ -495,16 +531,16 @@ const applyGameState = async (gameState: GameState) => {
   const handleTileHighlightClick = (x: number, y: number) => {
     if (!highlightedTilesRef.current) return false;
     for (const tile of highlightedTilesRef.current) {
-      const pixel = coordMap[tile[0]];
+      const pixel = coordMap[tile.to];
       const dx = x - pixel.x;
       const dy = y - pixel.y;
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
         if (!selectedPieceRef.current) return false;
 
-        setdestination(tile[0]);
+        setdestination(tile.to);
 
         if (currentCardRef.current === 7) {
-          const current = parseInt(tile[1], 10);
+          const current = findPath(tile.from, tile.to).length
           setCurrentDistance(current);
           const target = 7 - current;
           const possibleSeconds = [];
@@ -515,10 +551,10 @@ const applyGameState = async (gameState: GameState) => {
               selectedPieceRef.current !== piece
             ) {
               const matching = PossibleMovesRef.current.find(
-                (m) => m.piece === piece.id
+                (m) => m.pawn === piece.id
               );
-              const canBeSecond = matching?.moves?.find(
-                (m) => parseInt(m[1], 10) === target
+              const canBeSecond = matching?.move?.find(
+                (m) => findPath(m.from, m.to).length === target
               );
               if (canBeSecond) {
                 possibleSeconds.push({ piece, move: canBeSecond });
@@ -545,9 +581,9 @@ const applyGameState = async (gameState: GameState) => {
         setSelectedPiece(piece);
 
         const matching = PossibleMovesRef.current?.find(
-          (m) => m.piece === piece.id
+          (m) => m.pawn === piece.id
         );
-        setHighlightedTiles(matching?.moves ?? []);
+        setHighlightedTiles(matching?.move ?? []);
         return true;
       }
     }
@@ -567,7 +603,7 @@ const applyGameState = async (gameState: GameState) => {
       console.log("Deck clicked! Sending to backend...");
       setLoading(true);
       try {
-        let player_Id = localStorage.getItem("userId") ?? ""
+        let player_Id = localStorage.getItem("userId" + randomId) ?? ""
         const res = await fetch(DRAW_CARD(player_Id),  {
           method: "GET",
           headers: {
@@ -654,7 +690,6 @@ const applyGameState = async (gameState: GameState) => {
       console.log("Game State:", gameState, gameState.currentView);
       if (gameState.gamePhase == 0) {
         setGameStarted(true)
-        setCanPull(false)
       }
       setView(gameState.currentView)
       if (currentCardRef.current != gameState.lastDrawnCard) {
@@ -691,7 +726,7 @@ const applyGameState = async (gameState: GameState) => {
           body: JSON.stringify(viewRef.current)
         });
       console.log(res)
-      if (!res.ok || canPullRef) {
+      if (!res.ok) {
         setPullGamestate(true)
       }
 
@@ -768,7 +803,7 @@ useEffect(() => {
 }, []);
 
   useEffect(() => {
-    let userId = localStorage.getItem("userId")
+    let userId = localStorage.getItem("userId" + randomId)
     if (pullGameState) {
       fetchGameState(userId ?? "")
     }
@@ -777,7 +812,7 @@ useEffect(() => {
 
   useEffect(() => {
     // console.log(playerColorRef.current)
-    const storedId = localStorage.getItem("userId");
+    const storedId = localStorage.getItem("userId" + randomId);
     const interval = setInterval(async () => {
       await heartbeat(storedId ?? "");
     }, 10000); // every 2 seconds
@@ -795,10 +830,6 @@ useEffect(() => {
   useEffect(() => {
     loadingRef.current = loading;
   }, [loading]);
-
-  useEffect(() => {
-    canPullRef.current = canPull;
-  }, [canPull]);
 
   useEffect(() => {
     PossibleMovesRef.current = possibleMoves;

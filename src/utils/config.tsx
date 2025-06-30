@@ -65,6 +65,10 @@ export const DRAW_CARD = (playerId: string)  => {
   return `${API_STRING}/games/Apologies/${playerId}/drawCard`
 }
 
+export const MOVE_PAWN = (playerId: string)  => {
+  return `${API_STRING}/games/Apologies/${playerId}/movePawn`
+}
+
 export const indexToColor: Record<number, string> = {
   0: "red",
   1: "yellow",

@@ -37,11 +37,12 @@ export default function JoinLobby() {
     
         const data = await res.json();
         setError("");
-        localStorage.setItem("userId", data.playerId);
+        const randomId = Math.random().toString(36).substring(2, 10);
+        localStorage.setItem("userId" + randomId, data.playerId);
         setTimeout(() => {
 
           router.push(
-            `/boardGame?game=${gameType}&username=${encodeURIComponent(username)}`
+            `/boardGame?game=${gameType}&username=${encodeURIComponent(username)}&randomId=${randomId}`
           );
         }, 500);
       } catch (err) {

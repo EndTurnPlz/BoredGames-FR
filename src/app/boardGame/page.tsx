@@ -13,6 +13,7 @@ export default function BoardGamePage() {
   const searchParams = useSearchParams();
   const gameType = searchParams.get("game");
   const username = searchParams.get("username");
+  const randomId = searchParams.get("randomId");
   const [playerColor, setPlayerColor] = useState("")
   const playerColorRef = useRef<string>("red")
   const [players, setPlayers] = useState([
@@ -63,7 +64,7 @@ export default function BoardGamePage() {
   };
 
   useEffect(() => {
-    let playerId = localStorage.getItem("userId") ?? ""
+    let playerId = localStorage.getItem("userId" + randomId) ?? ""
     setPlayerId(playerId)
     let lobbyId = localStorage.getItem("lobbyId") ?? ""
     if (lobbyId) {
@@ -135,7 +136,7 @@ export default function BoardGamePage() {
 
 
     {/* Overlay: Waiting for players */}
-    {!(players.length == 4) && (
+    {(players.length != 4) && (
       <div className="absolute inset-0 flex items-center justify-center z-50">
         <div className="bg-white bg-opacity-80 p-8 rounded-xl shadow-xl text-black text-center space-y-4 max-w-lg">
           <p className="text-xl font-bold">Waiting for 4 players to join...</p>
