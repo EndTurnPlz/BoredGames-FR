@@ -70,9 +70,9 @@ export const MOVE_PAWN = (playerId: string)  => {
 }
 
 export const indexToColor: Record<number, string> = {
-  0: "red",
+  0: "blue",
   1: "yellow",
-  2: "blue",
-  3: "green",
+  2: "green",
+  3: "red",
 };
 

@@ -466,25 +466,25 @@ const applyGameState = async (gameState: GameState) => {
         let player_Id = localStorage.getItem("userId" + randomId) ?? ""
         const body = currentCardRef.current === 7
       ? {
-          move1: {
-            pawn: selectedPieceRef.current?.id,
-            from: selectedPieceRef.current?.id,
-            to: destinationRef.current,
+          Move: {
+            From: selectedPieceRef.current?.id,
+            To: destinationRef.current,
+            Effect: 0
           },
-          move2: {
-            pawn: secondSelectedPieceRef.current?.id,
-            from: secondSelectedPieceRef.current?.id,
-            to: secondSelectedDestinationRef.current,
+          SplitMove: {
+            From: secondSelectedPieceRef.current?.id,
+            To: secondSelectedDestinationRef.current,
+            Effect: 2
           },
         }
       : {
-          move1: {
-            pawn: selectedPieceRef.current?.id,
-            from: selectedPieceRef.current?.id,
-            to: destinationRef.current,
+          Move: {
+            From: selectedPieceRef.current?.id,
+            To: destinationRef.current,
+            Effect: 2
           },
         };
-
+        console.log(body)
 
         const res = await fetch(MOVE_PAWN(player_Id),  {
           method: "POST",
@@ -582,6 +582,7 @@ const applyGameState = async (gameState: GameState) => {
         const matching = PossibleMovesRef.current?.find(
           (m) => m.pawn === piece.id
         );
+        console.log(PossibleMovesRef.current, piece.id)
         setHighlightedTiles(matching?.move ?? []);
         return true;
       }
@@ -689,13 +690,15 @@ const applyGameState = async (gameState: GameState) => {
 
       const gameState = await res.json();
       console.log("Game State:", gameState, gameState.currentView);
-      if (gameState.gamePhase == 0) {
+      if (gameState.gamePhase == 0 || gameState.gamePhase != 8) {
         setGameStarted(true)
       }
       setView(gameState.currentView)
       if (currentCardRef.current != gameState.lastDrawnCard) {
-        setCurrentCard(gameState.lastDrawnCard)
-        setTopCardPath(`/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+        if (gameState.lastDrawnCard in numberDict) {
+          animateCardSwap('/Cards/deck.png', `/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+          setCurrentCard(gameState.lastDrawnCard)
+        }
       }
       let pieces = gameState.pieces
       const colorOrder = ["blue", "yellow", "green", "red"];
@@ -704,7 +707,6 @@ const applyGameState = async (gameState: GameState) => {
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row].slice(); 
       }
-      console.log(colorToPieces)
       applyGameState(colorToPieces)
       setTurnOrder(gameState.turnOrder)
     } catch (err) {
@@ -720,7 +722,7 @@ const applyGameState = async (gameState: GameState) => {
       // console.log(GET_HEARTBEAT(playerId))
       console.log(viewRef)
       const res = await fetch(GET_HEARTBEAT(playerId), {
-        method: "PUT",
+        method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
@@ -816,11 +818,12 @@ useEffect(() => {
     const storedId = localStorage.getItem("userId" + randomId);
     const interval = setInterval(async () => {
       await heartbeat(storedId ?? "");
-    }, 10000); // every 2 seconds
-
+    }, 4000); // every 2 seconds
+    fetchGameState(storedId ?? "")
     drawWithRotation(playerColorRef.current);
     setAngle(colorToAngleDict[playerColorRef.current])
     drawPieces(playerColorRef.current);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
