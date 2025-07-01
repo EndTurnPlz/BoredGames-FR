@@ -76,3 +76,10 @@ export const indexToColor: Record<number, string> = {
   3: "red",
 };
 
+export const colorToIndex: Record<string, number> = {
+  "blue": 0,
+ "yellow": 1,
+  "green": 2,
+  "red": 3
+};
+

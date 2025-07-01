@@ -10,7 +10,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor, MOVE_PAWN } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor, MOVE_PAWN, colorToIndex } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -69,8 +69,8 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
 
   const deckPath = "Cards/deck.png";
-  const [topCardPath, setTopCardPath] = useState<string>("/Cards/FaceCards/one.png");
-  const topCardPathRef = useRef<string>("/Cards/FaceCards/one.png");
+  const [topCardPath, setTopCardPath] = useState<string>("/Cards/deck.png");
+  const topCardPathRef = useRef<string>("/Cards/deck.png");
 
   const [currentCard, setCurrentCard] = useState<number>(0);
   const currentCardRef = useRef<number | null>(null);
@@ -86,6 +86,9 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
+  
+  const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([])
+  const [gamePhase, setGamePhase] = useState<number>(8);
 
   let devMode = false
 
@@ -123,6 +126,15 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
 
   const [destination, setdestination] = useState<string | null>(null);
   const destinationRef = useRef<string | null>(null);
+
+  const [possibleEffects, setPossibleEffects] = useState<number[]>([]);
+  const possibleEffectsRef = useRef<number[]>([])
+
+  const [effectPopupPosition, setEffectPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const [selectedEffect, setSelectedEffect] = useState<number | null>(null);
+
+  const [secondEffect, setSecondSelectedEffect] = useState<number | null>(null)
+
 
   const [secondDestination, setSecondDestination] = useState<string | null>(
     null
@@ -425,7 +437,7 @@ const applyGameState = async (gameState: GameState) => {
     if (!canvas) return;
 
     const handleClick = async (event: MouseEvent) => {
-      if (loadingRef.current) return;
+      if (loadingRef.current || pullGameState) return;
 
       const rect = canvas.getBoundingClientRect();
 
@@ -453,7 +465,7 @@ const applyGameState = async (gameState: GameState) => {
   }, []);
 
   const handleConfirmMoveClick = async () => {
-    if (destinationRef.current) {
+    if (destinationRef.current && !pullGameState) {
       if (!isPlayerTurn) {
         console.log("Not your turn!");
         return true;
@@ -469,19 +481,19 @@ const applyGameState = async (gameState: GameState) => {
           Move: {
             From: selectedPieceRef.current?.id,
             To: destinationRef.current,
-            Effect: 0
+            Effect: selectedEffect
           },
           SplitMove: {
             From: secondSelectedPieceRef.current?.id,
             To: secondSelectedDestinationRef.current,
-            Effect: 2
+            Effect: secondEffect
           },
         }
       : {
           Move: {
             From: selectedPieceRef.current?.id,
             To: destinationRef.current,
-            Effect: 2
+            Effect: selectedEffect
           },
         };
         console.log(body)
@@ -498,6 +510,7 @@ const applyGameState = async (gameState: GameState) => {
         }
         
         setLoading(false)
+        resetSelections();
         return true;
       }
       catch(err) {
@@ -516,7 +529,7 @@ const applyGameState = async (gameState: GameState) => {
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
         setSecondDestination(tile.move.to);
         setSecondSelectedPiece(tile.piece);
-
+        setSecondSelectedEffect(tile.move.effects[0])
         const distance = findPath(tile.move.from, tile.move.to).length;
         const current = currentDistanceref.current ?? 0;
         setCurrentDistance(current + distance);
@@ -537,6 +550,19 @@ const applyGameState = async (gameState: GameState) => {
         if (!selectedPieceRef.current) return false;
 
         setdestination(tile.to);
+        if (tile.effects.length > 1) {
+          setPossibleEffects(tile.effects);
+
+          // Position the popup near the clicked tile
+          setEffectPopupPosition({
+            x: coordMap[tile.to].x,
+            y: coordMap[tile.to].y,
+          });
+        } else {
+          // Auto-select the only effect
+          setSelectedEffect(tile.effects[0]);
+          setEffectPopupPosition(null);
+        }
 
         if (currentCardRef.current === 7) {
           const current = findPath(tile.from, tile.to).length
@@ -659,6 +685,9 @@ const applyGameState = async (gameState: GameState) => {
     setSecondDestination(null);
     setPossibleSecondPawns([]);
     setSecondSelectedPiece(null);
+    setSelectedEffect(null);
+    setSecondSelectedEffect(null);
+    setPossibleEffects([]);
   };
 
   useEffect(() => {
@@ -707,8 +736,16 @@ const applyGameState = async (gameState: GameState) => {
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row].slice(); 
       }
+      console.log(colorToIndex[playerColorRef.current], playerColorRef.current, gameState.gamePhase)
+      if ((gameState.gamePhase == colorToIndex[playerColorRef.current]*2) || ( gameState.gamePhase == (colorToIndex[playerColorRef.current]*2 + 1))) {
+        setIsPlayerTurn(true);
+      } else {
+        setIsPlayerTurn(false)
+      }
       applyGameState(colorToPieces)
       setTurnOrder(gameState.turnOrder)
+      setLocalTurnOrder(gameState.turnOrder)
+      setGamePhase(gameState.gamePhase)
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -875,6 +912,10 @@ useEffect(() => {
   }, [possibleSecondPawns]);
 
   useEffect(() => {
+    possibleEffectsRef.current = possibleEffects;
+  }, [possibleEffects]);
+
+  useEffect(() => {
     if (!devMode) return;
 
     const dummyGameState: GameState = {
@@ -945,6 +986,39 @@ useEffect(() => {
     Your Turn
   </button>
     )}
+{effectPopupPosition && possibleEffects.length > 1 && (
+  <div
+    style={{
+      position: "absolute",
+      left: effectPopupPosition.x,
+      top: effectPopupPosition.y,
+      zIndex: 100,
+      backgroundColor: "white",
+      border: "1px solid black",
+      borderRadius: "8px",
+      padding: "0.5rem",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
+    }}
+  >
+    {possibleEffects.map((eff) => (
+      <div
+        key={eff}
+        onClick={() => {
+          setSelectedEffect(eff);
+          setEffectPopupPosition(null);
+        }}
+        style={{
+          padding: "0.25rem 0.5rem",
+          cursor: "pointer",
+          borderBottom: "1px solid #ccc",
+        }}
+      >
+        {eff === 4 ? "Swap" : "Move"}
+      </div>
+    ))}
+  </div>
+)}
+
 {floatingCard && (
   <div
     style={{
@@ -1004,7 +1078,7 @@ useEffect(() => {
           padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
         }}
       >
-        Rohit is playing...
+        {localTurnOrder[(gamePhase  - (gamePhase % 1)) / 2]} is playing...
       </div>
 
     )}
@@ -1050,5 +1124,6 @@ useEffect(() => {
         </div>
       )}
     </div>
+    
   );
 }
