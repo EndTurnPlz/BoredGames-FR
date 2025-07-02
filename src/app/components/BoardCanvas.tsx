@@ -10,7 +10,7 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor, MOVE_PAWN, colorToIndex } from "@/utils/config";
+import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor, MOVE_PAWN, colorToIndex, deck_card, card_path } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -476,7 +476,7 @@ const applyGameState = async (gameState: GameState) => {
       }
       try {
         let player_Id = localStorage.getItem("userId" + randomId) ?? ""
-        const body = currentCardRef.current === 7
+        const body = secondSelectedDestinationRef.current
       ? {
           Move: {
             From: selectedPieceRef.current?.id,
@@ -643,7 +643,7 @@ const applyGameState = async (gameState: GameState) => {
         }
         console.log(response)
         setPossibleMoves(response.movesets);
-        animateCardSwap("/Cards/deck.png", `/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
+        animateCardSwap(deck_card, card_path(numberDict[response.cardDrawn]))
         setCurrentCard(response.cardDrawn);
         // setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
         setView(response.view)
@@ -723,7 +723,7 @@ const applyGameState = async (gameState: GameState) => {
       }
       setView(gameState.currentView)
       if (gameState.lastDrawnCard in numberDict && !isPlayerTurn) {
-        animateCardSwap('/Cards/deck.png', `/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+        animateCardSwap(deckPath, card_path(numberDict[gameState.lastDrawnCard]))
         setCurrentCard(gameState.lastDrawnCard)
       }
       let pieces = gameState.pieces
@@ -1001,7 +1001,7 @@ useEffect(() => {
       <div
         key={eff}
         onClick={() => {
-          setSelectedEffect(eff);
+          setSecondSelectedEffect(eff);
           setEffectPopupPosition(null);
         }}
         style={{
