@@ -565,7 +565,8 @@ const applyGameState = async (gameState: GameState) => {
         }
 
         if (currentCardRef.current === 7) {
-          const current = findPath(tile.from, tile.to).length
+          const current = findPath(tile.from, tile.to).length - 1
+          console.log(current, findPath(tile.from, tile.to));
           setCurrentDistance(current);
           const target = 7 - current;
           const possibleSeconds = [];
@@ -579,7 +580,7 @@ const applyGameState = async (gameState: GameState) => {
                 (m) => m.pawn === piece.id
               );
               const canBeSecond = matching?.move?.find(
-                (m) => findPath(m.from, m.to).length === target
+                (m) => (findPath(m.from, m.to).length - 1) === target
               );
               if (canBeSecond) {
                 possibleSeconds.push({ piece, move: canBeSecond });
@@ -642,12 +643,10 @@ const applyGameState = async (gameState: GameState) => {
         }
         console.log(response)
         setPossibleMoves(response.movesets);
-        if (currentCardRef.current != response.cardDrawn) {
-          animateCardSwap("/Cards/deck.png", `/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
-          setCurrentCard(response.cardDrawn);
-          // setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
-          setView(response.view)
-        }
+        animateCardSwap("/Cards/deck.png", `/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
+        setCurrentCard(response.cardDrawn);
+        // setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
+        setView(response.view)
         setLoading(false)
         return true;
       }
@@ -719,15 +718,13 @@ const applyGameState = async (gameState: GameState) => {
 
       const gameState = await res.json();
       console.log("Game State:", gameState, gameState.currentView);
-      if (gameState.gamePhase == 0 || gameState.gamePhase != 8) {
+      if (gameState.gamePhase != 8) {
         setGameStarted(true)
       }
       setView(gameState.currentView)
-      if (currentCardRef.current != gameState.lastDrawnCard) {
-        if (gameState.lastDrawnCard in numberDict) {
-          animateCardSwap('/Cards/deck.png', `/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
-          setCurrentCard(gameState.lastDrawnCard)
-        }
+      if (gameState.lastDrawnCard in numberDict && !isPlayerTurn) {
+        animateCardSwap('/Cards/deck.png', `/Cards/FaceCards/${numberDict[gameState.lastDrawnCard]}.png`)
+        setCurrentCard(gameState.lastDrawnCard)
       }
       let pieces = gameState.pieces
       const colorOrder = ["blue", "yellow", "green", "red"];
