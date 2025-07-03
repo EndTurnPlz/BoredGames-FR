@@ -56,6 +56,8 @@ type FloatingCard = {
   phase: "start" | "animate" | "done";
 };
 
+type playerPhase = "draw" | "move" | "wait"
+
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
@@ -65,7 +67,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
   const [angle, setAngle] = useState(0);
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
+  const [isPlayerTurn, setIsPlayerTurn] = useState("draw"); 
 
   const [topCardPath, setTopCardPath] = useState<string>(deck_card);
   const topCardPathRef = useRef<string>(deck_card);
@@ -655,6 +657,16 @@ const applyGameState = async (gameState: GameState) => {
     return true;
   };
 
+  const setPlayerTurn = (phase: number) => {
+    if (phase == colorToIndex[playerColorRef.current]*2) {
+      setIsPlayerTurn("draw");
+    } else if (phase == (colorToIndex[playerColorRef.current]*2 + 1)) {
+      setIsPlayerTurn("move")
+    } else {
+      setIsPlayerTurn("wait")
+    }
+  }
+
   const resetSelections = () => {
     setSelectedPiece(null);
     setdestination(null);
@@ -680,11 +692,7 @@ const applyGameState = async (gameState: GameState) => {
     drawPieces(playerColor)
     if (playerColor != "") {
       playerColorRef.current = playerColor
-      if ((gamePhase == colorToIndex[playerColorRef.current]*2) || (gamePhase == (colorToIndex[playerColorRef.current]*2 + 1))) {
-        setIsPlayerTurn(true);
-      } else {
-        setIsPlayerTurn(false)
-      }
+      setPlayerTurn(gamePhase);
     }
   }, [playerColor]);
 
@@ -707,7 +715,7 @@ const applyGameState = async (gameState: GameState) => {
         setGameStarted(true)
       }
       setView(gameState.currentView)
-      if (gameState.lastDrawnCard in numberDict && !isPlayerTurn) {
+      if (gameState.lastDrawnCard in numberDict && isPlayerTurn == "draw") {
         animateCardSwap(deck_card, card_path(numberDict[gameState.lastDrawnCard]))
         setCurrentCard(gameState.lastDrawnCard)
       }
@@ -719,11 +727,7 @@ const applyGameState = async (gameState: GameState) => {
         colorToPieces[color] = pieces[row].slice(); 
       }
       console.log(colorToIndex[playerColorRef.current], playerColorRef.current, gameState.gamePhase)
-      if ((gameState.gamePhase == colorToIndex[playerColorRef.current]*2) || ( gameState.gamePhase == (colorToIndex[playerColorRef.current]*2 + 1))) {
-        setIsPlayerTurn(true);
-      } else {
-        setIsPlayerTurn(false)
-      }
+      setPlayerTurn(gameState.gamePhase);
       applyGameState(colorToPieces)
       setTurnOrder(gameState.turnOrder)
       setLocalTurnOrder(gameState.turnOrder)
@@ -925,7 +929,7 @@ useEffect(() => {
     setGameStarted(true);
     setPossibleMoves(mockCardResponse11.movesets)
     applyGameState(dummyGameState);
-    setIsPlayerTurn(true)
+    setIsPlayerTurn("draw")
     playerColorRef.current = "red"
     // const nextDummyGameState: GameState = {
     //   red: ["d_S", "d_S", "d_S", "d_S"],
@@ -965,7 +969,7 @@ useEffect(() => {
     {/* Deck Button */}
 <button
   onClick={async () => {
-    if (loadingRef.current || pullGameState || !isPlayerTurn) return;
+    if (loadingRef.current || pullGameState || (isPlayerTurn == "wait")) return;
     await handleDeckClick();
   }}
   style={{
@@ -982,12 +986,8 @@ useEffect(() => {
     background: `url(${deck_card}) no-repeat center/contain`,
   }}
   aria-label="Draw from deck"
-  className="relative group"
+  className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
 >
-  <div
-    className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-30 transition-opacity duration-200 rounded"
-    style={{ pointerEvents: "none" }}
-  />
 </button>
 
 {/* Top Card Button */}
@@ -1010,14 +1010,11 @@ useEffect(() => {
     background: `url(${topCardPath}) no-repeat center/contain`,
   }}
   aria-label="view top card"
-  className="relative group"
+  className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
 >
-  <div
-    className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-30 transition-opacity duration-200 rounded"
-    style={{ pointerEvents: "none" }}
-  />
+
 </button>
-    {isPlayerTurn && (
+    {(isPlayerTurn == "move") && (
      <button
       onClick={handleConfirmMoveClick}
       className="absolute font-bold z-20 shadow-md transition-colors duration-200 
@@ -1125,7 +1122,7 @@ useEffect(() => {
   </div>
 )}
 
-    {!isPlayerTurn && (
+    {(isPlayerTurn != "move") && (
       <div
         style={{
           position: "absolute",
@@ -1142,7 +1139,9 @@ useEffect(() => {
           padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
         }}
       >
-        {localTurnOrder[(gamePhase  - (gamePhase % 2)) / 2]} is playing...
+       {(isPlayerTurn == "wait")
+        ? `${localTurnOrder[Math.floor(gamePhase / 2)]} is playing...`
+        : "Click Deck to Draw Card"}
       </div>
 
     )}
