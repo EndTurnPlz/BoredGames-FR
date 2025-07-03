@@ -1028,7 +1028,7 @@ useEffect(() => {
         borderRadius: canvasHeight * 0.02,
       }}
     >
-      Your Turn
+      Submit Move
     </button>
     )}
 {effectPopupPosition && possibleEffects.length > 1 && (
