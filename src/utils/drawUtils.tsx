@@ -218,24 +218,6 @@ export const drawStripWithTriangleAndCircle = (
     ctx.restore();
   }
 };
-export const drawCard = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  imgName: string
-) => {
-  const img = new Image();
-  img.src = imgName; // Can be a relative path or full URL
-  img.onload = () => {
-    ctx.drawImage(img, x, y, width, height);
-  };
-
-  img.onerror = () => {
-    console.error(`Failed to load image: ${imgName}`);
-  };
-};
 
 // Store last known button bounds to detect clicks
 
