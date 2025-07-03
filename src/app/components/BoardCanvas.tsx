@@ -60,7 +60,7 @@ type FloatingCard = {
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "green", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
+export default function GameCanvas({ gameType, username, playerColor = "red", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
   const searchParams = useSearchParams();
   const randomId = searchParams.get("randomId");
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -90,7 +90,7 @@ export default function GameCanvas({ gameType, username, playerColor = "green", 
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([])
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = false
+  let devMode = true
 
   const [view, setView] = useState(-1)
   const viewRef = useRef<number | null>(null)
@@ -554,9 +554,10 @@ const applyGameState = async (gameState: GameState) => {
           setPossibleEffects(tile.effects);
 
           // Position the popup near the clicked tile
+          let coords = getUnrotatedMousePosition(coordMap[tile.to].x, coordMap[tile.to].y, colorToAngleDict[playerColorRef.current]);
           setEffectPopupPosition({
-            x: coordMap[tile.to].x,
-            y: coordMap[tile.to].y,
+            x: coords.x,
+            y: coords.y - tileSize,
           });
         } else {
           // Auto-select the only effect
@@ -603,12 +604,14 @@ const applyGameState = async (gameState: GameState) => {
       const dx = x - piece.drawX;
       const dy = y - piece.drawY;
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+         console.log(x, y, piece.color)
         if (piece.color != playerColorRef.current) return;
         setSelectedPiece(piece);
 
         const matching = PossibleMovesRef.current?.find(
           (m) => m.pawn === piece.id
         );
+        console.log(matching)
         console.log(PossibleMovesRef.current, piece.id)
         setHighlightedTiles(matching?.move ?? []);
         return true;
@@ -687,6 +690,7 @@ const applyGameState = async (gameState: GameState) => {
     setSelectedEffect(null);
     setSecondSelectedEffect(null);
     setPossibleEffects([]);
+    setEffectPopupPosition(null);
   };
 
   useEffect(() => {
@@ -854,6 +858,7 @@ useEffect(() => {
   }, [pullGameState])
 
   useEffect(() => {
+    if (devMode) return;
     console.log("refreshed")
     const storedId = localStorage.getItem("userId" + randomId);
     const interval = setInterval(async () => {
@@ -922,25 +927,28 @@ useEffect(() => {
     if (!devMode) return;
 
     const dummyGameState: GameState = {
-      red: ["d_S", "d_S", "d_S", "d_S"],
-      blue: ["a_S", "a_S", "a_8", "a_S"],
+      red: ["d_4", "d_S", "d_S", "d_S"],
+      blue: ["d_15", "a_S", "a_8", "a_S"],
       yellow: ["b_S", "b_S", "b_S", "b_S"],
       green: ["c_S", "c_S", "c_S", "c_S"]
     };
 
     setGameStarted(true);
+    setPossibleMoves(mockCardResponse11.movesets)
     applyGameState(dummyGameState);
-    const nextDummyGameState: GameState = {
-      red: ["d_S", "d_S", "d_S", "d_S"],
-      blue: ["a_S", "a_S", "a_S", "a_S"],
-      yellow: ["b_S", "b_S", "b_S", "b_S"],
-      green: ["c_S", "c_S", "c_S", "c_S"]
-    };
+    setIsPlayerTurn(true)
+    playerColorRef.current = "red"
+    // const nextDummyGameState: GameState = {
+    //   red: ["d_S", "d_S", "d_S", "d_S"],
+    //   blue: ["a_S", "a_S", "a_S", "a_S"],
+    //   yellow: ["b_S", "b_S", "b_S", "b_S"],
+    //   green: ["c_S", "c_S", "c_S", "c_S"]
+    // };
 
     // Optional: trigger an animation after mount
     setTimeout(() => {
       // applyGameState(nextDummyGameState)
-      animateCardSwap("Cards/deck.png", "/Cards/FaceCards/two.png")
+      // animateCardSwap("Cards/deck.png", "/Cards/FaceCards/two.png")
     }, 3000);
   }, []);
 
@@ -996,7 +1004,7 @@ useEffect(() => {
       left: effectPopupPosition.x,
       top: effectPopupPosition.y,
       zIndex: 100,
-      backgroundColor: "white",
+      backgroundColor: "black",
       border: "1px solid black",
       borderRadius: "8px",
       padding: "0.5rem",
@@ -1007,16 +1015,32 @@ useEffect(() => {
       <div
         key={eff}
         onClick={() => {
-          setSecondSelectedEffect(eff);
-          setEffectPopupPosition(null);
+          setSecondSelectedEffect(eff); // just select, don't close
         }}
         style={{
           padding: "0.25rem 0.5rem",
           cursor: "pointer",
           borderBottom: "1px solid #ccc",
+          backgroundColor: eff === selectedEffect ? "#444" : "transparent", // 👈 highlight
+          color: eff === selectedEffect ? "white" : "lightgray",
+          borderRadius: "4px"
         }}
       >
-        {eff === 4 ? "Swap" : "Move"}
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            color: "inherit",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+          onClick={(e) => {
+            e.stopPropagation(); // prevent bubbling to parent div
+            setSelectedEffect(eff);
+          }}
+        >
+          {eff === 4 ? "Swap" : "Move"}
+        </button>
       </div>
     ))}
   </div>

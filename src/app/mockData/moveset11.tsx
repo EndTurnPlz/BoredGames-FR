@@ -1,21 +1,19 @@
 export const mockCardResponse11 = {
-  "card": 11,
-  "moveset" : [
-    {
-      "piece" : "d_3",
-      "moves" : [
-        ["c_7","11"],
-        ["c_13","11"],
-        ["d_14","11"],
-      ]
-    },
-    {
-      "piece" : "a_9",
-      "moves" : [
-        ["c_7","11"],
-        ["c_13","11"],
-        ["a_s3","11"],
-      ]
-    }
-  ]
+    "currentView": 6,
+    "cardDrawn": 11,
+    "movesets": [
+        {
+            "pawn": "d_4",
+            "move": [
+                {
+                    "from": "d_4",
+                    "to": "d_11",
+                    "effects": [
+                        0,
+                        4
+                    ]
+                }
+            ]
+        }
+    ]
 };
