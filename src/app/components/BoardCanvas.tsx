@@ -9,14 +9,36 @@ import {
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
-import { tileSize, canvasWidth, canvasHeight, numberDict, colorToAngleDict, GET_HEARTBEAT, GET_GAMESTATE, DRAW_CARD, indexToColor, MOVE_PAWN, colorToIndex, deck_card, card_path } from "@/utils/config";
+import {
+  tileSize,
+  canvasWidth,
+  canvasHeight,
+  numberDict,
+  colorToAngleDict,
+  GET_HEARTBEAT,
+  GET_GAMESTATE,
+  DRAW_CARD,
+  indexToColor,
+  MOVE_PAWN,
+  colorToIndex,
+  deck_card,
+  card_path,
+} from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
 import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { drawPiecesWithOffset } from "@/utils/drawUtils";
-import { cardH, cardW, cardX1, cardX2, cardY, radius, darkColorMap } from "@/utils/config";
+import {
+  cardH,
+  cardW,
+  cardX1,
+  cardX2,
+  cardY,
+  radius,
+  darkColorMap,
+} from "@/utils/config";
 import { useSearchParams } from "next/navigation";
 
 type GameState = {
@@ -32,7 +54,7 @@ export type Piece = {
 type MoveSet = {
   pawn: string;
   move: Move[];
-}
+};
 type Move = {
   from: string;
   to: string;
@@ -49,25 +71,32 @@ type BoardCanvasProps = {
 };
 
 type FloatingCard = {
-  oldSrc: string
+  oldSrc: string;
   newSrc: string;
   x: number;
   y: number;
   phase: "start" | "animate" | "done";
 };
 
-type playerPhase = "draw" | "move" | "wait"
+type playerPhase = "draw" | "move" | "wait";
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
-export default function GameCanvas({ gameType, username, playerColor = "red", setGameOver, setTurnOrder, setGameStarted }: BoardCanvasProps) {
+export default function GameCanvas({
+  gameType,
+  username,
+  playerColor = "red",
+  setGameOver,
+  setTurnOrder,
+  setGameStarted,
+}: BoardCanvasProps) {
   const searchParams = useSearchParams();
   const randomId = searchParams.get("randomId");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
   const [angle, setAngle] = useState(0);
-  const [isPlayerTurn, setIsPlayerTurn] = useState("draw"); 
+  const [isPlayerTurn, setIsPlayerTurn] = useState("draw");
 
   const [topCardPath, setTopCardPath] = useState<string>(deck_card);
   const topCardPathRef = useRef<string>(deck_card);
@@ -77,7 +106,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
 
   const [players, setPlayers] = useState<Player[]>([]);
   const playersref = useRef<Player[]>([]);
-  const playerColorRef = useRef<string>("green")
+  const playerColorRef = useRef<string>("green");
 
   const drawnPiecesRef = useRef<DrawnPiece[]>([]);
 
@@ -86,23 +115,19 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
-  
-  const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([])
+
+  const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = false
+  let devMode = true;
 
-  const [view, setView] = useState(-1)
-  const viewRef = useRef<number | null>(null)
+  const [view, setView] = useState(-1);
+  const viewRef = useRef<number | null>(null);
 
-  const [pullGameState, setPullGamestate] = useState(false)
+  const [pullGameState, setPullGamestate] = useState(false);
 
-  const [possibleMoves, setPossibleMoves] = useState<
-   MoveSet[]
-  >([]);
-  const PossibleMovesRef = useRef<
-   MoveSet[] | null
-  >(null);
+  const [possibleMoves, setPossibleMoves] = useState<MoveSet[]>([]);
+  const PossibleMovesRef = useRef<MoveSet[] | null>(null);
 
   const [possibleSecondPawns, setPossibleSecondPawns] = useState<
     { piece: DrawnPiece; move: Move }[]
@@ -112,7 +137,6 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   >(null);
 
   const [floatingCard, setFloatingCard] = useState<FloatingCard | null>(null);
-
 
   const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
   const highlightedTilesRef = useRef<Move[] | null>(null);
@@ -128,13 +152,15 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   const destinationRef = useRef<string | null>(null);
 
   const [possibleEffects, setPossibleEffects] = useState<number[]>([]);
-  const possibleEffectsRef = useRef<number[]>([])
+  const possibleEffectsRef = useRef<number[]>([]);
 
-  const [effectPopupPosition, setEffectPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const [effectPopupPosition, setEffectPopupPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<number | null>(null);
 
-  const [secondEffect, setSecondSelectedEffect] = useState<number | null>(null)
-
+  const [secondEffect, setSecondSelectedEffect] = useState<number | null>(null);
 
   const [secondDestination, setSecondDestination] = useState<string | null>(
     null
@@ -194,7 +220,17 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
     ];
 
     zones.forEach(({ x, y, color, text }) =>
-      drawCircle(ctx, x, y, circleRadius, color, tileSize, text, angle, playerColorRef.current)
+      drawCircle(
+        ctx,
+        x,
+        y,
+        circleRadius,
+        color,
+        tileSize,
+        text,
+        angle,
+        playerColorRef.current
+      )
     );
 
     for (let row = 0; row < numRows; row++) {
@@ -212,7 +248,12 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
           blueSafetyZone,
           greenSafetyZone,
         ];
-        const colors = [darkColorMap["red"], darkColorMap["yellow"], darkColorMap["blue"], darkColorMap["green"]];
+        const colors = [
+          darkColorMap["red"],
+          darkColorMap["yellow"],
+          darkColorMap["blue"],
+          darkColorMap["green"],
+        ];
 
         zones.forEach((zone, i) => {
           if (zone.some(([r, c]) => r === row && c === col)) {
@@ -304,17 +345,30 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
     );
 
     const safetyConfigs = [
-      { zone: redSafetyZone, angle: 90, offsetX: 2 * tileSize, offsetY: tileSize / 2 },
+      {
+        zone: redSafetyZone,
+        angle: 90,
+        offsetX: 2 * tileSize,
+        offsetY: tileSize / 2,
+      },
       { zone: blueSafetyZone, angle: 360, offsetX: 1.5 * tileSize, offsetY: 0 },
-      { zone: greenSafetyZone, angle: 180, offsetX: 0.5 * tileSize, offsetY: -2 * tileSize },
-      { zone: yellowSafetyZone, angle: 270, offsetX: 0, offsetY: 1.5 * tileSize },
+      {
+        zone: greenSafetyZone,
+        angle: 180,
+        offsetX: 0.5 * tileSize,
+        offsetY: -2 * tileSize,
+      },
+      {
+        zone: yellowSafetyZone,
+        angle: 270,
+        offsetX: 0,
+        offsetY: 1.5 * tileSize,
+      },
     ];
 
     safetyConfigs.forEach(({ zone, angle, offsetX, offsetY }) => {
       drawSafetyWord(ctx, zone, angle, offsetX, offsetY);
     });
-
-
 
     // drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
     // drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
@@ -327,7 +381,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    ctx.clearRect(0,0, canvasWidth, canvasHeight)
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     const angle = getRotationAngleForColor(color);
     // Save current state
     ctx.save();
@@ -397,40 +451,38 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
 
     drawAllCircles(ctx, tileSize, highlights);
     ctx.restore();
-  }
-  
+  };
 
-const applyGameState = async (gameState: GameState) => {
-  const oldPlayers = playersref.current
+  const applyGameState = async (gameState: GameState) => {
+    const oldPlayers = playersref.current;
 
-  const newPlayers: Player[] = [];
-  const animationPromises: Promise<void>[] = [];
+    const newPlayers: Player[] = [];
+    const animationPromises: Promise<void>[] = [];
 
-  for (const color in gameState) {
-    const coordStrings = gameState[color];
-    const oldPlayer = oldPlayers.find((player) => player.color === color)
-    const positions = coordStrings.map((coord) =>
-      coordStringToPixel(coord, tileSize)
-    );
-    const player = new Player(color, positions);
-    newPlayers.push(player);
+    for (const color in gameState) {
+      const coordStrings = gameState[color];
+      const oldPlayer = oldPlayers.find((player) => player.color === color);
+      const positions = coordStrings.map((coord) =>
+        coordStringToPixel(coord, tileSize)
+      );
+      const player = new Player(color, positions);
+      newPlayers.push(player);
 
-    for (let i = 0; i < positions.length; i++) {
-      const target = positions[i];
-      const pieceId = oldPlayer?.pieces[i].id ?? "";
-      const currentPiece = oldPlayer?.pieces[i];
-      if (currentPiece && (pieceId != target.id)) {
-        // console.log(currentPiece, pieceId, target.id)
-        animationPromises.push(
-          animatePieceAlongPath(pieceId, findPath(pieceId, target.id))
-        );
+      for (let i = 0; i < positions.length; i++) {
+        const target = positions[i];
+        const pieceId = oldPlayer?.pieces[i].id ?? "";
+        const currentPiece = oldPlayer?.pieces[i];
+        if (currentPiece && pieceId != target.id) {
+          // console.log(currentPiece, pieceId, target.id)
+          animationPromises.push(
+            animatePieceAlongPath(pieceId, findPath(pieceId, target.id))
+          );
+        }
       }
     }
-  }
-  await Promise.all(animationPromises); 
-  setPlayers(newPlayers);
-};
-
+    await Promise.all(animationPromises);
+    setPlayers(newPlayers);
+  };
 
   useEffect(() => {
     const canvas = piecesCanvasRef.current;
@@ -446,11 +498,12 @@ const applyGameState = async (gameState: GameState) => {
       let unrotatedCoords = getUnrotatedMousePosition(
         mouseX,
         mouseY,
-        colorToAngleDict[playerColorRef.current] 
+        colorToAngleDict[playerColorRef.current]
       );
 
       if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
-      if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y)) return;
+      if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y))
+        return;
       if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
 
       resetSelections();
@@ -473,47 +526,46 @@ const applyGameState = async (gameState: GameState) => {
         return true;
       }
       try {
-        let player_Id = localStorage.getItem("userId" + randomId) ?? ""
+        let player_Id = localStorage.getItem("userId" + randomId) ?? "";
         const body = secondSelectedDestinationRef.current
-      ? {
-          Move: {
-            From: selectedPieceRef.current?.id,
-            To: destinationRef.current,
-            Effect: selectedEffect
-          },
-          SplitMove: {
-            From: secondSelectedPieceRef.current?.id,
-            To: secondSelectedDestinationRef.current,
-            Effect: secondEffect
-          },
-        }
-      : {
-          Move: {
-            From: selectedPieceRef.current?.id,
-            To: destinationRef.current,
-            Effect: selectedEffect
-          },
-        };
-        console.log(body)
+          ? {
+              Move: {
+                From: selectedPieceRef.current?.id,
+                To: destinationRef.current,
+                Effect: selectedEffect,
+              },
+              SplitMove: {
+                From: secondSelectedPieceRef.current?.id,
+                To: secondSelectedDestinationRef.current,
+                Effect: secondEffect,
+              },
+            }
+          : {
+              Move: {
+                From: selectedPieceRef.current?.id,
+                To: destinationRef.current,
+                Effect: selectedEffect,
+              },
+            };
+        console.log(body);
 
-        const res = await fetch(MOVE_PAWN(player_Id),  {
+        const res = await fetch(MOVE_PAWN(player_Id), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(body)
-        })
+          body: JSON.stringify(body),
+        });
         if (!res.ok) {
-          throw Error("failed to post move")
+          throw Error("failed to post move");
         }
-        
-        setLoading(false)
+
+        setLoading(false);
         resetSelections();
         return true;
-      }
-      catch(err) {
+      } catch (err) {
         console.error("Error fetching game state:", err);
-        setLoading(false)
+        setLoading(false);
         return false;
       }
     }
@@ -527,7 +579,7 @@ const applyGameState = async (gameState: GameState) => {
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
         setSecondDestination(tile.move.to);
         setSecondSelectedPiece(tile.piece);
-        setSecondSelectedEffect(tile.move.effects[0])
+        setSecondSelectedEffect(tile.move.effects[0]);
         const distance = findPath(tile.move.from, tile.move.to).length - 1;
         const current = currentDistanceref.current ?? 0;
         setCurrentDistance(current + distance);
@@ -552,7 +604,11 @@ const applyGameState = async (gameState: GameState) => {
           setPossibleEffects(tile.effects);
 
           // Position the popup near the clicked tile
-          let coords = getUnrotatedMousePosition(coordMap[tile.to].x, coordMap[tile.to].y, colorToAngleDict[playerColorRef.current]);
+          let coords = getUnrotatedMousePosition(
+            coordMap[tile.to].x,
+            coordMap[tile.to].y,
+            colorToAngleDict[playerColorRef.current]
+          );
           setEffectPopupPosition({
             x: coords.x,
             y: coords.y - tileSize,
@@ -564,7 +620,7 @@ const applyGameState = async (gameState: GameState) => {
         }
 
         if (currentCardRef.current === 7) {
-          const current = findPath(tile.from, tile.to).length - 1
+          const current = findPath(tile.from, tile.to).length - 1;
           console.log(current, findPath(tile.from, tile.to));
           setCurrentDistance(current);
           const target = 7 - current;
@@ -579,7 +635,7 @@ const applyGameState = async (gameState: GameState) => {
                 (m) => m.pawn === piece.id
               );
               const canBeSecond = matching?.move?.find(
-                (m) => (findPath(m.from, m.to).length - 1) === target
+                (m) => findPath(m.from, m.to).length - 1 === target
               );
               if (canBeSecond) {
                 possibleSeconds.push({ piece, move: canBeSecond });
@@ -602,15 +658,15 @@ const applyGameState = async (gameState: GameState) => {
       const dx = x - piece.drawX;
       const dy = y - piece.drawY;
       if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-         console.log(x, y, piece.color)
+        console.log(x, y, piece.color);
         if (piece.color != playerColorRef.current) return;
         setSelectedPiece(piece);
 
         const matching = PossibleMovesRef.current?.find(
           (m) => m.pawn === piece.id
         );
-        console.log(matching)
-        console.log(PossibleMovesRef.current, piece.id)
+        console.log(matching);
+        console.log(PossibleMovesRef.current, piece.id);
         setHighlightedTiles(matching?.move ?? []);
         return true;
       }
@@ -623,49 +679,48 @@ const applyGameState = async (gameState: GameState) => {
     console.log("Deck clicked! Sending to backend...");
     setLoading(true);
     try {
-      let player_Id = localStorage.getItem("userId" + randomId) ?? ""
-      const res = await fetch(DRAW_CARD(player_Id),  {
+      let player_Id = localStorage.getItem("userId" + randomId) ?? "";
+      const res = await fetch(DRAW_CARD(player_Id), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-    })
-      const response = await res.json()
+      });
+      const response = await res.json();
       if (!res.ok) {
-        throw Error("failed to draw card")
+        throw Error("failed to draw card");
       }
-      console.log(response)
+      console.log(response);
       setPossibleMoves(response.movesets);
-      localStorage.setItem("drawCard", JSON.stringify(response))
-      animateCardSwap(deck_card, card_path(numberDict[response.cardDrawn]))
+      localStorage.setItem("drawCard", JSON.stringify(response));
+      animateCardSwap(deck_card, card_path(numberDict[response.cardDrawn]));
       setCurrentCard(response.cardDrawn);
-      setView(response.view)
-      setLoading(false)
+      setView(response.view);
+      setLoading(false);
       return true;
-    }
-    catch(err) {
+    } catch (err) {
       console.error("Error fetching game state:", err);
-      setLoading(false)
+      setLoading(false);
       return null;
     }
   };
 
   const handleTopCardClick = () => {
     console.log("top card clicked! zooming in...");
-    console.log(topCardPath)
+    console.log(topCardPath);
     setShowZoomedCard(true);
     return true;
   };
 
   const setPlayerTurn = (phase: number) => {
-    if (phase == colorToIndex[playerColorRef.current]*2) {
+    if (phase == colorToIndex[playerColorRef.current] * 2) {
       setIsPlayerTurn("draw");
-    } else if (phase == (colorToIndex[playerColorRef.current]*2 + 1)) {
-      setIsPlayerTurn("move")
+    } else if (phase == colorToIndex[playerColorRef.current] * 2 + 1) {
+      setIsPlayerTurn("move");
     } else {
-      setIsPlayerTurn("wait")
+      setIsPlayerTurn("wait");
     }
-  }
+  };
 
   const resetSelections = () => {
     setSelectedPiece(null);
@@ -686,19 +741,19 @@ const applyGameState = async (gameState: GameState) => {
   }, [selectedPiece]);
 
   useEffect(() => {
-    console.log("color change: " + playerColor)
-    drawWithRotation(playerColor)
-    setAngle(colorToAngleDict[playerColor])
-    drawPieces(playerColor)
+    console.log("color change: " + playerColor);
+    drawWithRotation(playerColor);
+    setAngle(colorToAngleDict[playerColor]);
+    drawPieces(playerColor);
     if (playerColor != "") {
-      playerColorRef.current = playerColor
+      playerColorRef.current = playerColor;
       setPlayerTurn(gamePhase);
     }
   }, [playerColor]);
 
   useEffect(() => {
-    console.log("changed view", view)
-    viewRef.current = view
+    console.log("changed view", view);
+    viewRef.current = view;
   }, [view]);
 
   const fetchGameState = async (playerId: string) => {
@@ -712,26 +767,33 @@ const applyGameState = async (gameState: GameState) => {
       const gameState = await res.json();
       console.log("Game State:", gameState, gameState.currentView);
       if (gameState.gamePhase != 8) {
-        setGameStarted(true)
+        setGameStarted(true);
       }
-      setView(gameState.currentView)
+      setView(gameState.currentView);
       if (gameState.lastDrawnCard in numberDict && isPlayerTurn == "draw") {
-        animateCardSwap(deck_card, card_path(numberDict[gameState.lastDrawnCard]))
-        setCurrentCard(gameState.lastDrawnCard)
+        animateCardSwap(
+          deck_card,
+          card_path(numberDict[gameState.lastDrawnCard])
+        );
+        setCurrentCard(gameState.lastDrawnCard);
       }
-      let pieces = gameState.pieces
+      let pieces = gameState.pieces;
       const colorOrder = ["blue", "yellow", "green", "red"];
       const colorToPieces: Record<string, string[]> = {};
       for (let row = 0; row < pieces.length; row++) {
         const color = colorOrder[row];
-        colorToPieces[color] = pieces[row].slice(); 
+        colorToPieces[color] = pieces[row].slice();
       }
-      console.log(colorToIndex[playerColorRef.current], playerColorRef.current, gameState.gamePhase)
+      console.log(
+        colorToIndex[playerColorRef.current],
+        playerColorRef.current,
+        gameState.gamePhase
+      );
       setPlayerTurn(gameState.gamePhase);
-      applyGameState(colorToPieces)
-      setTurnOrder(gameState.turnOrder)
-      setLocalTurnOrder(gameState.turnOrder)
-      setGamePhase(gameState.gamePhase)
+      applyGameState(colorToPieces);
+      setTurnOrder(gameState.turnOrder);
+      setLocalTurnOrder(gameState.turnOrder);
+      setGamePhase(gameState.gamePhase);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -744,17 +806,17 @@ const applyGameState = async (gameState: GameState) => {
     try {
       if (pullGameState) return;
       // console.log(GET_HEARTBEAT(playerId))
-      console.log(viewRef)
+      console.log(viewRef);
       const res = await fetch(GET_HEARTBEAT(playerId), {
         method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(viewRef.current)
-        });
-      console.log(res)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(viewRef.current),
+      });
+      console.log(res);
       if (!res.ok) {
-        setPullGamestate(true)
+        setPullGamestate(true);
       }
 
       // applyGameState(gameState);
@@ -765,106 +827,113 @@ const applyGameState = async (gameState: GameState) => {
   };
 
   const animateCardSwap = (oldSrc: string, newSrc: string) => {
-    setFloatingCard({ oldSrc, newSrc, x:cardX1, y: cardY, phase: "start" });
+    setFloatingCard({ oldSrc, newSrc, x: cardX1, y: cardY, phase: "start" });
   };
-  
-const animatePieceAlongPath = (
-  pieceId: string,
-  path: string[],
-  speed: number = 300
-): Promise<void> => {
-  return new Promise((resolve) => {
-    // console.log(path)
-    const allPlayers = [...playersref.current];
-    const targetPlayer = allPlayers.find(p => p.pieces.some(pc => pc.id === pieceId));
-    if (!targetPlayer)  {
-      resolve(); 
-      return;
-    }
-    const pieceIndex = targetPlayer.pieces.findIndex(pc => pc.id === pieceId);
-    if (pieceIndex === -1) {
-      resolve();
-      return;
-    }
 
-    let stepIndex = 1;
-
-    const moveToNext = () => {
-      // console.log(stepIndex)
-      if (stepIndex >= path.length) {
-        // Final update to state after full path
-        setPlayers(allPlayers);
+  const animatePieceAlongPath = (
+    pieceId: string,
+    path: string[],
+    speed: number = 300
+  ): Promise<void> => {
+    return new Promise((resolve) => {
+      // console.log(path)
+      const allPlayers = [...playersref.current];
+      const targetPlayer = allPlayers.find((p) =>
+        p.pieces.some((pc) => pc.id === pieceId)
+      );
+      if (!targetPlayer) {
+        resolve();
+        return;
+      }
+      const pieceIndex = targetPlayer.pieces.findIndex(
+        (pc) => pc.id === pieceId
+      );
+      if (pieceIndex === -1) {
         resolve();
         return;
       }
 
-      const coord = path[stepIndex];
-      const pixel = coordMap[coord];
-      // console.log(pixel, coord)
-      if (!pixel) {
-        return;
-        resolve();
-      }
+      let stepIndex = 1;
 
-      // Update the logical position
-      targetPlayer.pieces[pieceIndex].x = pixel.x;
-      targetPlayer.pieces[pieceIndex].y = pixel.y;
-      // console.log(allPlayers)
-      setPlayers([...allPlayers]); // trigger state update for redraw
+      const moveToNext = () => {
+        // console.log(stepIndex)
+        if (stepIndex >= path.length) {
+          // Final update to state after full path
+          setPlayers(allPlayers);
+          resolve();
+          return;
+        }
 
-      stepIndex++;
-      setTimeout(moveToNext, speed);
-    };
+        const coord = path[stepIndex];
+        const pixel = coordMap[coord];
+        // console.log(pixel, coord)
+        if (!pixel) {
+          return;
+          resolve();
+        }
 
-    moveToNext();
-  });
-};
+        // Update the logical position
+        targetPlayer.pieces[pieceIndex].x = pixel.x;
+        targetPlayer.pieces[pieceIndex].y = pixel.y;
+        // console.log(allPlayers)
+        setPlayers([...allPlayers]); // trigger state update for redraw
 
+        stepIndex++;
+        setTimeout(moveToNext, speed);
+      };
 
-useEffect(() => {
-  const cardPaths = Object.values(numberDict).map(n => `/Cards/FaceCards/${n}.png`);
-  cardPaths.forEach(path => {
-    const img = new Image();
-    img.src = path;
-  });
-}, []);
+      moveToNext();
+    });
+  };
 
   useEffect(() => {
-    let userId = localStorage.getItem("userId" + randomId)
+    const cardPaths = Object.values(numberDict).map(
+      (n) => `/Cards/FaceCards/${n}.png`
+    );
+    cardPaths.forEach((path) => {
+      const img = new Image();
+      img.src = path;
+    });
+  }, []);
+
+  useEffect(() => {
+    let userId = localStorage.getItem("userId" + randomId);
     if (pullGameState) {
-      fetchGameState(userId ?? "")
+      fetchGameState(userId ?? "");
     }
-    setPullGamestate(false)
-  }, [pullGameState])
+    setPullGamestate(false);
+  }, [pullGameState]);
 
   useEffect(() => {
     if (devMode) return;
-    console.log("refreshed")
+    console.log("refreshed");
     const storedId = localStorage.getItem("userId" + randomId);
     const interval = setInterval(async () => {
       await heartbeat(storedId ?? "");
-    }, 4000); 
+    }, 4000);
     const refresh = async () => {
       drawWithRotation(playerColorRef.current);
-      setAngle(colorToAngleDict[playerColorRef.current])
+      setAngle(colorToAngleDict[playerColorRef.current]);
       drawPieces(playerColorRef.current);
-      console.log("start fetch")
-      await fetchGameState(storedId ?? "")
-      console.log("end fetch")
-      const storedResponse = JSON.parse(localStorage.getItem("drawCard") || "{}");
-      console.log(storedResponse)
-      setPossibleMoves(storedResponse.movesets)
+      console.log("start fetch");
+      await fetchGameState(storedId ?? "");
+      console.log("end fetch");
+      const storedResponse = JSON.parse(
+        localStorage.getItem("drawCard") || "{}"
+      );
+      console.log(storedResponse);
+      setPossibleMoves(storedResponse.movesets);
       if (storedResponse.cardDrawn in numberDict) {
-        setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]))
-        setCurrentCard(storedResponse.cardDrawn)
+        setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]));
+        setCurrentCard(storedResponse.cardDrawn);
       }
-    }
+    };
     refresh();
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    playersref.current = players
+    playersref.current = players;
     drawPieces(playerColorRef.current);
   }, [players]);
 
@@ -889,9 +958,9 @@ useEffect(() => {
   }, [currentCard]);
 
   useEffect(() => {
-    console.log(topCardPath)
-    topCardPathRef.current = topCardPath
-    drawWithRotation(playerColorRef.current)
+    console.log(topCardPath);
+    topCardPathRef.current = topCardPath;
+    drawWithRotation(playerColorRef.current);
   }, [topCardPath]);
 
   useEffect(() => {
@@ -923,14 +992,14 @@ useEffect(() => {
       red: ["d_4", "d_S", "d_S", "d_S"],
       blue: ["d_15", "a_S", "a_8", "a_S"],
       yellow: ["b_S", "b_S", "b_S", "b_S"],
-      green: ["c_S", "c_S", "c_S", "c_S"]
+      green: ["c_S", "c_S", "c_S", "c_S"],
     };
 
     setGameStarted(true);
-    setPossibleMoves(mockCardResponse11.movesets)
+    setPossibleMoves(mockCardResponse11.movesets);
     applyGameState(dummyGameState);
-    setIsPlayerTurn("draw")
-    playerColorRef.current = "red"
+    setIsPlayerTurn("draw");
+    playerColorRef.current = "red";
     // const nextDummyGameState: GameState = {
     //   red: ["d_S", "d_S", "d_S", "d_S"],
     //   blue: ["a_S", "a_S", "a_S", "a_S"],
@@ -947,206 +1016,206 @@ useEffect(() => {
 
   return (
     <div className="flex flex-col items-center">
-    <div className="min-h-screen flex items-center justify-center bg-black-200">
-  <div
-    className={`relative ${loading ? "blur-sm pointer-events-none" : ""}`}
-    style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
-  >
-    <canvas
-      ref={canvasRef}
-      width={canvasWidth}
-      height={canvasHeight}
-      className= {`absolute top-0 left-0 z-0 pointer-events-none`}
-      style={{ display: "block" }}
-    />
-    <canvas
-      ref={piecesCanvasRef}
-      width={canvasWidth}
-      height={canvasHeight}
-      className={`absolute top-0 left-0 z-10`}
-      style={{ pointerEvents: "auto" }}
-    />
-    {/* Deck Button */}
-<button
-  onClick={async () => {
-    if (loadingRef.current || pullGameState || (isPlayerTurn == "wait")) return;
-    await handleDeckClick();
-  }}
-  style={{
-    position: "absolute",
-    top: cardY,
-    left: cardX1,
-    width: cardW,
-    height: cardH,
-    border: "none",
-    cursor: "pointer",
-    padding: 0,
-    overflow: "hidden",
-    zIndex: 30,
-    background: `url(${deck_card}) no-repeat center/contain`,
-  }}
-  aria-label="Draw from deck"
-  className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
->
-</button>
-
-{/* Top Card Button */}
-<button
-  onClick={() => {
-    if (loadingRef.current || pullGameState) return;
-    handleTopCardClick();
-  }}
-  style={{
-    position: "absolute",
-    top: cardY,
-    left: cardX2,
-    width: cardW,
-    height: cardH,
-    border: "none",
-    cursor: "pointer",
-    padding: 0,
-    overflow: "hidden",
-    zIndex: 30,
-    background: `url(${topCardPath}) no-repeat center/contain`,
-  }}
-  aria-label="view top card"
-  className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
->
-
-</button>
-    {(isPlayerTurn == "move") && (
-     <button
-      onClick={handleConfirmMoveClick}
-      className="absolute font-bold z-20 shadow-md transition-colors duration-200 
-                bg-white text-black hover:bg-yellow-300"
-      style={{
-        top: cardY + cardH + 0.3 * tileSize,
-        left: (cardX1 + cardX2) / 2 - 0.15 * tileSize,
-        width: canvasWidth * 0.2,
-        height: canvasHeight * 0.06,
-        fontSize: canvasHeight * 0.03,
-        borderRadius: canvasHeight * 0.02,
-      }}
-    >
-      Submit Move
-    </button>
-    )}
-{effectPopupPosition && possibleEffects.length > 1 && (
-  <div
-    style={{
-      position: "absolute",
-      left: effectPopupPosition.x,
-      top: effectPopupPosition.y,
-      zIndex: 100,
-      backgroundColor: "black",
-      border: "1px solid black",
-      borderRadius: "8px",
-      padding: "0.5rem",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-    }}
-  >
-    {possibleEffects.map((eff) => (
-      <div
-        key={eff}
-        onClick={() => {
-          setSecondSelectedEffect(eff); // just select, don't close
-        }}
-        style={{
-          padding: "0.25rem 0.5rem",
-          cursor: "pointer",
-          borderBottom: "1px solid #ccc",
-          backgroundColor: eff === selectedEffect ? "#444" : "transparent", // 👈 highlight
-          color: eff === selectedEffect ? "white" : "lightgray",
-          borderRadius: "4px"
-        }}
-      >
-        <button
-          style={{
-            background: "none",
-            border: "none",
-            color: "inherit",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-          onClick={(e) => {
-            e.stopPropagation(); // prevent bubbling to parent div
-            setSelectedEffect(eff);
-          }}
+      <div className="min-h-screen flex items-center justify-center bg-black-200">
+        <div
+          className={`relative ${loading ? "blur-sm pointer-events-none" : ""}`}
+          style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
         >
-          {eff === 4 ? "Swap" : "Move"}
-        </button>
+          <canvas
+            ref={canvasRef}
+            width={canvasWidth}
+            height={canvasHeight}
+            className={`absolute top-0 left-0 z-0 pointer-events-none`}
+            style={{ display: "block" }}
+          />
+          <canvas
+            ref={piecesCanvasRef}
+            width={canvasWidth}
+            height={canvasHeight}
+            className={`absolute top-0 left-0 z-10`}
+            style={{ pointerEvents: "auto" }}
+          />
+          {/* Deck Button */}
+          <button
+            onClick={async () => {
+              if (loadingRef.current || pullGameState || isPlayerTurn == "wait")
+                return;
+              await handleDeckClick();
+            }}
+            style={{
+              position: "absolute",
+              top: cardY,
+              left: cardX1,
+              width: cardW,
+              height: cardH,
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              overflow: "hidden",
+              zIndex: 30,
+              background: `url(${deck_card}) no-repeat center/contain`,
+            }}
+            aria-label="Draw from deck"
+            className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
+          ></button>
+
+          {/* Top Card Button */}
+          <button
+            onClick={() => {
+              if (loadingRef.current || pullGameState) return;
+              handleTopCardClick();
+            }}
+            style={{
+              position: "absolute",
+              top: cardY,
+              left: cardX2,
+              width: cardW,
+              height: cardH,
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              overflow: "hidden",
+              zIndex: 30,
+              background: `url(${topCardPath}) no-repeat center/contain`,
+            }}
+            aria-label="view top card"
+            className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
+          ></button>
+          {isPlayerTurn == "move" && (
+            <button
+              onClick={handleConfirmMoveClick}
+              className="absolute font-bold z-20 shadow-md transition-colors duration-200 
+                bg-white text-black hover:bg-yellow-300"
+              style={{
+                top: cardY + cardH + 0.3 * tileSize,
+                left: (cardX1 + cardX2) / 2 - 0.15 * tileSize,
+                width: canvasWidth * 0.2,
+                height: canvasHeight * 0.06,
+                fontSize: canvasHeight * 0.03,
+                borderRadius: canvasHeight * 0.02,
+              }}
+            >
+              Submit Move
+            </button>
+          )}
+          {effectPopupPosition && possibleEffects.length > 1 && (
+            <div
+              style={{
+                position: "absolute",
+                left: effectPopupPosition.x,
+                top: effectPopupPosition.y,
+                zIndex: 100,
+                backgroundColor: "black",
+                border: "1px solid black",
+                borderRadius: "8px",
+                padding: "0.5rem",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+              }}
+            >
+              {possibleEffects.map((eff) => (
+                <div
+                  key={eff}
+                  onClick={() => {
+                    setSecondSelectedEffect(eff); // just select, don't close
+                  }}
+                  style={{
+                    padding: "0.25rem 0.5rem",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #ccc",
+                    backgroundColor:
+                      eff === selectedEffect ? "#444" : "transparent", // 👈 highlight
+                    color: eff === selectedEffect ? "white" : "lightgray",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <button
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "inherit",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent bubbling to parent div
+                      setSelectedEffect(eff);
+                    }}
+                  >
+                    {eff === 4 ? "Swap" : "Move"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {floatingCard && (
+            <div
+              style={{
+                position: "absolute",
+                left: floatingCard.x,
+                top: floatingCard.y,
+                width: cardW,
+                height: cardH,
+                pointerEvents: "none",
+                zIndex: 1000,
+              }}
+            >
+              {/* Old card: rising and fading out */}
+              <img
+                src={floatingCard.oldSrc}
+                alt="Old card"
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  opacity: floatingCard.phase === "animate" ? 0 : 1,
+                  animation:
+                    floatingCard.phase === "start"
+                      ? "riseThenRight 2s forwards ease-in-out"
+                      : floatingCard.phase === "animate"
+                      ? "fallThenLeft 2s forwards ease-in-out"
+                      : "none",
+                }}
+                onAnimationEnd={() => {
+                  if (floatingCard.phase === "start") {
+                    setFloatingCard((prev) => {
+                      if (!prev) return null;
+                      return { ...prev, oldSrc: prev.newSrc, phase: "animate" };
+                    });
+                  }
+                  if (floatingCard.phase === "animate") {
+                    setTopCardPath(floatingCard.oldSrc);
+                    setFloatingCard(null);
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {isPlayerTurn != "move" && (
+            <div
+              style={{
+                position: "absolute",
+                top: cardY + cardH + 0.3 * tileSize,
+                left: (cardX1 + cardX2) / 2,
+                transform: "translateX(-25%)",
+                fontSize: canvasHeight * 0.03,
+                color: "white",
+                fontWeight: "bold",
+                zIndex: 20,
+                userSelect: "none",
+                textShadow: "0 0 5px rgba(0,0,0,0.7)",
+                // whiteSpace: "nowrap", // prevent wrapping
+                padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
+              }}
+            >
+              {isPlayerTurn == "wait"
+                ? `${localTurnOrder[Math.floor(gamePhase / 2)]} is playing...`
+                : "Click Deck to Draw Card"}
+            </div>
+          )}
+        </div>
       </div>
-    ))}
-  </div>
-)}
-
-{floatingCard && (
-  <div
-    style={{
-      position: "absolute",
-      left: floatingCard.x,
-      top: floatingCard.y,
-      width: cardW,
-      height: cardH,
-      pointerEvents: "none",
-      zIndex: 1000,
-    }}
-  >
-    {/* Old card: rising and fading out */}
-<img
-  src={floatingCard.oldSrc}
-  alt="Old card"
-  style={{
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    opacity: floatingCard.phase === "animate" ? 0 : 1,
-    animation:
-      floatingCard.phase === "start"
-        ? "riseThenRight 2s forwards ease-in-out"
-        : (floatingCard.phase === "animate" ? "fallThenLeft 2s forwards ease-in-out" : "none"),
-  }}
-  onAnimationEnd={() => {
-    if (floatingCard.phase === "start") {
-      setFloatingCard((prev) => {
-        if (!prev) return null;
-        return { ...prev, oldSrc: prev.newSrc, phase: "animate" };
-      });
-    }
-    if (floatingCard.phase === "animate") {
-      setTopCardPath(floatingCard.oldSrc);
-      setFloatingCard(null);
-    }
-  }}
-/>
-  </div>
-)}
-
-    {(isPlayerTurn != "move") && (
-      <div
-        style={{
-          position: "absolute",
-          top: cardY + cardH + 0.3 * tileSize,
-          left: (cardX1 + cardX2) / 2,
-          transform: "translateX(-25%)",
-          fontSize: canvasHeight * 0.03,
-          color: "white",
-          fontWeight: "bold",
-          zIndex: 20,
-          userSelect: "none",
-          textShadow: "0 0 5px rgba(0,0,0,0.7)",
-          // whiteSpace: "nowrap", // prevent wrapping
-          padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
-        }}
-      >
-       {(isPlayerTurn == "wait")
-        ? `${localTurnOrder[Math.floor(gamePhase / 2)]} is playing...`
-        : "Click Deck to Draw Card"}
-      </div>
-
-    )}
-  </div>
-</div>
 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
@@ -1187,6 +1256,5 @@ useEffect(() => {
         </div>
       )}
     </div>
-    
   );
 }
