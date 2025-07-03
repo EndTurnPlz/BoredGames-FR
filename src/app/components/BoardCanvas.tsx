@@ -837,7 +837,6 @@ useEffect(() => {
     if (devMode) return;
     console.log("refreshed")
     const storedId = localStorage.getItem("userId" + randomId);
-    const storedResponse = JSON.parse(localStorage.getItem("drawCard") || "{}");
     const interval = setInterval(async () => {
       await heartbeat(storedId ?? "");
     }, 4000); 
@@ -848,13 +847,13 @@ useEffect(() => {
       console.log("start fetch")
       await fetchGameState(storedId ?? "")
       console.log("end fetch")
-      if (storedResponse != "{}") {
+      const storedResponse = JSON.parse(localStorage.getItem("drawCard") || "{}");
+      console.log(storedResponse)
       setPossibleMoves(storedResponse.movesets)
-      if (storedResponse.lastDrawnCard in numberDict) {
+      if (storedResponse.cardDrawn in numberDict) {
         setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]))
         setCurrentCard(storedResponse.cardDrawn)
       }
-    }
     }
     refresh();
     return () => clearInterval(interval);
@@ -886,7 +885,6 @@ useEffect(() => {
   }, [currentCard]);
 
   useEffect(() => {
-
     console.log(topCardPath)
     topCardPathRef.current = topCardPath
     drawWithRotation(playerColorRef.current)
