@@ -530,7 +530,7 @@ const applyGameState = async (gameState: GameState) => {
         setSecondDestination(tile.move.to);
         setSecondSelectedPiece(tile.piece);
         setSecondSelectedEffect(tile.move.effects[0])
-        const distance = findPath(tile.move.from, tile.move.to).length;
+        const distance = findPath(tile.move.from, tile.move.to).length - 1;
         const current = currentDistanceref.current ?? 0;
         setCurrentDistance(current + distance);
         return true;
@@ -701,10 +701,16 @@ const applyGameState = async (gameState: GameState) => {
     drawPieces(playerColor)
     if (playerColor != "") {
       playerColorRef.current = playerColor
+      if ((gamePhase == colorToIndex[playerColorRef.current]*2) || (gamePhase == (colorToIndex[playerColorRef.current]*2 + 1))) {
+        setIsPlayerTurn(true);
+      } else {
+        setIsPlayerTurn(false)
+      }
     }
   }, [playerColor]);
 
   useEffect(() => {
+    console.log("changed view", view)
     viewRef.current = view
   }, [view]);
 
@@ -848,15 +854,15 @@ useEffect(() => {
   }, [pullGameState])
 
   useEffect(() => {
-    // console.log(playerColorRef.current)
+    console.log("refreshed")
     const storedId = localStorage.getItem("userId" + randomId);
     const interval = setInterval(async () => {
       await heartbeat(storedId ?? "");
-    }, 4000); // every 2 seconds
-    fetchGameState(storedId ?? "")
+    }, 4000); 
     drawWithRotation(playerColorRef.current);
     setAngle(colorToAngleDict[playerColorRef.current])
     drawPieces(playerColorRef.current);
+    fetchGameState(storedId ?? "")
     return () => clearInterval(interval);
   }, []);
 
@@ -1075,7 +1081,7 @@ useEffect(() => {
           padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
         }}
       >
-        {localTurnOrder[(gamePhase  - (gamePhase % 1)) / 2]} is playing...
+        {localTurnOrder[(gamePhase  - (gamePhase % 2)) / 2]} is playing...
       </div>
 
     )}
