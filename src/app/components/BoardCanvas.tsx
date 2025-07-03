@@ -5,7 +5,6 @@ import {
   drawCircle,
   fillTile,
   drawStripWithTriangleAndCircle,
-  drawCard,
   drawAllCircles,
   drawSafetyWord,
 } from "@/utils/drawUtils";
@@ -57,6 +56,8 @@ type FloatingCard = {
   phase: "start" | "animate" | "done";
 };
 
+type playerPhase = "draw" | "move" | "wait"
+
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
@@ -66,11 +67,10 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
   const [angle, setAngle] = useState(0);
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true); 
+  const [isPlayerTurn, setIsPlayerTurn] = useState("draw"); 
 
-  const deckPath = "Cards/deck.png";
-  const [topCardPath, setTopCardPath] = useState<string>("/Cards/deck.png");
-  const topCardPathRef = useRef<string>("/Cards/deck.png");
+  const [topCardPath, setTopCardPath] = useState<string>(deck_card);
+  const topCardPathRef = useRef<string>(deck_card);
 
   const [currentCard, setCurrentCard] = useState<number>(0);
   const currentCardRef = useRef<number | null>(null);
@@ -90,7 +90,7 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([])
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = true
+  let devMode = false
 
   const [view, setView] = useState(-1)
   const viewRef = useRef<number | null>(null)
@@ -316,11 +316,11 @@ export default function GameCanvas({ gameType, username, playerColor = "red", se
 
 
 
-    drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
-    drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
+    // drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
+    // drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
 
-    deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
-    topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
+    // deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
+    // topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
   };
 
   const drawWithRotation = (color: string) => {
@@ -452,8 +452,6 @@ const applyGameState = async (gameState: GameState) => {
       if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y)) return;
       if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
-      if (await handleDeckClick(mouseX, mouseY)) return;
-      if (handleTopCardClick(mouseX, mouseY)) return;
 
       resetSelections();
     };
@@ -621,64 +619,53 @@ const applyGameState = async (gameState: GameState) => {
     return false;
   };
 
-  const handleDeckClick = async (x: number, y: number) => {
-    const deck = deckRef.current;
-    if (!deck) return false;
-    if (
-      x >= deck.x &&
-      x <= deck.x + deck.width &&
-      y >= deck.y &&
-      y <= deck.y + deck.height
-    ) {
-      console.log("Deck clicked! Sending to backend...");
-      setLoading(true);
-      try {
-        let player_Id = localStorage.getItem("userId" + randomId) ?? ""
-        const res = await fetch(DRAW_CARD(player_Id),  {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-      })
-        const response = await res.json()
-        if (!res.ok) {
-          throw Error("failed to draw card")
-        }
-        console.log(response)
-        setPossibleMoves(response.movesets);
-        animateCardSwap(deck_card, card_path(numberDict[response.cardDrawn]))
-        setCurrentCard(response.cardDrawn);
-        // setTopCardPath(`/Cards/FaceCards/${numberDict[response.cardDrawn]}.png`)
-        setView(response.view)
-        setLoading(false)
-        return true;
+  const handleDeckClick = async () => {
+    console.log("Deck clicked! Sending to backend...");
+    setLoading(true);
+    try {
+      let player_Id = localStorage.getItem("userId" + randomId) ?? ""
+      const res = await fetch(DRAW_CARD(player_Id),  {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+    })
+      const response = await res.json()
+      if (!res.ok) {
+        throw Error("failed to draw card")
       }
-      catch(err) {
-        console.error("Error fetching game state:", err);
-        setLoading(false)
-        return null;
-        }
-      }
-
-    return false;
-  };
-
-  const handleTopCardClick = (x: number, y: number) => {
-    const topCard = topCardRef.current;
-    if (!topCard) return false;
-    if (
-      x >= topCard.x &&
-      x <= topCard.x + topCard.width &&
-      y >= topCard.y &&
-      y <= topCard.y + topCard.height
-    ) {
-      console.log("top card clicked! zooming in...");
-      setShowZoomedCard(true);
+      console.log(response)
+      setPossibleMoves(response.movesets);
+      localStorage.setItem("drawCard", JSON.stringify(response))
+      animateCardSwap(deck_card, card_path(numberDict[response.cardDrawn]))
+      setCurrentCard(response.cardDrawn);
+      setView(response.view)
+      setLoading(false)
       return true;
     }
-
-    return false;
+    catch(err) {
+      console.error("Error fetching game state:", err);
+      setLoading(false)
+      return null;
+    }
   };
+
+  const handleTopCardClick = () => {
+    console.log("top card clicked! zooming in...");
+    console.log(topCardPath)
+    setShowZoomedCard(true);
+    return true;
+  };
+
+  const setPlayerTurn = (phase: number) => {
+    if (phase == colorToIndex[playerColorRef.current]*2) {
+      setIsPlayerTurn("draw");
+    } else if (phase == (colorToIndex[playerColorRef.current]*2 + 1)) {
+      setIsPlayerTurn("move")
+    } else {
+      setIsPlayerTurn("wait")
+    }
+  }
 
   const resetSelections = () => {
     setSelectedPiece(null);
@@ -705,11 +692,7 @@ const applyGameState = async (gameState: GameState) => {
     drawPieces(playerColor)
     if (playerColor != "") {
       playerColorRef.current = playerColor
-      if ((gamePhase == colorToIndex[playerColorRef.current]*2) || (gamePhase == (colorToIndex[playerColorRef.current]*2 + 1))) {
-        setIsPlayerTurn(true);
-      } else {
-        setIsPlayerTurn(false)
-      }
+      setPlayerTurn(gamePhase);
     }
   }, [playerColor]);
 
@@ -732,8 +715,8 @@ const applyGameState = async (gameState: GameState) => {
         setGameStarted(true)
       }
       setView(gameState.currentView)
-      if (gameState.lastDrawnCard in numberDict && !isPlayerTurn) {
-        animateCardSwap(deckPath, card_path(numberDict[gameState.lastDrawnCard]))
+      if (gameState.lastDrawnCard in numberDict && isPlayerTurn == "draw") {
+        animateCardSwap(deck_card, card_path(numberDict[gameState.lastDrawnCard]))
         setCurrentCard(gameState.lastDrawnCard)
       }
       let pieces = gameState.pieces
@@ -744,11 +727,7 @@ const applyGameState = async (gameState: GameState) => {
         colorToPieces[color] = pieces[row].slice(); 
       }
       console.log(colorToIndex[playerColorRef.current], playerColorRef.current, gameState.gamePhase)
-      if ((gameState.gamePhase == colorToIndex[playerColorRef.current]*2) || ( gameState.gamePhase == (colorToIndex[playerColorRef.current]*2 + 1))) {
-        setIsPlayerTurn(true);
-      } else {
-        setIsPlayerTurn(false)
-      }
+      setPlayerTurn(gameState.gamePhase);
       applyGameState(colorToPieces)
       setTurnOrder(gameState.turnOrder)
       setLocalTurnOrder(gameState.turnOrder)
@@ -763,6 +742,7 @@ const applyGameState = async (gameState: GameState) => {
   const heartbeat = async (playerId: string) => {
     if (devMode) return;
     try {
+      if (pullGameState) return;
       // console.log(GET_HEARTBEAT(playerId))
       console.log(viewRef)
       const res = await fetch(GET_HEARTBEAT(playerId), {
@@ -864,10 +844,22 @@ useEffect(() => {
     const interval = setInterval(async () => {
       await heartbeat(storedId ?? "");
     }, 4000); 
-    drawWithRotation(playerColorRef.current);
-    setAngle(colorToAngleDict[playerColorRef.current])
-    drawPieces(playerColorRef.current);
-    fetchGameState(storedId ?? "")
+    const refresh = async () => {
+      drawWithRotation(playerColorRef.current);
+      setAngle(colorToAngleDict[playerColorRef.current])
+      drawPieces(playerColorRef.current);
+      console.log("start fetch")
+      await fetchGameState(storedId ?? "")
+      console.log("end fetch")
+      const storedResponse = JSON.parse(localStorage.getItem("drawCard") || "{}");
+      console.log(storedResponse)
+      setPossibleMoves(storedResponse.movesets)
+      if (storedResponse.cardDrawn in numberDict) {
+        setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]))
+        setCurrentCard(storedResponse.cardDrawn)
+      }
+    }
+    refresh();
     return () => clearInterval(interval);
   }, []);
 
@@ -897,6 +889,7 @@ useEffect(() => {
   }, [currentCard]);
 
   useEffect(() => {
+    console.log(topCardPath)
     topCardPathRef.current = topCardPath
     drawWithRotation(playerColorRef.current)
   }, [topCardPath]);
@@ -936,7 +929,7 @@ useEffect(() => {
     setGameStarted(true);
     setPossibleMoves(mockCardResponse11.movesets)
     applyGameState(dummyGameState);
-    setIsPlayerTurn(true)
+    setIsPlayerTurn("draw")
     playerColorRef.current = "red"
     // const nextDummyGameState: GameState = {
     //   red: ["d_S", "d_S", "d_S", "d_S"],
@@ -973,29 +966,70 @@ useEffect(() => {
       className={`absolute top-0 left-0 z-10`}
       style={{ pointerEvents: "auto" }}
     />
-    {isPlayerTurn && (
-       <button
-    onClick={handleConfirmMoveClick}
-    style={{
-      position: "absolute",
-      top: cardY + cardH + 0.3 * tileSize,       // halfway down canvas
-      left: (cardX1 + cardX2) / 2 - 0.15 * tileSize,       // halfway across canvas
-      // transform: "translate(-50%, -50%)", // offset to center button on this point
-      width: canvasWidth * 0.2,    // 30% of canvas width
-      height: canvasHeight * 0.06, // 8% of canvas height
-      fontSize: canvasHeight * 0.03,
-      borderRadius: canvasHeight * 0.02,
-      backgroundColor: "white",
-      color: "black",
-      fontWeight: "bold",
-      zIndex: 20,
-      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.3)",
-      transition: "background 0.2s ease",
-    }}
-    className="hover:bg-gray-100 z-20"
-  >
-    Your Turn
-  </button>
+    {/* Deck Button */}
+<button
+  onClick={async () => {
+    if (loadingRef.current || pullGameState || (isPlayerTurn == "wait")) return;
+    await handleDeckClick();
+  }}
+  style={{
+    position: "absolute",
+    top: cardY,
+    left: cardX1,
+    width: cardW,
+    height: cardH,
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    overflow: "hidden",
+    zIndex: 30,
+    background: `url(${deck_card}) no-repeat center/contain`,
+  }}
+  aria-label="Draw from deck"
+  className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
+>
+</button>
+
+{/* Top Card Button */}
+<button
+  onClick={() => {
+    if (loadingRef.current || pullGameState) return;
+    handleTopCardClick();
+  }}
+  style={{
+    position: "absolute",
+    top: cardY,
+    left: cardX2,
+    width: cardW,
+    height: cardH,
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    overflow: "hidden",
+    zIndex: 30,
+    background: `url(${topCardPath}) no-repeat center/contain`,
+  }}
+  aria-label="view top card"
+  className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
+>
+
+</button>
+    {(isPlayerTurn == "move") && (
+     <button
+      onClick={handleConfirmMoveClick}
+      className="absolute font-bold z-20 shadow-md transition-colors duration-200 
+                bg-white text-black hover:bg-yellow-300"
+      style={{
+        top: cardY + cardH + 0.3 * tileSize,
+        left: (cardX1 + cardX2) / 2 - 0.15 * tileSize,
+        width: canvasWidth * 0.2,
+        height: canvasHeight * 0.06,
+        fontSize: canvasHeight * 0.03,
+        borderRadius: canvasHeight * 0.02,
+      }}
+    >
+      Submit Move
+    </button>
     )}
 {effectPopupPosition && possibleEffects.length > 1 && (
   <div
@@ -1088,7 +1122,7 @@ useEffect(() => {
   </div>
 )}
 
-    {!isPlayerTurn && (
+    {(isPlayerTurn != "move") && (
       <div
         style={{
           position: "absolute",
@@ -1105,7 +1139,9 @@ useEffect(() => {
           padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
         }}
       >
-        {localTurnOrder[(gamePhase  - (gamePhase % 2)) / 2]} is playing...
+       {(isPlayerTurn == "wait")
+        ? `${localTurnOrder[Math.floor(gamePhase / 2)]} is playing...`
+        : "Click Deck to Draw Card"}
       </div>
 
     )}
@@ -1139,7 +1175,7 @@ useEffect(() => {
           }}
         >
           <img
-            src={topCardPathRef.current}
+            src={topCardPath}
             alt="Zoomed Card"
             style={{
               maxWidth: "90%",
