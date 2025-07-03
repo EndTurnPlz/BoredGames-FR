@@ -60,7 +60,7 @@ export default function Home() {
       <Header />
 
       <main
-        className={`flex flex-col items-center justify-start min-h-screen px-4 pt-16 pb-4 ${
+        className={`flex flex-col items-center justify-start min-h-screen px-4 pt-16 ${
           isTransitioning ? "blur-sm pointer-events-none" : ""
         }`}
       >
@@ -68,7 +68,7 @@ export default function Home() {
         <GameCarousel gameType={gameType} onGameSelect={setGameType} />
 
         {/* Username section */}
-        <div className="bg-slate-800/60 backdrop-blur-lg rounded-3xl shadow-2xl shadow-cyan-500/10 p-10 flex flex-col items-center w-full max-w-md space-y-8 border border-cyan-400/20">
+        <div className="bg-slate-800/60 backdrop-blur-lg rounded-3xl shadow-2xl shadow-cyan-500/10 px-10 py-4 flex flex-col items-center w-full max-w-md space-y-8 border border-cyan-400/20">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-cyan-100 mb-2">
               Ready to Play?
@@ -105,7 +105,7 @@ export default function Home() {
             Start Game
           </button>
         </div>
-        <footer className="mt-10 text-white/40 text-sm">
+        <footer className="mt-8 text-white/40 text-sm">
           &copy; {new Date().getFullYear()} BoredGames. All rights reserved.
         </footer>
       </main>

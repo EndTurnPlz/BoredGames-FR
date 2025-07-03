@@ -99,7 +99,7 @@ export default function GameCarousel({
   );
 
   return (
-    <div className="w-full max-w-5xl mb-8">
+    <div className="w-full max-w-5xl mb-16">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Choose Your Game</h2>
       </div>
