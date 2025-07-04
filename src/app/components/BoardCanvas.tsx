@@ -463,10 +463,10 @@ export default function GameCanvas({
     return false;
   };
 
-  const handleSecondPawnClick = (move: Move, idx: number) => {
-    console.log();
+  const handleSecondPawnClick = (move: Move) => {
+    const new_idx = drawnPieces.findIndex((p) => p.id == move.from);
     setSecondDestination(move.to);
-    setSecondSelectedPiece(idx);
+    setSecondSelectedPiece(new_idx);
     setSecondSelectedEffect(move.effects[0]);
     const distance = findPath(move.from, move.to).length - 1;
     const current = currentDistanceref.current ?? 0;
@@ -855,7 +855,7 @@ export default function GameCanvas({
               key={idx}
               piece={piece}
               idx={idx}
-              selected={selectedPiece === idx}
+              selected={(selectedPiece === idx) || (secondSelectedPiece === idx)}
               playerColor={playerColorRef.current}
               handlePieceSelection={() => handlePieceSelection(piece, idx)}
             />
@@ -876,14 +876,14 @@ export default function GameCanvas({
             />
           ))}
           {possibleSecondPawns.map(({ piece, move }, index) => {
-            if (secondSelectedPiece === -1 || secondSelectedPiece === index) {
+            if (secondSelectedPiece === -1) {
               return (
                 <AnimatedOverlayCircle
                   key={`second-${index}`}
                   coord={piece.id}
                   playerColor={playerColorRef.current}
-                  borderColor={secondSelectedPiece === index ? "gold" : "purple"}
-                  onClick={() => handleSecondPawnClick(move, index)}
+                  borderColor={secondSelectedPiece === index ? "none" : "purple"}
+                  onClick={() => handleSecondPawnClick(move)}
                   zIndex={1100}
                   selected={secondSelectedPiece === index}
                   animatePulse={true} // make sure to pass this too if needed
@@ -891,27 +891,19 @@ export default function GameCanvas({
               );
             }
           })}
-          {secondDestination && (() => {
-            const { x: rawX, y: rawY } = coordStringToPixel(secondDestination, tileSize);
-            const { x, y } = getUnrotatedMousePosition(
-              rawX,
-              rawY,
-              colorToAngleDict[playerColorRef.current]
-            );
+         {secondDestination && (() => {
             return (
-              <div
-                style={{
-                  position: "absolute",
-                  top: y - tileSize / 2,
-                  left: x - tileSize / 2,
-                  width: tileSize,
-                  height: tileSize,
-                  borderRadius: "50%",
-                  border: "3px solid purple", // color to indicate second destination
-                  backgroundColor: "purple",
-                  pointerEvents: "none",
-                  zIndex: 999,
-                }}
+              <AnimatedOverlayCircle
+                key={`destination-${secondDestination}`}
+                coord={secondDestination}
+                playerColor={playerColorRef.current}
+                borderColor="purple"
+                backgroundColor={ "purple"}
+                onClick={() => {}}
+                zIndex={999}
+                selected={true}
+                animatePulse={false} // make sure to pass this too if needed
+                // pass style props for position here instead of recomputing?
               />
             );
           })()}

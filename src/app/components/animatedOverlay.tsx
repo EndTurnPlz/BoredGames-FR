@@ -46,15 +46,21 @@ export const AnimatedOverlayCircle = ({
         onClick?.();
       }}
       animate={
-        animatePulse && !selected
-          ? {
-              scale: [1, 1.1, 1],
-              transition: {
-                duration: 1,
-                repeat: Infinity,
-              },
-            }
-          : undefined
+        selected
+      ? {
+          y: -5,
+          boxShadow:
+            "0 8px 16px rgba(0,0,0,0.4), inset 0 -4px 4px rgba(0,0,0,0.3), inset 0 4px 4px rgba(255,255,255,0.5)",
+        }
+      : animatePulse
+      ? {
+          scale: [1, 1.1, 1],
+          transition: {
+            duration: 1,
+            repeat: Infinity,
+          },
+        }
+      : undefined
       }
     />
   );
