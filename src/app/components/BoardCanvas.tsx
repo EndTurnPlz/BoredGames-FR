@@ -25,6 +25,7 @@ import {
   wordToAngleDict,
 } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
+import { SelectablePiece } from "@/components/Piece";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
 import { mockCardResponse7 } from "../mockData/moveset7";
@@ -856,31 +857,16 @@ const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
             className={`absolute top-0 left-0 z-0 pointer-events-none`}
             style={{ display: "block" }}
           />
-          {drawnPieces.map((piece, idx) => {
-            const x = piece.drawX;
-            const y = piece.drawY;
-            const { x: new_x, y: new_y } = getUnrotatedMousePosition(x, y, colorToAngleDict[playerColorRef.current]);
-            return (
-              <button
-                key={idx}
-                onClick={(e) => { e.stopPropagation(); handlePieceSelection(piece, idx)}} // define this handler
-                style={{
-                  position: "absolute",
-                  top: new_y - tileSize/2,
-                  left: new_x - tileSize/2,
-                  width: tileSize,
-                  height: tileSize,
-                  backgroundColor: piece.color,
-                  borderRadius: "50%",
-                  border: (selectedPiece == idx) ? "3px solid gold" : "2px solid white",
-                  transition: "top 0.3s ease, left 0.3s ease, border 0.3s ease",
-                  zIndex: 1000,
-                  cursor: "pointer",
-                }}
-                aria-label={`Piece at row ${piece.y}, column ${piece.x}`}
-              />
-            );
-          })}
+         {drawnPieces.map((piece, idx) => (
+            <SelectablePiece
+              key={idx}
+              piece={piece}
+              idx={idx}
+              selected={selectedPiece === idx}
+              playerColor={playerColorRef.current}
+              handlePieceSelection={handlePieceSelection}
+            />
+          ))}
           {highlightedTiles
           .filter((move) => !destination || destination === move.to)
           .map((move, index) => {
