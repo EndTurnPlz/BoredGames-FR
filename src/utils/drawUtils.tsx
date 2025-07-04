@@ -1,11 +1,16 @@
 // utils/drawUtils.ts
 import { coordStringToPixel } from "./outerPath";
-import {  tileSize, font_px, darkColorMap } from "./config";
+import { tileSize, font_px, darkColorMap } from "./config";
 import { Piece } from "@/app/components/BoardCanvas";
 import { DrawnPiece } from "@/app/components/BoardCanvas";
 
 function colorDistance(current: string, target: string): number {
-  const colorOrder = [darkColorMap["blue"], darkColorMap["yellow"], darkColorMap["green"], darkColorMap["red"]];
+  const colorOrder = [
+    darkColorMap["blue"],
+    darkColorMap["yellow"],
+    darkColorMap["green"],
+    darkColorMap["red"],
+  ];
   const currentIndex = colorOrder.indexOf(current);
   const targetIndex = colorOrder.indexOf(target);
 
@@ -25,7 +30,7 @@ export const drawCircle = (
   tileSize: number,
   text: string,
   angleDegrees: number,
-  playerColor: string,
+  playerColor: string
 ) => {
   ctx.beginPath();
   ctx.arc(tileX * tileSize, tileY * tileSize, radius, 0, 2 * Math.PI);
@@ -39,7 +44,7 @@ export const drawCircle = (
 
   const centerX = tileX * tileSize;
   const centerY = tileY * tileSize;
-  angleDegrees += (colorDistance(darkColorMap[playerColor], color) * 90)
+  angleDegrees += colorDistance(darkColorMap[playerColor], color) * 90;
   const angleRadians = (angleDegrees * Math.PI) / 180;
 
   ctx.save(); // Save current state
@@ -66,10 +71,87 @@ export const fillTile = (
 ) => {
   const x = col * tileSize;
   const y = row * tileSize;
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, tileSize, tileSize);
-  ctx.strokeStyle = "white";
-  ctx.strokeRect(x, y, tileSize, tileSize);
+
+  // Save current drawing state
+  ctx.save();
+
+  if (color === "black") {
+    // Enhanced styling for the black squares like in modern digital board games
+
+    // Main dark navy background - deeper color for more contrast
+    ctx.fillStyle = "#0F1029"; // Very dark navy blue
+    ctx.fillRect(x, y, tileSize, tileSize);
+
+    // Subtle inner glow effect
+    ctx.strokeStyle = "#232848"; // Slightly lighter than the fill for depth
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
+
+    // Add a more pronounced top highlight for 3D effect
+    const topGradient = ctx.createLinearGradient(x, y, x, y + tileSize / 3);
+    topGradient.addColorStop(0, "rgba(255, 255, 255, 0.15)"); // Brighter highlight
+    topGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = topGradient;
+    ctx.fillRect(x, y, tileSize, tileSize / 3);
+
+    // Add a very subtle bottom shadow for depth
+    const bottomGradient = ctx.createLinearGradient(
+      x,
+      y + tileSize * 0.7,
+      x,
+      y + tileSize
+    );
+    bottomGradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+    bottomGradient.addColorStop(1, "rgba(0, 0, 0, 0.3)");
+    ctx.fillStyle = bottomGradient;
+    ctx.fillRect(x, y + tileSize * 0.7, tileSize, tileSize * 0.3);
+
+    // Add a subtle corner highlight for polish
+    ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + tileSize / 10, y);
+    ctx.lineTo(x, y + tileSize / 10);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    // Handle other colors with enhanced styling
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, tileSize, tileSize);
+
+    // Improved border styling
+    if (color === "white") {
+      // For white tiles, use a light gray border
+      ctx.strokeStyle = "#CCCCCC";
+    } else {
+      // For colored tiles, use a darker shade of the same color
+      const darkerColor = color.startsWith("#")
+        ? color.replace(/^#/, "")
+        : color;
+
+      if (darkerColor.startsWith("rgb")) {
+        // Handle RGB colors
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+      } else {
+        // For hex colors, create a slightly darker variant
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+      }
+    }
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, tileSize, tileSize);
+
+    // Add a subtle highlight to the top of colored tiles too
+    if (color !== "white") {
+      const gradient = ctx.createLinearGradient(x, y, x, y + tileSize / 5);
+      gradient.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+      gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, y, tileSize, tileSize / 5);
+    }
+  }
+
+  // Restore drawing state
+  ctx.restore();
 };
 
 export const drawStripWithTriangleAndCircle = (
@@ -81,12 +163,12 @@ export const drawStripWithTriangleAndCircle = (
   color: string,
   direction: string
 ) => {
-  // Draw the vertical strip
+  // Save the current context state
+  ctx.save();
 
-  ctx.fillStyle = color;
-
-  let rectX = x,
-    rectY = y;
+  // Draw the main strip with enhanced styling
+  const rectX = x;
+  const rectY = y;
   let rectWidth = width,
     rectHeight = height;
 
@@ -95,12 +177,44 @@ export const drawStripWithTriangleAndCircle = (
     rectHeight = width;
   }
 
-  // Draw the strip
+  // Create a darker background for the strip
+  const stripBgColor = "#0F1029"; // Same dark background as black squares
+  ctx.fillStyle = stripBgColor;
   ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+  // Add colored border that matches the player color
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
   ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
 
-  const triangleWidth = width * 1.6;
-  const triangleHeight = height * 0.15;
+  // Add a subtle inner glow using the player color
+  const alpha = 0.25;
+  ctx.fillStyle = color.startsWith("rgba")
+    ? color
+    : `${color}${alpha.toString(16).padStart(2, "0")}`;
+  const padding = 2;
+  ctx.fillRect(
+    rectX + padding,
+    rectY + padding,
+    rectWidth - padding * 2,
+    rectHeight - padding * 2
+  );
+
+  // Add a top highlight for 3D effect
+  const gradient = ctx.createLinearGradient(
+    rectX,
+    rectY,
+    rectX,
+    rectY + rectHeight * 0.3
+  );
+  gradient.addColorStop(0, "rgba(255, 255, 255, 0.15)");
+  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(rectX, rectY, rectWidth, rectHeight * 0.3);
+
+  // Calculate triangle dimensions for a more modern look
+  const triangleWidth = width * 1.4; // Slightly smaller than original
+  const triangleHeight = height * 0.18; // Slightly taller
 
   // Coordinates for triangle
   let tipX = x + width / 2;
@@ -142,15 +256,30 @@ export const drawStripWithTriangleAndCircle = (
     baseRightY = y + width + (triangleWidth - width) / 2;
   }
 
-  // Draw triangle
+  // Draw modern triangle with the dark background and colored border
   ctx.beginPath();
   ctx.moveTo(tipX, tipY);
   ctx.lineTo(baseLeftX, baseLeftY);
   ctx.lineTo(baseRightX, baseRightY);
   ctx.closePath();
+
+  // Fill with dark background
+  ctx.fillStyle = stripBgColor;
   ctx.fill();
 
-  const circleRadius = width * 0.8;
+  // Add colored border
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Add subtle inner glow to triangle
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.globalAlpha = 1.0;
+
+  // Calculate circle dimensions for a more modern look
+  const circleRadius = width * 0.7; // Slightly smaller for modern look
   let circleX = 0,
     circleY = 0;
 
@@ -167,26 +296,38 @@ export const drawStripWithTriangleAndCircle = (
     circleX = x + height;
     circleY = y + width / 2;
   }
-  ctx.stroke();
 
+  // Draw modern circle with dark background and colored border
   ctx.beginPath();
   ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = stripBgColor;
   ctx.fill();
+
+  // Add colored border
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.fillStyle = "black"; // or any contrasting color
-  ctx.font = `${font_px}px sans-serif`;
+  // Add subtle inner glow to circle
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(circleX, circleY, circleRadius - 2, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.globalAlpha = 1.0;
+
+  // Modern text styling
+  ctx.fillStyle = "white"; // White text for better contrast
+  ctx.font = `bold ${font_px}px sans-serif`; // Bold font for emphasis
 
   const text = "Slide!";
   const textWidth = ctx.measureText(text).width;
 
-  // Loop the text once it goes off the shape
-  const totalLength =
-    direction === "left" || direction === "right" ? width : height;
   const textX = -textWidth;
 
+  // Draw text with different positioning based on direction
   if (direction === "right") {
-    ctx.fillText(text, rectX + rectWidth / 2, rectY + 3*rectHeight / 4);
+    ctx.fillText(text, rectX + rectWidth / 2, rectY + (3 * rectHeight) / 4);
   } else if (direction === "left") {
     ctx.save();
     // Move origin to right edge of the rect before flipping
@@ -216,11 +357,16 @@ export const drawStripWithTriangleAndCircle = (
     ctx.fillText(text, textX + height / 2, rectWidth / 4);
     ctx.restore();
   }
+
+  // Add a subtle glow effect around the text
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 5;
+
+  // Restore the context state
+  ctx.restore();
 };
 
 // Store last known button bounds to detect clicks
-
-
 
 const drawHighlightedCircles = (
   ctx: CanvasRenderingContext2D,
@@ -281,10 +427,7 @@ export const drawSafetyWord = (
   ctx.restore();
 };
 
-
-export const drawPiecesWithOffset = (
-  allPieces: Piece[],
-): DrawnPiece[] => {
+export const drawPiecesWithOffset = (allPieces: Piece[]): DrawnPiece[] => {
   const tileGroups: Record<string, Piece[]> = {};
 
   for (const piece of allPieces) {
@@ -318,4 +461,4 @@ export const drawPiecesWithOffset = (
   }
 
   return drawnPieces;
-}
+};
