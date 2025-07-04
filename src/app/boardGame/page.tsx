@@ -100,7 +100,7 @@ export default function BoardGamePage() {
 
       <main className="flex h-screen pt-20 px-4 gap-4">
         {/* Left Sidebar - Game Info & Chat */}
-        <div className="w-80 bg-slate-800/80 backdrop-blur-lg border-2 border-cyan-500/30 p-6 flex flex-col rounded-2xl shadow-lg shadow-cyan-900/20 my-2">
+        <div className="w-80 bg-slate-800/80 backdrop-blur-lg border-2 border-cyan-500/30 p-6 flex flex-col rounded-2xl shadow-lg shadow-cyan-900/20 my-2 z-90">
           {/* Game Title */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
@@ -162,7 +162,7 @@ export default function BoardGamePage() {
         </div>
 
         {/* Right Sidebar - Players & Rules */}
-        <div className="w-80 bg-slate-800/80 backdrop-blur-lg border-2 border-cyan-500/30 p-6 flex flex-col rounded-2xl shadow-lg shadow-cyan-900/20 my-2">
+        <div className="w-80 bg-slate-800/80 backdrop-blur-lg border-2 border-cyan-500/30 p-6 flex flex-col rounded-2xl shadow-lg shadow-cyan-900/20 my-2 z-90">
           {/* Players Section */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-cyan-100 mb-3">
@@ -204,28 +204,11 @@ export default function BoardGamePage() {
 
         {/* Overlay: Waiting for players */}
         {players.length != 4 && (
-          <div className="absolute inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events: none">
             <div className="bg-slate-800/90 backdrop-blur-lg border-2 border-cyan-500/30 p-8 rounded-3xl shadow-2xl shadow-cyan-500/20 text-white text-center space-y-4 max-w-lg">
               <p className="text-xl font-bold text-cyan-100">
                 Waiting for 4 players to join...
               </p>
-              {hostId == 0 && (
-                <>
-                  <div className="text-sm break-all bg-slate-700/80 border border-cyan-400/40 p-3 rounded-xl shadow-inner">
-                    <span className="text-cyan-200">{shareLink}</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(shareLink);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:scale-105 hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-                  >
-                    {copied ? "Copied!" : "Copy Invite Link"}
-                  </button>
-                </>
-              )}
             </div>
           </div>
         )}
@@ -235,12 +218,6 @@ export default function BoardGamePage() {
           <div className="absolute inset-0 flex items-center justify-center z-50">
             <div className="bg-slate-800/90 backdrop-blur-lg border-2 border-cyan-500/30 p-8 rounded-3xl shadow-2xl shadow-cyan-500/20 text-xl font-bold text-cyan-100 text-center space-y-4">
               <p>All players have joined!</p>
-              <button
-                onClick={handleStart}
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:scale-105 hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg"
-              >
-                Start Game
-              </button>
             </div>
           </div>
         )}

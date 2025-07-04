@@ -953,6 +953,7 @@ const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
                   backgroundColor: piece.color,
                   borderRadius: "50%",
                   border: (selectedPiece == idx) ? "3px solid gold" : "2px solid white",
+                  transition: "top 0.3s ease, left 0.3s ease, border 0.3s ease",
                   zIndex: 1000,
                   cursor: "pointer",
                 }}
