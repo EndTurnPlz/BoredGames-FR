@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
 import {
   drawCircle,
@@ -299,7 +300,7 @@ export default function GameCanvas({
       },
 
       {
-        x: 8.5 * tileSize,
+        x: 9.5 * tileSize,
         y: tileSize / 4,
         width: tileSize / 2,
         height: 4 * tileSize,
@@ -453,7 +454,7 @@ export default function GameCanvas({
                 Effect: selectedEffect,
               },
               SplitMove: {
-                From: possibleSecondPawns[secondSelectedPieceRef.current],
+                From: possibleSecondPawns[secondSelectedPieceRef.current].piece.id,
                 To: secondSelectedDestinationRef.current,
                 Effect: secondEffect,
               },
@@ -479,7 +480,7 @@ export default function GameCanvas({
         }
 
         setLoading(false);
-        resetAllSelections();
+        resetSelections();
         return true;
       } catch (err) {
         console.error("Error fetching game state:", err);
@@ -490,6 +491,7 @@ export default function GameCanvas({
     return false;
   };
   const handleSecondPawnClick = (move: Move, idx: number) => {
+    console.log()
     setSecondDestination(move.to);
     setSecondSelectedPiece(idx);
     setSecondSelectedEffect(move.effects[0]);
@@ -528,10 +530,11 @@ export default function GameCanvas({
       const target = 7 - current;
       const possibleSeconds = [];
 
-      for (const piece of drawnPiecesRef.current) {
+      for (const piece of drawnPieces) {
+        console.log(piece, selectedEffect, PossibleMovesRef.current)
         if (
           PossibleMovesRef.current &&
-          drawnPiecesRef.current[selectedPiece] !== piece
+          drawnPieces[selectedPiece] !== piece
         ) {
           const matching = PossibleMovesRef.current.find(
             (m) => m.pawn === piece.id
@@ -682,7 +685,6 @@ export default function GameCanvas({
       setTurnOrder(gameState.turnOrder);
       setLocalTurnOrder(gameState.turnOrder);
       setGamePhase(gameState.gamePhase);
-      resetAllSelections();
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -815,6 +817,12 @@ export default function GameCanvas({
   }, [possibleEffects]);
 
   useEffect(() => {
+    if (isPlayerTurn == "wait") {
+      resetAllSelections();
+    }
+  }, [isPlayerTurn]);
+
+  useEffect(() => {
     if (!devMode) return;
 
     const dummyGameState: GameState = {
@@ -843,27 +851,60 @@ export default function GameCanvas({
       // animateCardSwap("Cards/deck.png", "/Cards/FaceCards/two.png")
     }, 3000);
   }, []);
+  
+const CardButton = ({ onClick, x, y, src, label }: { onClick: () => void, x: number, y: number, src: string, label: string }) => {
+  const hasMounted = useRef(false);
+  const [prevSrc, setPrevSrc] = useState(src);
 
-  const CardButton = ({ onClick, x, y, src, label }: { onClick: () => void, x: number, y: number, src: string, label: string }) => (
-  <button
-    onClick={onClick}
-    aria-label={label}
-    style={{
-      position: "absolute",
-      top: y,
-      left: x,
-      width: cardW,
-      height: cardH,
-      border: "none",
-      cursor: "pointer",
-      padding: 0,
-      overflow: "hidden",
-      zIndex: 30,
-      background: `url(${src}) no-repeat center/contain`,
-    }}
-    className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
-  />
-);
+  useEffect(() => {
+    if (hasMounted.current) {
+      setPrevSrc(src);
+    } else {
+      hasMounted.current = true;
+    }
+  }, [src]);
+
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        position: "absolute",
+        top: y,
+        left: x,
+        width: cardW,
+        height: cardH,
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        overflow: "hidden",
+        zIndex: 30,
+        background: "none",
+      }}
+      className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
+    >
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={src}
+          src={src}
+          alt="Card"
+          initial={hasMounted.current ? { opacity: 0, scale: 0.95 } : false}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+        />
+      </AnimatePresence>
+    </button>
+  );
+};
 
 const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
   if (piece.color !== playerColorRef.current) return false;
