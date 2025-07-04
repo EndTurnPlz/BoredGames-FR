@@ -48,7 +48,7 @@ export type Piece = {
   x: number;
   y: number;
   color: string;
-  radius: number;
+  isActive: boolean;
   id: string;
 };
 type MoveSet = {
@@ -108,6 +108,7 @@ export default function GameCanvas({
   const playersref = useRef<Player[]>([]);
   const playerColorRef = useRef<string>("green");
 
+  const [drawnPieces, setDrawnPieces] = useState<DrawnPiece[]>([])
   const drawnPiecesRef = useRef<DrawnPiece[]>([]);
 
   const deckRef = useRef<Card | null>(null);
@@ -119,7 +120,7 @@ export default function GameCanvas({
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = true;
+  let devMode = false;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -141,12 +142,12 @@ export default function GameCanvas({
   const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
   const highlightedTilesRef = useRef<Move[] | null>(null);
 
-  const [selectedPiece, setSelectedPiece] = useState<DrawnPiece | null>(null);
-  const selectedPieceRef = useRef<DrawnPiece | null>(null);
+  const [selectedPiece, setSelectedPiece] = useState<number>(-1);
+  const selectedPieceRef = useRef<number>(-1);
 
   const [secondSelectedPiece, setSecondSelectedPiece] =
-    useState<DrawnPiece | null>(null);
-  const secondSelectedPieceRef = useRef<DrawnPiece | null>(null);
+    useState<number>(-1);
+  const secondSelectedPieceRef = useRef<number>(-1);
 
   const [destination, setdestination] = useState<string | null>(null);
   const destinationRef = useRef<string | null>(null);
@@ -398,59 +399,18 @@ export default function GameCanvas({
   };
 
   const drawPieces = (color: string) => {
-    const canvas = piecesCanvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    const angle = getRotationAngleForColor(color);
-    // Save current state
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-
-    // Move origin to center, rotate, then move back
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(angle);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
     const allPawns = players.flatMap((p) =>
       p.pieces.map((piece) => ({
         x: piece.x,
         y: piece.y,
         color: p.color,
-        radius: radius,
+        isActive: false,
         id: piece.id,
       }))
     );
 
-    drawnPiecesRef.current = drawPiecesWithOffset(ctx, allPawns, selectedPiece);
-    let highlights = [];
-    if (!destinationRef.current) {
-      highlightedTiles.forEach((coord) => {
-        highlights.push({ coord: coord.to, color: "#FF00FF" });
-      });
-    } else {
-      highlightedTiles.forEach((coord) => {
-        if (destination === coord.to) {
-          highlights.push({ coord: coord.to, color: "#008000" });
-        }
-      });
-    }
-
-    if (!secondSelectedPieceRef.current) {
-      possibleSecondPawns.forEach((coord) => {
-        highlights.push({ coord: coord.piece.id, color: "#FF00FF" });
-      });
-    } else {
-      highlights.push({
-        coord: secondSelectedPieceRef.current.id,
-        color: "gold",
-      });
-      if (secondDestination) {
-        highlights.push({ coord: secondDestination, color: "#008000" });
-      }
-    }
-
-    drawAllCircles(ctx, tileSize, highlights);
-    ctx.restore();
+    setDrawnPieces(drawPiecesWithOffset(allPawns))
   };
 
   const applyGameState = async (gameState: GameState) => {
@@ -467,53 +427,10 @@ export default function GameCanvas({
       );
       const player = new Player(color, positions);
       newPlayers.push(player);
-
-      for (let i = 0; i < positions.length; i++) {
-        const target = positions[i];
-        const pieceId = oldPlayer?.pieces[i].id ?? "";
-        const currentPiece = oldPlayer?.pieces[i];
-        if (currentPiece && pieceId != target.id) {
-          // console.log(currentPiece, pieceId, target.id)
-          animationPromises.push(
-            animatePieceAlongPath(pieceId, findPath(pieceId, target.id))
-          );
-        }
-      }
     }
     await Promise.all(animationPromises);
     setPlayers(newPlayers);
   };
-
-  useEffect(() => {
-    const canvas = piecesCanvasRef.current;
-    if (!canvas) return;
-
-    const handleClick = async (event: MouseEvent) => {
-      if (loadingRef.current || pullGameState) return;
-
-      const rect = canvas.getBoundingClientRect();
-
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-      let unrotatedCoords = getUnrotatedMousePosition(
-        mouseX,
-        mouseY,
-        colorToAngleDict[playerColorRef.current]
-      );
-
-      if (handleSecondPawnClick(unrotatedCoords.x, unrotatedCoords.y)) return;
-      if (handleTileHighlightClick(unrotatedCoords.x, unrotatedCoords.y))
-        return;
-      if (handlePieceSelection(unrotatedCoords.x, unrotatedCoords.y)) return;
-
-      resetSelections();
-    };
-
-    canvas.addEventListener("click", handleClick);
-    return () => {
-      canvas.removeEventListener("click", handleClick);
-    };
-  }, []);
 
   const handleConfirmMoveClick = async () => {
     if (destinationRef.current && !pullGameState) {
@@ -521,28 +438,29 @@ export default function GameCanvas({
         console.log("Not your turn!");
         return true;
       }
-
+      console.log("hello")
       if (currentCardRef.current === 7 && currentDistanceref.current !== 7) {
         return true;
       }
       try {
+
         let player_Id = localStorage.getItem("userId" + randomId) ?? "";
         const body = secondSelectedDestinationRef.current
           ? {
               Move: {
-                From: selectedPieceRef.current?.id,
+                From: drawnPieces[selectedPiece].id,
                 To: destinationRef.current,
                 Effect: selectedEffect,
               },
               SplitMove: {
-                From: secondSelectedPieceRef.current?.id,
+                From: possibleSecondPawns[secondSelectedPieceRef.current],
                 To: secondSelectedDestinationRef.current,
                 Effect: secondEffect,
               },
             }
           : {
               Move: {
-                From: selectedPieceRef.current?.id,
+                From: drawnPieces[selectedPiece].id,
                 To: destinationRef.current,
                 Effect: selectedEffect,
               },
@@ -561,7 +479,7 @@ export default function GameCanvas({
         }
 
         setLoading(false);
-        resetSelections();
+        resetAllSelections();
         return true;
       } catch (err) {
         console.error("Error fetching game state:", err);
@@ -571,109 +489,68 @@ export default function GameCanvas({
     }
     return false;
   };
-  const handleSecondPawnClick = (x: number, y: number) => {
-    if (!possibleSecondPawnsRef.current) return false;
-    for (const tile of possibleSecondPawnsRef.current) {
-      const dx = x - tile.piece.drawX;
-      const dy = y - tile.piece.drawY;
-      if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-        setSecondDestination(tile.move.to);
-        setSecondSelectedPiece(tile.piece);
-        setSecondSelectedEffect(tile.move.effects[0]);
-        const distance = findPath(tile.move.from, tile.move.to).length - 1;
-        const current = currentDistanceref.current ?? 0;
-        setCurrentDistance(current + distance);
-        return true;
-      }
-    }
-
-    return false;
+  const handleSecondPawnClick = (move: Move, idx: number) => {
+    setSecondDestination(move.to);
+    setSecondSelectedPiece(idx);
+    setSecondSelectedEffect(move.effects[0]);
+    const distance = findPath(move.from, move.to).length - 1;
+    const current = currentDistanceref.current ?? 0;
+    setCurrentDistance(current + distance);
+    return true;
   };
 
-  const handleTileHighlightClick = (x: number, y: number) => {
-    if (!highlightedTilesRef.current) return false;
-    for (const tile of highlightedTilesRef.current) {
-      const pixel = coordMap[tile.to];
-      const dx = x - pixel.x;
-      const dy = y - pixel.y;
-      if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-        if (!selectedPieceRef.current) return false;
+  const handleTileHighlightClick = (tile: Move) => {
+    if (selectedPieceRef.current == -1) return false;
 
-        setdestination(tile.to);
-        if (tile.effects.length > 1) {
-          setPossibleEffects(tile.effects);
+    setdestination(tile.to);
 
-          // Position the popup near the clicked tile
-          let coords = getUnrotatedMousePosition(
-            coordMap[tile.to].x,
-            coordMap[tile.to].y,
-            colorToAngleDict[playerColorRef.current]
+    if (tile.effects.length > 1) {
+      setPossibleEffects(tile.effects);
+
+      // Calculate popup position near tile
+      let coords = getUnrotatedMousePosition(
+        coordMap[tile.to].x,
+        coordMap[tile.to].y,
+        colorToAngleDict[playerColorRef.current]
+      );
+      setEffectPopupPosition({
+        x: coords.x + tileSize/2,
+        y: coords.y - 3*tileSize/2,
+      });
+    } else {
+      setSelectedEffect(tile.effects[0]);
+      setEffectPopupPosition(null);
+    }
+    if (currentCardRef.current === 7) {
+      const current = findPath(tile.from, tile.to).length - 1;
+      setCurrentDistance(current);
+
+      const target = 7 - current;
+      const possibleSeconds = [];
+
+      for (const piece of drawnPiecesRef.current) {
+        if (
+          PossibleMovesRef.current &&
+          drawnPiecesRef.current[selectedPiece] !== piece
+        ) {
+          const matching = PossibleMovesRef.current.find(
+            (m) => m.pawn === piece.id
           );
-          setEffectPopupPosition({
-            x: coords.x,
-            y: coords.y - tileSize,
-          });
-        } else {
-          // Auto-select the only effect
-          setSelectedEffect(tile.effects[0]);
-          setEffectPopupPosition(null);
-        }
-
-        if (currentCardRef.current === 7) {
-          const current = findPath(tile.from, tile.to).length - 1;
-          console.log(current, findPath(tile.from, tile.to));
-          setCurrentDistance(current);
-          const target = 7 - current;
-          const possibleSeconds = [];
-
-          for (const piece of drawnPiecesRef.current) {
-            if (
-              PossibleMovesRef.current &&
-              selectedPieceRef.current !== piece
-            ) {
-              const matching = PossibleMovesRef.current.find(
-                (m) => m.pawn === piece.id
-              );
-              const canBeSecond = matching?.move?.find(
-                (m) => findPath(m.from, m.to).length - 1 === target
-              );
-              if (canBeSecond) {
-                possibleSeconds.push({ piece, move: canBeSecond });
-              }
-            }
+          const canBeSecond = matching?.move?.find(
+            (m) => findPath(m.from, m.to).length - 1 === target
+          );
+          if (canBeSecond) {
+            possibleSeconds.push({ piece, move: canBeSecond });
           }
-
-          setPossibleSecondPawns(possibleSeconds);
         }
-
-        return true;
       }
+      console.log(possibleSeconds)
+      setPossibleSecondPawns(possibleSeconds);
     }
 
-    return false;
+    return true;
   };
 
-  const handlePieceSelection = (x: number, y: number) => {
-    for (const piece of drawnPiecesRef.current) {
-      const dx = x - piece.drawX;
-      const dy = y - piece.drawY;
-      if (Math.sqrt(dx * dx + dy * dy) <= radius) {
-        console.log(x, y, piece.color);
-        if (piece.color != playerColorRef.current) return;
-        setSelectedPiece(piece);
-
-        const matching = PossibleMovesRef.current?.find(
-          (m) => m.pawn === piece.id
-        );
-        console.log(matching);
-        console.log(PossibleMovesRef.current, piece.id);
-        setHighlightedTiles(matching?.move ?? []);
-        return true;
-      }
-    }
-
-    return false;
-  };
 
   const handleDeckClick = async () => {
     console.log("Deck clicked! Sending to backend...");
@@ -693,7 +570,7 @@ export default function GameCanvas({
       console.log(response);
       setPossibleMoves(response.movesets);
       localStorage.setItem("drawCard", JSON.stringify(response));
-      animateCardSwap(deck_card, card_path(numberDict[response.cardDrawn]));
+      setTopCardPath(card_path(numberDict[response.cardDrawn]));
       setCurrentCard(response.cardDrawn);
       setView(response.view);
       setLoading(false);
@@ -722,13 +599,27 @@ export default function GameCanvas({
     }
   };
 
-  const resetSelections = () => {
-    setSelectedPiece(null);
+  const resetAllSelections = () => {
+    setSelectedPiece(-1);
     setdestination(null);
     setHighlightedTiles([]);
     setSecondDestination(null);
     setPossibleSecondPawns([]);
-    setSecondSelectedPiece(null);
+    setSecondSelectedPiece(-1);
+    setSelectedEffect(null);
+    setSecondSelectedEffect(null);
+    setPossibleEffects([]);
+    setEffectPopupPosition(null);
+    setPossibleMoves([])
+  };
+
+  const resetSelections = () => {
+    setSelectedPiece(-1);
+    setdestination(null);
+    setHighlightedTiles([]);
+    setSecondDestination(null);
+    setPossibleSecondPawns([]);
+    setSecondSelectedPiece(-1);
     setSelectedEffect(null);
     setSecondSelectedEffect(null);
     setPossibleEffects([]);
@@ -744,10 +635,10 @@ export default function GameCanvas({
     console.log("color change: " + playerColor);
     drawWithRotation(playerColor);
     setAngle(colorToAngleDict[playerColor]);
-    drawPieces(playerColor);
     if (playerColor != "") {
       playerColorRef.current = playerColor;
       setPlayerTurn(gamePhase);
+      drawPieces(playerColor);
     }
   }, [playerColor]);
 
@@ -770,11 +661,8 @@ export default function GameCanvas({
         setGameStarted(true);
       }
       setView(gameState.currentView);
-      if (gameState.lastDrawnCard in numberDict && isPlayerTurn == "draw") {
-        animateCardSwap(
-          deck_card,
-          card_path(numberDict[gameState.lastDrawnCard])
-        );
+      if (gameState.lastDrawnCard in numberDict && isPlayerTurn != "move") {
+        setTopCardPath(card_path(numberDict[gameState.lastDrawnCard]));
         setCurrentCard(gameState.lastDrawnCard);
       }
       let pieces = gameState.pieces;
@@ -794,6 +682,7 @@ export default function GameCanvas({
       setTurnOrder(gameState.turnOrder);
       setLocalTurnOrder(gameState.turnOrder);
       setGamePhase(gameState.gamePhase);
+      resetAllSelections();
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -824,66 +713,6 @@ export default function GameCanvas({
       console.error("Error fetching game state:", err);
       return null;
     }
-  };
-
-  const animateCardSwap = (oldSrc: string, newSrc: string) => {
-    setFloatingCard({ oldSrc, newSrc, x: cardX1, y: cardY, phase: "start" });
-  };
-
-  const animatePieceAlongPath = (
-    pieceId: string,
-    path: string[],
-    speed: number = 300
-  ): Promise<void> => {
-    return new Promise((resolve) => {
-      // console.log(path)
-      const allPlayers = [...playersref.current];
-      const targetPlayer = allPlayers.find((p) =>
-        p.pieces.some((pc) => pc.id === pieceId)
-      );
-      if (!targetPlayer) {
-        resolve();
-        return;
-      }
-      const pieceIndex = targetPlayer.pieces.findIndex(
-        (pc) => pc.id === pieceId
-      );
-      if (pieceIndex === -1) {
-        resolve();
-        return;
-      }
-
-      let stepIndex = 1;
-
-      const moveToNext = () => {
-        // console.log(stepIndex)
-        if (stepIndex >= path.length) {
-          // Final update to state after full path
-          setPlayers(allPlayers);
-          resolve();
-          return;
-        }
-
-        const coord = path[stepIndex];
-        const pixel = coordMap[coord];
-        // console.log(pixel, coord)
-        if (!pixel) {
-          return;
-          resolve();
-        }
-
-        // Update the logical position
-        targetPlayer.pieces[pieceIndex].x = pixel.x;
-        targetPlayer.pieces[pieceIndex].y = pixel.y;
-        // console.log(allPlayers)
-        setPlayers([...allPlayers]); // trigger state update for redraw
-
-        stepIndex++;
-        setTimeout(moveToNext, speed);
-      };
-
-      moveToNext();
-    });
   };
 
   useEffect(() => {
@@ -989,17 +818,18 @@ export default function GameCanvas({
     if (!devMode) return;
 
     const dummyGameState: GameState = {
-      red: ["d_4", "d_S", "d_S", "d_S"],
+      red: ["d_4", "d_3", "d_S", "d_S"],
       blue: ["d_15", "a_S", "a_8", "a_S"],
       yellow: ["b_S", "b_S", "b_S", "b_S"],
       green: ["c_S", "c_S", "c_S", "c_S"],
     };
 
     setGameStarted(true);
-    setPossibleMoves(mockCardResponse11.movesets);
-    applyGameState(dummyGameState);
-    setIsPlayerTurn("draw");
+    setPossibleMoves(mockCardResponse7.movesets);
     playerColorRef.current = "red";
+    applyGameState(dummyGameState);
+    setIsPlayerTurn("move");
+    setCurrentCard(7)
     // const nextDummyGameState: GameState = {
     //   red: ["d_S", "d_S", "d_S", "d_S"],
     //   blue: ["a_S", "a_S", "a_S", "a_S"],
@@ -1014,12 +844,49 @@ export default function GameCanvas({
     }, 3000);
   }, []);
 
+  const CardButton = ({ onClick, x, y, src, label }: { onClick: () => void, x: number, y: number, src: string, label: string }) => (
+  <button
+    onClick={onClick}
+    aria-label={label}
+    style={{
+      position: "absolute",
+      top: y,
+      left: x,
+      width: cardW,
+      height: cardH,
+      border: "none",
+      cursor: "pointer",
+      padding: 0,
+      overflow: "hidden",
+      zIndex: 30,
+      background: `url(${src}) no-repeat center/contain`,
+    }}
+    className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
+  />
+);
+
+const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
+  if (piece.color !== playerColorRef.current) return false;
+
+  setSelectedPiece(idx);
+
+  const matching = PossibleMovesRef.current?.find(m => m.pawn === piece.id);
+
+  console.log(matching);
+  console.log(PossibleMovesRef.current, piece.id);
+
+  setHighlightedTiles(matching?.move ?? []);
+
+}
   return (
     <div className="flex flex-col items-center">
       <div className="min-h-screen flex items-center justify-center bg-black-200">
         <div
           className={`relative ${loading ? "blur-sm pointer-events-none" : ""}`}
           style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
+          onClick={() => {
+                    resetSelections()
+                  }}
         >
           <canvas
             ref={canvasRef}
@@ -1028,62 +895,110 @@ export default function GameCanvas({
             className={`absolute top-0 left-0 z-0 pointer-events-none`}
             style={{ display: "block" }}
           />
-          <canvas
-            ref={piecesCanvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
-            className={`absolute top-0 left-0 z-10`}
-            style={{ pointerEvents: "auto" }}
-          />
-          {/* Deck Button */}
-          <button
-            onClick={async () => {
-              if (loadingRef.current || pullGameState || isPlayerTurn == "wait")
-                return;
-              await handleDeckClick();
-            }}
-            style={{
-              position: "absolute",
-              top: cardY,
-              left: cardX1,
-              width: cardW,
-              height: cardH,
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              overflow: "hidden",
-              zIndex: 30,
-              background: `url(${deck_card}) no-repeat center/contain`,
-            }}
-            aria-label="Draw from deck"
-            className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
-          ></button>
+          {drawnPieces.map((piece, idx) => {
+            const x = piece.drawX;
+            const y = piece.drawY;
+            const { x: new_x, y: new_y } = getUnrotatedMousePosition(x, y, colorToAngleDict[playerColorRef.current]);
+            return (
+              <button
+                key={idx}
+                onClick={(e) => { e.stopPropagation(); handlePieceSelection(piece, idx)}} // define this handler
+                style={{
+                  position: "absolute",
+                  top: new_y - tileSize/2,
+                  left: new_x - tileSize/2,
+                  width: tileSize,
+                  height: tileSize,
+                  backgroundColor: piece.color,
+                  borderRadius: "50%",
+                  border: (selectedPiece == idx) ? "3px solid gold" : "2px solid white",
+                  zIndex: 1000,
+                  cursor: "pointer",
+                }}
+                aria-label={`Piece at row ${piece.y}, column ${piece.x}`}
+              />
+            );
+          })}
+          {highlightedTiles
+          .filter((move) => !destination || destination === move.to)
+          .map((move, index) => {
+            const { x: rawX, y: rawY } = coordStringToPixel(move.to, tileSize);
+            const { x, y } = getUnrotatedMousePosition(rawX, rawY, colorToAngleDict[playerColorRef.current]);
+            return (
+              <div
+                key={index}
+                onClick={(e) => { e.stopPropagation(); handleTileHighlightClick(move)}} // define this handler
+                style={{
+                  position: "absolute",
+                  top: y - tileSize / 2,
+                  left: x - tileSize / 2,
+                  width: tileSize,
+                  height: tileSize,
+                  borderRadius: "50%",
+                  border: "3px solid purple",
+                  backgroundColor: destination === move.to ? "purple" : "transparent",
+                  pointerEvents: "auto",
+                  zIndex: 1000,
+                }}
+              />
+            );
+          })}
+          {possibleSecondPawns.map(({piece, move}, index) => {
+            const { x: rawX, y: rawY } = coordStringToPixel(piece.id, tileSize);
+            const { x, y } = getUnrotatedMousePosition(rawX, rawY, colorToAngleDict[playerColorRef.current]);
+            return (
+              <div
+                key={index}
+                onClick={(e) => { e.stopPropagation(); handleSecondPawnClick(move, index)}} // define this handler
+                style={{
+                  position: "absolute",
+                  top: y - tileSize / 2,
+                  left: x - tileSize / 2,
+                  width: tileSize,
+                  height: tileSize,
+                  borderRadius: "50%",
+                  border: secondDestination === move.to ?  "3px solid gold" : "3px solid purple",
+                  backgroundColor: "transparent",
+                  pointerEvents: "auto",
+                  zIndex: 1100,
+                }}
+              />
+            );
+          })}
+          {secondDestination && (() => {
+            const { x: rawX, y: rawY } = coordStringToPixel(secondDestination, tileSize);
+            const { x, y } = getUnrotatedMousePosition(
+              rawX,
+              rawY,
+              colorToAngleDict[playerColorRef.current]
+            );
 
+            return (
+              <div
+                style={{
+                  position: "absolute",
+                  top: y - tileSize / 2,
+                  left: x - tileSize / 2,
+                  width: tileSize,
+                  height: tileSize,
+                  borderRadius: "50%",
+                  border: "3px solid purple", // color to indicate second destination
+                  backgroundColor: "purple",
+                  pointerEvents: "none",
+                  zIndex: 999,
+                }}
+              />
+            );
+          })()}
+          {/* Deck Button */}
+          <CardButton onClick={handleDeckClick} x={cardX1} y={cardY} src={deck_card} label="Draw from deck" />
           {/* Top Card Button */}
-          <button
-            onClick={() => {
-              if (loadingRef.current || pullGameState) return;
-              handleTopCardClick();
-            }}
-            style={{
-              position: "absolute",
-              top: cardY,
-              left: cardX2,
-              width: cardW,
-              height: cardH,
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              overflow: "hidden",
-              zIndex: 30,
-              background: `url(${topCardPath}) no-repeat center/contain`,
-            }}
-            aria-label="view top card"
-            className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
-          ></button>
+          <CardButton onClick={handleTopCardClick} x={cardX2} y={cardY} src={topCardPath} label="View top card" />
           {isPlayerTurn == "move" && (
             <button
-              onClick={handleConfirmMoveClick}
+              onClick={ (e) => {
+                e.stopPropagation(); handleConfirmMoveClick()
+              }}
               className="absolute font-bold z-20 shadow-md transition-colors duration-200 
                 bg-white text-black hover:bg-yellow-300"
               style={{
@@ -1093,6 +1008,7 @@ export default function GameCanvas({
                 height: canvasHeight * 0.06,
                 fontSize: canvasHeight * 0.03,
                 borderRadius: canvasHeight * 0.02,
+                pointerEvents: "auto",
               }}
             >
               Submit Move
@@ -1147,51 +1063,6 @@ export default function GameCanvas({
               ))}
             </div>
           )}
-
-          {floatingCard && (
-            <div
-              style={{
-                position: "absolute",
-                left: floatingCard.x,
-                top: floatingCard.y,
-                width: cardW,
-                height: cardH,
-                pointerEvents: "none",
-                zIndex: 1000,
-              }}
-            >
-              {/* Old card: rising and fading out */}
-              <img
-                src={floatingCard.oldSrc}
-                alt="Old card"
-                style={{
-                  position: "absolute",
-                  width: "100%",
-                  height: "100%",
-                  opacity: floatingCard.phase === "animate" ? 0 : 1,
-                  animation:
-                    floatingCard.phase === "start"
-                      ? "riseThenRight 2s forwards ease-in-out"
-                      : floatingCard.phase === "animate"
-                      ? "fallThenLeft 2s forwards ease-in-out"
-                      : "none",
-                }}
-                onAnimationEnd={() => {
-                  if (floatingCard.phase === "start") {
-                    setFloatingCard((prev) => {
-                      if (!prev) return null;
-                      return { ...prev, oldSrc: prev.newSrc, phase: "animate" };
-                    });
-                  }
-                  if (floatingCard.phase === "animate") {
-                    setTopCardPath(floatingCard.oldSrc);
-                    setFloatingCard(null);
-                  }
-                }}
-              />
-            </div>
-          )}
-
           {isPlayerTurn != "move" && (
             <div
               style={{

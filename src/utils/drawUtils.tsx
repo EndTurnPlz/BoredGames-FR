@@ -3,7 +3,6 @@ import { coordStringToPixel } from "./outerPath";
 import {  tileSize, font_px, darkColorMap } from "./config";
 import { Piece } from "@/app/components/BoardCanvas";
 import { DrawnPiece } from "@/app/components/BoardCanvas";
-import { lightColorMap } from "./config";
 
 function colorDistance(current: string, target: string): number {
   const colorOrder = [darkColorMap["blue"], darkColorMap["yellow"], darkColorMap["green"], darkColorMap["red"]];
@@ -284,9 +283,7 @@ export const drawSafetyWord = (
 
 
 export const drawPiecesWithOffset = (
-  ctx: CanvasRenderingContext2D,
   allPieces: Piece[],
-  selectedPiece: DrawnPiece | null
 ): DrawnPiece[] => {
   const tileGroups: Record<string, Piece[]> = {};
 
@@ -302,7 +299,6 @@ export const drawPiecesWithOffset = (
   for (const group of Object.values(tileGroups)) {
     const centerX = group[0].x;
     const centerY = group[0].y;
-    const radius = group[0].radius;
 
     group.forEach((piece, i) => {
       let offsetX = 0;
@@ -316,22 +312,6 @@ export const drawPiecesWithOffset = (
 
       const drawX = centerX + offsetX;
       const drawY = centerY + offsetY;
-
-      // Draw filled piece
-      ctx.beginPath();
-      ctx.arc(drawX, drawY, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = lightColorMap[piece.color];
-      ctx.fill();
-
-      // Highlight selected piece
-      const isSelected =
-        selectedPiece &&
-        selectedPiece.drawX === drawX &&
-        selectedPiece.drawY === drawY;
-
-      ctx.lineWidth = isSelected ? 4 : 2;
-      ctx.strokeStyle = isSelected ? "gold" : "white";
-      ctx.stroke();
 
       drawnPieces.push({ ...piece, drawX, drawY });
     });
