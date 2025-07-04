@@ -22,6 +22,13 @@ export const numberDict: { [key: number]: string } = {
 
 export const colorToAngleDict: { [key: string]: number } = {
     "yellow": 0,
+    "green": 270,
+    "red": 180,
+    "blue": 90
+} 
+
+export const wordToAngleDict: { [key: string]: number } = {
+    "yellow": 0,
     "green": 90,
     "red": 180,
     "blue": 270

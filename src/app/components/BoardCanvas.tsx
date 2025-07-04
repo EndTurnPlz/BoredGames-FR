@@ -22,6 +22,7 @@ import {
   deck_card,
   card_path,
   GET_GAMESTREAM,
+  wordToAngleDict,
 } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
@@ -207,7 +208,7 @@ export default function GameCanvas({
         color,
         tileSize,
         text,
-        angle,
+        wordToAngleDict[playerColorRef.current],
         playerColorRef.current
       )
     );
