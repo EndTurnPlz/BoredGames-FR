@@ -57,8 +57,8 @@ export const GET_GAMESTATE = (playerId: string)  => {
   return `${API_STRING}/games/Apologies/${playerId}/pullGameState`
 }
 
-export const GET_HEARTBEAT= (playerId: string)  => {
-  return `${API_STRING}/${playerId}/heartbeat`
+export const GET_GAMESTREAM= (playerId: string)  => {
+  return `${API_STRING}/${playerId}/gameViewStream`
 }
 
 export const DRAW_CARD = (playerId: string)  => {

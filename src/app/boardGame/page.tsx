@@ -152,7 +152,6 @@ export default function BoardGamePage() {
           >
             <GameComponent
               gameType={gameType}
-              username={username}
               playerColor={playerColor}
               setGameOver={setGameOver}
               setTurnOrder={setPlayers}

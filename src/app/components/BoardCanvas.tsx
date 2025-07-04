@@ -16,14 +16,13 @@ import {
   canvasHeight,
   numberDict,
   colorToAngleDict,
-  GET_HEARTBEAT,
   GET_GAMESTATE,
   DRAW_CARD,
-  indexToColor,
   MOVE_PAWN,
   colorToIndex,
   deck_card,
   card_path,
+  GET_GAMESTREAM,
 } from "@/utils/config";
 import { getRotationAngleForColor } from "@/utils/rotation";
 import { mockCardResponse2 } from "../mockData/moveset2";
@@ -37,7 +36,6 @@ import {
   cardX1,
   cardX2,
   cardY,
-  radius,
   darkColorMap,
 } from "@/utils/config";
 import { useSearchParams } from "next/navigation";
@@ -63,30 +61,16 @@ type Move = {
 };
 
 type BoardCanvasProps = {
-  gameType: string | null;
-  username: string | null;
   playerColor: string;
   setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
   setTurnOrder: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-type FloatingCard = {
-  oldSrc: string;
-  newSrc: string;
-  x: number;
-  y: number;
-  phase: "start" | "animate" | "done";
-};
-
-type playerPhase = "draw" | "move" | "wait";
-
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 type Card = { x: number; y: number; height: number; width: number };
 
 export default function GameCanvas({
-  gameType,
-  username,
   playerColor = "red",
   setGameOver,
   setTurnOrder,
@@ -95,7 +79,7 @@ export default function GameCanvas({
   const searchParams = useSearchParams();
   const randomId = searchParams.get("randomId");
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const piecesCanvasRef = useRef<HTMLCanvasElement>(null);
+
   const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState("draw");
 
@@ -111,9 +95,6 @@ export default function GameCanvas({
 
   const [drawnPieces, setDrawnPieces] = useState<DrawnPiece[]>([])
   const drawnPiecesRef = useRef<DrawnPiece[]>([]);
-
-  const deckRef = useRef<Card | null>(null);
-  const topCardRef = useRef<Card | null>(null);
 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
@@ -137,8 +118,6 @@ export default function GameCanvas({
   const possibleSecondPawnsRef = useRef<
     { piece: DrawnPiece; move: Move }[] | null
   >(null);
-
-  const [floatingCard, setFloatingCard] = useState<FloatingCard | null>(null);
 
   const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
   const highlightedTilesRef = useRef<Move[] | null>(null);
@@ -371,12 +350,6 @@ export default function GameCanvas({
     safetyConfigs.forEach(({ zone, angle, offsetX, offsetY }) => {
       drawSafetyWord(ctx, zone, angle, offsetX, offsetY);
     });
-
-    // drawCard(ctx, cardX1, cardY, cardW, cardH, deckPath);
-    // drawCard(ctx, cardX2, cardY, cardW, cardH, topCardPathRef.current);
-
-    // deckRef.current = { x: cardX1, y: cardY, width: cardW, height: cardH };
-    // topCardRef.current = { x: cardX2, y: cardY, width: cardW, height: cardH };
   };
 
   const drawWithRotation = (color: string) => {
@@ -490,6 +463,7 @@ export default function GameCanvas({
     }
     return false;
   };
+
   const handleSecondPawnClick = (move: Move, idx: number) => {
     console.log()
     setSecondDestination(move.to);
@@ -691,31 +665,28 @@ export default function GameCanvas({
     }
   };
 
-  // Simulate fetching the gameState from backend
-  const heartbeat = async (playerId: string) => {
-    if (devMode) return;
-    try {
-      if (pullGameState) return;
-      // console.log(GET_HEARTBEAT(playerId))
-      console.log(viewRef);
-      const res = await fetch(GET_HEARTBEAT(playerId), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(viewRef.current),
-      });
-      console.log(res);
-      if (!res.ok) {
-        setPullGamestate(true);
-      }
+  useEffect(() => {
+    const playerId = localStorage.getItem("userId" + randomId) ?? ""; 
+    console.log(GET_GAMESTREAM(playerId));
+    const eventSource = new EventSource(GET_GAMESTREAM(playerId));
 
-      // applyGameState(gameState);
-    } catch (err) {
-      console.error("Error fetching game state:", err);
-      return null;
-    }
-  };
+    eventSource.onmessage = (event) => {
+      if (event.data != viewRef.current) {
+        setPullGamestate(true)
+      }
+      console.log("Received:", event.data); // You will get the viewNum here
+
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE error:", err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close(); // Clean up when the component unmounts
+    };
+  }, []);
 
   useEffect(() => {
     const cardPaths = Object.values(numberDict).map(
@@ -739,9 +710,7 @@ export default function GameCanvas({
     if (devMode) return;
     console.log("refreshed");
     const storedId = localStorage.getItem("userId" + randomId);
-    const interval = setInterval(async () => {
-      await heartbeat(storedId ?? "");
-    }, 4000);
+
     const refresh = async () => {
       drawWithRotation(playerColorRef.current);
       setAngle(colorToAngleDict[playerColorRef.current]);
@@ -759,8 +728,9 @@ export default function GameCanvas({
         setCurrentCard(storedResponse.cardDrawn);
       }
     };
+
     refresh();
-    return () => clearInterval(interval);
+
   }, []);
 
   useEffect(() => {
@@ -848,7 +818,6 @@ export default function GameCanvas({
     // Optional: trigger an animation after mount
     setTimeout(() => {
       // applyGameState(nextDummyGameState)
-      // animateCardSwap("Cards/deck.png", "/Cards/FaceCards/two.png")
     }, 3000);
   }, []);
   
