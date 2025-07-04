@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import CardButton from "@/components/Card";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
 import {
   drawCircle,
   fillTile,
   drawStripWithTriangleAndCircle,
-  drawAllCircles,
   drawSafetyWord,
 } from "@/utils/drawUtils";
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
@@ -102,7 +101,7 @@ export default function GameCanvas({
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = false;
+  let devMode = true;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -807,7 +806,7 @@ export default function GameCanvas({
     playerColorRef.current = "red";
     applyGameState(dummyGameState);
     setIsPlayerTurn("move");
-    setCurrentCard(7)
+    // setCurrentCard(7)
     // const nextDummyGameState: GameState = {
     //   red: ["d_S", "d_S", "d_S", "d_S"],
     //   blue: ["a_S", "a_S", "a_S", "a_S"],
@@ -817,63 +816,15 @@ export default function GameCanvas({
 
     // Optional: trigger an animation after mount
     setTimeout(() => {
+      setTopCardPath(card_path("seven"))
       // applyGameState(nextDummyGameState)
     }, 3000);
+
+    setTimeout(() => {
+      setTopCardPath(card_path("eight"))
+      // applyGameState(nextDummyGameState)
+    }, 6000);
   }, []);
-  
-const CardButton = ({ onClick, x, y, src, label }: { onClick: () => void, x: number, y: number, src: string, label: string }) => {
-  const hasMounted = useRef(false);
-  const [prevSrc, setPrevSrc] = useState(src);
-
-  useEffect(() => {
-    if (hasMounted.current) {
-      setPrevSrc(src);
-    } else {
-      hasMounted.current = true;
-    }
-  }, [src]);
-
-  return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      style={{
-        position: "absolute",
-        top: y,
-        left: x,
-        width: cardW,
-        height: cardH,
-        border: "none",
-        padding: 0,
-        cursor: "pointer",
-        overflow: "hidden",
-        zIndex: 30,
-        background: "none",
-      }}
-      className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2 transition-all duration-200"
-    >
-      <AnimatePresence mode="wait">
-        <motion.img
-          key={src}
-          src={src}
-          alt="Card"
-          initial={hasMounted.current ? { opacity: 0, scale: 0.95 } : false}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.05 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            position: "absolute",
-            top: 0,
-            left: 0,
-          }}
-        />
-      </AnimatePresence>
-    </button>
-  );
-};
 
 const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
   if (piece.color !== playerColorRef.current) return false;
@@ -1002,9 +953,24 @@ const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
             );
           })()}
           {/* Deck Button */}
-          <CardButton onClick={handleDeckClick} x={cardX1} y={cardY} src={deck_card} label="Draw from deck" />
-          {/* Top Card Button */}
-          <CardButton onClick={handleTopCardClick} x={cardX2} y={cardY} src={topCardPath} label="View top card" />
+          <CardButton
+            onClick={handleDeckClick}
+            x={cardX1}
+            y={cardY}
+            src={deck_card}
+            label="Draw from deck"
+            animate={false} // <- no transition
+          />
+
+          {/* Top Card (with animation) */}
+          <CardButton
+            onClick={handleTopCardClick}
+            x={cardX2}
+            y={cardY}
+            src={topCardPath}
+            label="View top card"
+            animate={true} // <- or just omit this line, since true is default
+          />
           {isPlayerTurn == "move" && (
             <button
               onClick={ (e) => {
