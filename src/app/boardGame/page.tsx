@@ -231,7 +231,7 @@ export default function BoardGamePage() {
         )}
         {(showRules || showCards) && (
           <div
-            className="fixed inset-0 z-[1001] bg-transparent bg-opacity-30 flex items-center justify-center"
+            className="fixed inset-0 z-[1101] bg-transparent bg-opacity-30 flex items-center justify-center"
             onClick={() => {
               setShowRules(false);
               setShowCards(false);

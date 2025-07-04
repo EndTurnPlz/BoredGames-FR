@@ -8,7 +8,7 @@ type SelectablePieceProps = {
   idx: number;
   selected: boolean;
   playerColor: string;
-  handlePieceSelection: (piece: DrawnPiece, idx: number) => void;
+  handlePieceSelection: () => any;
 };
 
 export const SelectablePiece = ({
@@ -28,7 +28,7 @@ export const SelectablePiece = ({
   return (
 <motion.button
   key={`${piece}-${selected}`}
-  onClick={(e) => { e.stopPropagation(); handlePieceSelection(piece, idx)}} // define this handler
+  onClick={(e) => { e.stopPropagation(); handlePieceSelection()}} // define this handler
   style={{
     position: "absolute",
     top: new_y - tileSize/2,

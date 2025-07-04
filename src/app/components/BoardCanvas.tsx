@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import CardButton from "@/components/Card";
 import { Player } from "./Player"; // assumes Player has a draw(ctx) method
+import { AnimatedOverlayCircle } from "./animatedOverlay";
 import {
   drawCircle,
   fillTile,
@@ -102,7 +103,7 @@ export default function GameCanvas({
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = false;
+  let devMode = true;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -521,7 +522,7 @@ export default function GameCanvas({
           }
         }
       }
-      console.log(possibleSeconds)
+      console.log("possible Second", possibleSeconds)
       setPossibleSecondPawns(possibleSeconds);
     }
 
@@ -666,6 +667,7 @@ export default function GameCanvas({
   };
 
   useEffect(() => {
+    if (devMode) return;
     const playerId = localStorage.getItem("userId" + randomId) ?? ""; 
     console.log(GET_GAMESTREAM(playerId));
     const eventSource = new EventSource(GET_GAMESTREAM(playerId));
@@ -796,7 +798,7 @@ export default function GameCanvas({
     if (!devMode) return;
 
     const dummyGameState: GameState = {
-      red: ["d_4", "d_3", "d_S", "d_S"],
+      red: ["d_4", "d_3", "d_5", "d_S"],
       blue: ["d_15", "a_S", "a_8", "a_S"],
       yellow: ["b_S", "b_S", "b_S", "b_S"],
       green: ["c_S", "c_S", "c_S", "c_S"],
@@ -806,6 +808,7 @@ export default function GameCanvas({
     setPossibleMoves(mockCardResponse7.movesets);
     playerColorRef.current = "red";
     applyGameState(dummyGameState);
+    setCurrentCard(7)
     setIsPlayerTurn("move");
     // setCurrentCard(7)
     // const nextDummyGameState: GameState = {
@@ -822,7 +825,7 @@ export default function GameCanvas({
     }, 3000);
 
     setTimeout(() => {
-      setTopCardPath(card_path("eight"))
+      // setTopCardPath(card_path("eight"))
       // applyGameState(nextDummyGameState)
     }, 6000);
   }, []);
@@ -864,54 +867,39 @@ const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
               idx={idx}
               selected={selectedPiece === idx}
               playerColor={playerColorRef.current}
-              handlePieceSelection={handlePieceSelection}
+              handlePieceSelection={() => handlePieceSelection(piece, idx)}
             />
           ))}
           {highlightedTiles
           .filter((move) => !destination || destination === move.to)
-          .map((move, index) => {
-            const { x: rawX, y: rawY } = coordStringToPixel(move.to, tileSize);
-            const { x, y } = getUnrotatedMousePosition(rawX, rawY, colorToAngleDict[playerColorRef.current]);
-            return (
-              <div
-                key={index}
-                onClick={(e) => { e.stopPropagation(); handleTileHighlightClick(move)}} // define this handler
-                style={{
-                  position: "absolute",
-                  top: y - tileSize / 2,
-                  left: x - tileSize / 2,
-                  width: tileSize,
-                  height: tileSize,
-                  borderRadius: "50%",
-                  border: "3px solid purple",
-                  backgroundColor: destination === move.to ? "purple" : "transparent",
-                  pointerEvents: "auto",
-                  zIndex: 1000,
-                }}
-              />
-            );
-          })}
-          {possibleSecondPawns.map(({piece, move}, index) => {
-            const { x: rawX, y: rawY } = coordStringToPixel(piece.id, tileSize);
-            const { x, y } = getUnrotatedMousePosition(rawX, rawY, colorToAngleDict[playerColorRef.current]);
-            return (
-              <div
-                key={index}
-                onClick={(e) => { e.stopPropagation(); handleSecondPawnClick(move, index)}} // define this handler
-                style={{
-                  position: "absolute",
-                  top: y - tileSize / 2,
-                  left: x - tileSize / 2,
-                  width: tileSize,
-                  height: tileSize,
-                  borderRadius: "50%",
-                  border: secondDestination === move.to ?  "3px solid gold" : "3px solid purple",
-                  backgroundColor: "transparent",
-                  pointerEvents: "auto",
-                  zIndex: 1100,
-                }}
-              />
-            );
+          .map((move, index) => (
+            <AnimatedOverlayCircle
+              key={`highlight-${index}`}
+              coord={move.to}
+              playerColor={playerColorRef.current}
+              borderColor="purple"
+              backgroundColor={destination === move.to ? "purple" : "transparent"}
+              onClick={() => handleTileHighlightClick(move)}
+              zIndex={1000}
+              animatePulse={!destination}
+              selected={destination === move.to}
+            />
+          ))}
+          {possibleSecondPawns.map(({ piece, move }, index) => {
+            if (secondSelectedPiece === -1 || secondSelectedPiece === index) {
+              return (
+                <AnimatedOverlayCircle
+                  key={`second-${index}`}
+                  coord={piece.id}
+                  playerColor={playerColorRef.current}
+                  borderColor={secondSelectedPiece === index ? "gold" : "purple"}
+                  onClick={() => handleSecondPawnClick(move, index)}
+                  zIndex={1100}
+                  selected={secondSelectedPiece === index}
+                  animatePulse={true} // make sure to pass this too if needed
+                />
+              );
+            }
           })}
           {secondDestination && (() => {
             const { x: rawX, y: rawY } = coordStringToPixel(secondDestination, tileSize);
@@ -920,7 +908,6 @@ const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
               rawY,
               colorToAngleDict[playerColorRef.current]
             );
-
             return (
               <div
                 style={{

@@ -32,6 +32,18 @@ export const mockCardResponse7 = {
                     ]
                 }
             ]
+        },
+         {
+            "pawn": "d_5",
+            "move": [
+                {
+                    "from": "d_5",
+                    "to": "d_10",
+                    "effects": [
+                        0
+                    ]
+                }
+            ]
         }
     ]
 };
