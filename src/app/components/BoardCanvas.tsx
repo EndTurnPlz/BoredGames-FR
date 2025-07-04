@@ -93,7 +93,6 @@ export default function GameCanvas({
   const playerColorRef = useRef<string>("green");
 
   const [drawnPieces, setDrawnPieces] = useState<DrawnPiece[]>([])
-  const drawnPiecesRef = useRef<DrawnPiece[]>([]);
 
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
@@ -101,7 +100,7 @@ export default function GameCanvas({
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = true;
+  let devMode = false;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);

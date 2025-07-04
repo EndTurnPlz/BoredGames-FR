@@ -22,9 +22,9 @@ export const numberDict: { [key: number]: string } = {
 
 export const colorToAngleDict: { [key: string]: number } = {
     "yellow": 0,
-    "green": 270,
+    "green": 90,
     "red": 180,
-    "blue": 90
+    "blue": 270
 } 
 
 export const darkColorMap: Record<string, string> = {
