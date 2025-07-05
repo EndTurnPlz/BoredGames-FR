@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import BoardCanvas from "../components/BoardCanvas";
+import BoardCanvas from "../gameBoards/sorryBoard";
 import {
   HiArrowRight,
   HiArrowLeft,

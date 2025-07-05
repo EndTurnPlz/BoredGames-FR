@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { DrawnPiece } from "@/app/components/BoardCanvas";
+import { DrawnPiece } from "@/app/gameBoards/sorryBoard";
 import { tileSize, colorToAngleDict } from "@/utils/config";
 import { getUnrotatedMousePosition } from "@/utils/outerPath";
 

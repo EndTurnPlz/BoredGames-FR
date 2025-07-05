@@ -1,5 +1,5 @@
 import { AnimatedOverlayCircle } from "@/components/animatedOverlay";
-import { Move, DrawnPiece } from "@/app/components/BoardCanvas";
+import { Move, DrawnPiece } from "@/app/gameBoards/sorryBoard";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { colorToAngleDict, tileSize } from "@/utils/config";
 

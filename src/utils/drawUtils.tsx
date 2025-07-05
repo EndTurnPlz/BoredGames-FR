@@ -1,8 +1,8 @@
 // utils/drawUtils.ts
 import { coordStringToPixel } from "./outerPath";
 import { tileSize, font_px, darkColorMap } from "./config";
-import { Piece } from "@/app/components/BoardCanvas";
-import { DrawnPiece } from "@/app/components/BoardCanvas";
+import { Piece } from "@/app/gameBoards/sorryBoard";
+import { DrawnPiece } from "@/app/gameBoards/sorryBoard";
 
 function colorDistance(current: string, target: string): number {
   const colorOrder = [
