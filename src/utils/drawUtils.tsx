@@ -428,16 +428,20 @@ export const drawSafetyWord = (
 };
 
 export const drawPiecesWithOffset = (allPieces: Piece[]): DrawnPiece[] => {
-  const tileGroups: Record<string, Piece[]> = {};
+  const indexedPieces = allPieces.map((piece, index) => ({ ...piece, originalIndex: index }));
 
-  for (const piece of allPieces) {
+  // Step 2: Group by tile
+  const tileGroups: Record<string, (Piece & { originalIndex: number })[]> = {};
+
+  for (const piece of indexedPieces) {
     const key = `${Math.round(piece.x)}_${Math.round(piece.y)}`;
     if (!tileGroups[key]) tileGroups[key] = [];
     tileGroups[key].push(piece);
   }
 
+  // Step 3: Spread out and collect
   const offsetDistance = tileSize * 0.5;
-  const drawnPieces: DrawnPiece[] = [];
+  const drawnPieces: (DrawnPiece & { originalIndex: number })[] = [];
 
   for (const group of Object.values(tileGroups)) {
     const centerX = group[0].x;
@@ -459,6 +463,9 @@ export const drawPiecesWithOffset = (allPieces: Piece[]): DrawnPiece[] => {
       drawnPieces.push({ ...piece, drawX, drawY });
     });
   }
+
+  // Step 4: Sort drawnPieces by original index
+  drawnPieces.sort((a, b) => a.originalIndex - b.originalIndex);
 
   return drawnPieces;
 };

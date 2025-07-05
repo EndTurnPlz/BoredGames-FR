@@ -393,7 +393,6 @@ export default function GameCanvas({
 
     for (const color in gameState) {
       const coordStrings = gameState[color];
-      const oldPlayer = oldPlayers.find((player) => player.color === color);
       const positions = coordStrings.map((coord) =>
         coordStringToPixel(coord, tileSize)
       );
@@ -424,8 +423,7 @@ export default function GameCanvas({
                 Effect: selectedEffect,
               },
               SplitMove: {
-                From: possibleSecondPawns[secondSelectedPieceRef.current].piece
-                  .id,
+                From: drawnPieces[secondSelectedPieceRef.current].id,
                 To: secondSelectedDestinationRef.current,
                 Effect: secondEffect,
               },
@@ -641,7 +639,7 @@ export default function GameCanvas({
       const colorToPieces: Record<string, string[]> = {};
       for (let row = 0; row < pieces.length; row++) {
         const color = colorOrder[row];
-        colorToPieces[color] = pieces[row].slice();
+        colorToPieces[color] = pieces[row];
       }
       console.log(
         colorToIndex[playerColorRef.current],
@@ -789,10 +787,10 @@ export default function GameCanvas({
     if (!devMode) return;
 
     const dummyGameState: GameState = {
-      red: ["d_4", "d_3", "d_5", "d_S"],
-      blue: ["d_15", "a_S", "a_8", "a_S"],
-      yellow: ["b_S", "b_S", "b_S", "b_S"],
-      green: ["c_S", "c_S", "c_S", "c_S"],
+      red: ["b_14", "d_S", "d_S", "d_S"],
+      blue: ["a_S", "a_S", "a_S", "a_S"],
+      yellow: ["c_s1", "c_s2", "d_11", "a_4"],
+      green: ["c_S", "c_8", "c_S", "c_S"],
     };
 
     setGameStarted(true);
@@ -802,22 +800,19 @@ export default function GameCanvas({
     setCurrentCard(11)
     setIsPlayerTurn("move");
     // setCurrentCard(7)
-    // const nextDummyGameState: GameState = {
-    //   red: ["d_S", "d_S", "d_S", "d_S"],
-    //   blue: ["a_S", "a_S", "a_S", "a_S"],
-    //   yellow: ["b_S", "b_S", "b_S", "b_S"],
-    //   green: ["c_S", "c_S", "c_S", "c_S"]
-    // };
+    const nextDummyGameState: GameState = {
+      red: ["b_14", "c_8", "d_S", "d_S"],
+      blue: ["a_S", "a_S", "a_S", "a_S"],
+      yellow: ["c_s1", "c_s2", "d_11", "a_4"],
+      green: ["c_S", "c_S", "c_S", "c_S"],
+    };
 
     // Optional: trigger an animation after mount
     setTimeout(() => {
       setTopCardPath(card_path("eleven"));
-      // applyGameState(nextDummyGameState)
+      applyGameState(nextDummyGameState)
     }, 3000);
 
-    setTimeout(() => {
-      // applyGameState(nextDummyGameState)
-    }, 6000);
   }, []);
 
   const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
