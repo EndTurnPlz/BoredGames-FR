@@ -70,7 +70,6 @@ type BoardCanvasProps = {
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
-type Card = { x: number; y: number; height: number; width: number };
 
 export default function GameCanvas({
   playerColor = "red",
@@ -103,7 +102,7 @@ export default function GameCanvas({
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = true;
+  let devMode = false;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -797,10 +796,10 @@ export default function GameCanvas({
     };
 
     setGameStarted(true);
-    setPossibleMoves(mockCardResponse7.movesets);
+    setPossibleMoves(mockCardResponse11.movesets);
     playerColorRef.current = "red";
     applyGameState(dummyGameState);
-    setCurrentCard(7)
+    setCurrentCard(11)
     setIsPlayerTurn("move");
     // setCurrentCard(7)
     // const nextDummyGameState: GameState = {
@@ -812,7 +811,7 @@ export default function GameCanvas({
 
     // Optional: trigger an animation after mount
     setTimeout(() => {
-      setTopCardPath(card_path("seven"));
+      setTopCardPath(card_path("eleven"));
       // applyGameState(nextDummyGameState)
     }, 3000);
 
@@ -823,7 +822,7 @@ export default function GameCanvas({
 
   const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
     if (piece.color !== playerColorRef.current) return false;
-
+    resetSelections();
     setSelectedPiece(idx);
 
     const matching = PossibleMovesRef.current?.find((m) => m.pawn === piece.id);

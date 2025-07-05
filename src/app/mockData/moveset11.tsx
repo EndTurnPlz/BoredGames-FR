@@ -7,7 +7,20 @@ export const mockCardResponse11 = {
             "move": [
                 {
                     "from": "d_4",
-                    "to": "d_11",
+                    "to": "d_15",
+                    "effects": [
+                        0,
+                        4
+                    ]
+                }
+            ]
+        },
+         {
+            "pawn": "d_3",
+            "move": [
+                {
+                    "from": "d_4",
+                    "to": "a_1",
                     "effects": [
                         0,
                         4
