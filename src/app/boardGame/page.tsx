@@ -123,7 +123,7 @@ export default function BoardGamePage() {
               <HiShare className="w-5 h-5 text-cyan-300" />
               Share this game
             </h3>
-            {shareLink && (
+            {shareLink && !gameStarted && (
               <div className="space-y-3">
                 <div className="bg-slate-700/80 border border-cyan-400/40 p-3 rounded-xl text-sm shadow-inner">
                   <p className="text-cyan-200 break-all">{shareLink}</p>
