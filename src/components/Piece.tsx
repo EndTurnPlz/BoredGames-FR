@@ -3,6 +3,20 @@ import { DrawnPiece } from "@/app/components/BoardCanvas";
 import { tileSize, colorToAngleDict } from "@/utils/config";
 import { getUnrotatedMousePosition } from "@/utils/outerPath";
 
+export class Piece {
+  x: number;
+  y: number;
+  color: string;
+  id: string
+
+  constructor(x: number, y: number, color: string, id: string) {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    this.id = id
+  }
+}
+
 type SelectablePieceProps = {
   piece: DrawnPiece;
   idx: number;

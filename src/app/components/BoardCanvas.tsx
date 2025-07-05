@@ -1,14 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import CardButton from "@/components/Card";
-import { Player } from "./Player"; // assumes Player has a draw(ctx) method
-import { AnimatedOverlayCircle } from "./animatedOverlay";
-import {
-  drawCircle,
-  fillTile,
-  drawStripWithTriangleAndCircle,
-  drawSafetyWord,
-} from "@/utils/drawUtils";
+import { Player } from "../../components/Player"; // assumes Player has a draw(ctx) method
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
 import {
   tileSize,
@@ -23,28 +15,25 @@ import {
   deck_card,
   card_path,
   GET_GAMESTREAM,
-  wordToAngleDict,
 } from "@/utils/config";
-import { getRotationAngleForColor } from "@/utils/rotation";
-import { SelectablePiece } from "@/components/Piece";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
 import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { drawPiecesWithOffset } from "@/utils/drawUtils";
-import {
-  cardH,
-  cardW,
-  cardX1,
-  cardX2,
-  cardY,
-  darkColorMap,
-} from "@/utils/config";
 import { useSearchParams } from "next/navigation";
+import CardControls from "@/components/CardControls";
+import OverlayHighlights from "@/components/OverlayHighlights";
+import EffectPopup from "@/components/EffectPopup";
+import LoadingOverlay from "@/components/loadingOverlay";
+import ZoomedCard from "@/components/zoomedCard";
+import PiecesLayer from "@/components/piecesLayer";
+import { drawWithRotation } from "@/utils/canvasUtils";
+import { applyGameState, getTurnPhaseForPlayer } from "@/utils/gameUtils";
+import { useSyncedRef } from "@/hooks/useSyncedRef";
+import { useGameSelections } from "@/hooks/useGameSelections";
+import { GameState } from "@/utils/gameUtils";
 
-type GameState = {
-  [color: string]: string[];
-};
 export type Piece = {
   x: number;
   y: number;
@@ -52,11 +41,11 @@ export type Piece = {
   isActive: boolean;
   id: string;
 };
-type MoveSet = {
+export type MoveSet = {
   pawn: string;
   move: Move[];
 };
-type Move = {
+export type Move = {
   from: string;
   to: string;
   effects: number[];
@@ -115,12 +104,8 @@ export default function GameCanvas({
   const [possibleSecondPawns, setPossibleSecondPawns] = useState<
     { piece: DrawnPiece; move: Move }[]
   >([]);
-  const possibleSecondPawnsRef = useRef<
-    { piece: DrawnPiece; move: Move }[] | null
-  >(null);
 
   const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
-  const highlightedTilesRef = useRef<Move[] | null>(null);
 
   const [selectedPiece, setSelectedPiece] = useState<number>(-1);
   const selectedPieceRef = useRef<number>(-1);
@@ -132,7 +117,6 @@ export default function GameCanvas({
   const destinationRef = useRef<string | null>(null);
 
   const [possibleEffects, setPossibleEffects] = useState<number[]>([]);
-  const possibleEffectsRef = useRef<number[]>([]);
 
   const [effectPopupPosition, setEffectPopupPosition] = useState<{
     x: number;
@@ -152,224 +136,19 @@ export default function GameCanvas({
 
   const [showZoomedCard, setShowZoomedCard] = useState(false);
 
-  const drawBoard = (ctx: CanvasRenderingContext2D, tileSize: number) => {
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-    const circleRadius = 1.4 * tileSize;
-    const numCols = canvasWidth / tileSize;
-    const numRows = canvasHeight / tileSize;
-
-    const redSafetyZone = [
-      [1, 2],
-      [2, 2],
-      [3, 2],
-      [4, 2],
-      [5, 2],
-    ];
-    const yellowSafetyZone = [
-      [14, 13],
-      [13, 13],
-      [12, 13],
-      [11, 13],
-      [10, 13],
-    ];
-    const blueSafetyZone = [
-      [2, 14],
-      [2, 13],
-      [2, 12],
-      [2, 11],
-      [2, 10],
-    ];
-    const greenSafetyZone = [
-      [13, 1],
-      [13, 2],
-      [13, 3],
-      [13, 4],
-      [13, 5],
-    ];
-
-    const zones = [
-      { x: 2.5, y: 7.3, color: darkColorMap["red"], text: "Home" },
-      { x: 4.5, y: 2.3, color: darkColorMap["red"], text: "Start" },
-      { x: 13.5, y: 8.7, color: darkColorMap["yellow"], text: "Home" },
-      { x: 11.5, y: 13.7, color: darkColorMap["yellow"], text: "Start" },
-      { x: 8.7, y: 2.5, color: darkColorMap["blue"], text: "Home" },
-      { x: 13.7, y: 4.5, color: darkColorMap["blue"], text: "Start" },
-      { x: 7.3, y: 13.5, color: darkColorMap["green"], text: "Home" },
-      { x: 2.3, y: 11.5, color: darkColorMap["green"], text: "Start" },
-    ];
-
-    zones.forEach(({ x, y, color, text }) =>
-      drawCircle(
-        ctx,
-        x,
-        y,
-        circleRadius,
-        color,
-        tileSize,
-        text,
-        wordToAngleDict[playerColorRef.current],
-        playerColorRef.current
-      )
-    );
-
-    for (let row = 0; row < numRows; row++) {
-      for (let col = 0; col < numCols; col++) {
-        const isOuter =
-          row === 0 || row === numRows - 1 || col === 0 || col === numCols - 1;
-        if (isOuter) {
-          fillTile(ctx, row, col, "black", tileSize);
-          continue;
-        }
-
-        const zones: number[][][] = [
-          redSafetyZone,
-          yellowSafetyZone,
-          blueSafetyZone,
-          greenSafetyZone,
-        ];
-        const colors = [
-          darkColorMap["red"],
-          darkColorMap["yellow"],
-          darkColorMap["blue"],
-          darkColorMap["green"],
-        ];
-
-        zones.forEach((zone, i) => {
-          if (zone.some(([r, c]) => r === row && c === col)) {
-            fillTile(ctx, row, col, colors[i], tileSize);
-          }
-        });
-      }
-    }
-    const stripConfigs = [
-      {
-        x: tileSize / 4,
-        y: 2.5 * tileSize,
-        width: tileSize / 2,
-        height: 4 * tileSize,
-        color: darkColorMap["green"],
-        direction: "down",
-      },
-      {
-        x: tileSize / 4,
-        y: 11.5 * tileSize,
-        width: tileSize / 2,
-        height: 3 * tileSize,
-        color: darkColorMap["green"],
-        direction: "down",
-      },
-
-      {
-        x: 15 * tileSize + tileSize / 4,
-        y: 9.5 * tileSize,
-        width: tileSize / 2,
-        height: 4 * tileSize,
-        color: darkColorMap["blue"],
-        direction: "up",
-      },
-      {
-        x: 15 * tileSize + tileSize / 4,
-        y: 1.5 * tileSize,
-        width: tileSize / 2,
-        height: 3 * tileSize,
-        color: darkColorMap["blue"],
-        direction: "up",
-      },
-
-      {
-        x: 9.5 * tileSize,
-        y: tileSize / 4,
-        width: tileSize / 2,
-        height: 4 * tileSize,
-        color: darkColorMap["red"],
-        direction: "right",
-      },
-      {
-        x: 1.5 * tileSize,
-        y: tileSize / 4,
-        width: tileSize / 2,
-        height: 3 * tileSize,
-        color: darkColorMap["red"],
-        direction: "right",
-      },
-
-      {
-        x: 11.5 * tileSize,
-        y: 15 * tileSize + tileSize / 4,
-        width: tileSize / 2,
-        height: 3 * tileSize,
-        color: darkColorMap["yellow"],
-        direction: "left",
-      },
-      {
-        x: 2.5 * tileSize,
-        y: 15 * tileSize + tileSize / 4,
-        width: tileSize / 2,
-        height: 4 * tileSize,
-        color: darkColorMap["yellow"],
-        direction: "left",
-      },
-    ];
-
-    stripConfigs.forEach((cfg) =>
-      drawStripWithTriangleAndCircle(
-        ctx,
-        cfg.x,
-        cfg.y,
-        cfg.width,
-        cfg.height,
-        cfg.color,
-        cfg.direction
-      )
-    );
-
-    const safetyConfigs = [
-      {
-        zone: redSafetyZone,
-        angle: 90,
-        offsetX: 2 * tileSize,
-        offsetY: tileSize / 2,
-      },
-      { zone: blueSafetyZone, angle: 360, offsetX: 1.5 * tileSize, offsetY: 0 },
-      {
-        zone: greenSafetyZone,
-        angle: 180,
-        offsetX: 0.5 * tileSize,
-        offsetY: -2 * tileSize,
-      },
-      {
-        zone: yellowSafetyZone,
-        angle: 270,
-        offsetX: 0,
-        offsetY: 1.5 * tileSize,
-      },
-    ];
-
-    safetyConfigs.forEach(({ zone, angle, offsetX, offsetY }) => {
-      drawSafetyWord(ctx, zone, angle, offsetX, offsetY);
-    });
-  };
-
-  const drawWithRotation = (color: string) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    const angle = getRotationAngleForColor(color);
-    // Save current state
-    ctx.save();
-
-    // Move origin to center, rotate, then move back
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(angle);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-    // Draw after rotation
-    drawBoard(ctx, tileSize);
-    // Restore canvas state
-    ctx.restore();
-  };
+  const { resetSelections, resetAllSelections } = useGameSelections({
+    setSelectedPiece,
+    setdestination,
+    setHighlightedTiles,
+    setSecondDestination,
+    setPossibleSecondPawns,
+    setSecondSelectedPiece,
+    setSelectedEffect,
+    setSecondSelectedEffect,
+    setPossibleEffects,
+    setEffectPopupPosition,
+    setPossibleMoves,
+  });
 
   const drawPieces = (color: string) => {
     const allPawns = players.flatMap((p) =>
@@ -383,24 +162,6 @@ export default function GameCanvas({
     );
 
     setDrawnPieces(drawPiecesWithOffset(allPawns));
-  };
-
-  const applyGameState = async (gameState: GameState) => {
-    const oldPlayers = playersref.current;
-
-    const newPlayers: Player[] = [];
-    const animationPromises: Promise<void>[] = [];
-
-    for (const color in gameState) {
-      const coordStrings = gameState[color];
-      const positions = coordStrings.map((coord) =>
-        coordStringToPixel(coord, tileSize)
-      );
-      const player = new Player(color, positions);
-      newPlayers.push(player);
-    }
-    await Promise.all(animationPromises);
-    setPlayers(newPlayers);
   };
 
   const handleConfirmMoveClick = async () => {
@@ -558,43 +319,6 @@ export default function GameCanvas({
     return true;
   };
 
-  const setPlayerTurn = (phase: number) => {
-    if (phase == colorToIndex[playerColorRef.current] * 2) {
-      setIsPlayerTurn("draw");
-    } else if (phase == colorToIndex[playerColorRef.current] * 2 + 1) {
-      setIsPlayerTurn("move");
-    } else {
-      setIsPlayerTurn("wait");
-    }
-  };
-
-  const resetAllSelections = () => {
-    setSelectedPiece(-1);
-    setdestination(null);
-    setHighlightedTiles([]);
-    setSecondDestination(null);
-    setPossibleSecondPawns([]);
-    setSecondSelectedPiece(-1);
-    setSelectedEffect(null);
-    setSecondSelectedEffect(null);
-    setPossibleEffects([]);
-    setEffectPopupPosition(null);
-    setPossibleMoves([]);
-  };
-
-  const resetSelections = () => {
-    setSelectedPiece(-1);
-    setdestination(null);
-    setHighlightedTiles([]);
-    setSecondDestination(null);
-    setPossibleSecondPawns([]);
-    setSecondSelectedPiece(-1);
-    setSelectedEffect(null);
-    setSecondSelectedEffect(null);
-    setPossibleEffects([]);
-    setEffectPopupPosition(null);
-  };
-
   useEffect(() => {
     drawPieces(playerColorRef.current);
     selectedPieceRef.current = selectedPiece;
@@ -602,19 +326,16 @@ export default function GameCanvas({
 
   useEffect(() => {
     console.log("color change: " + playerColor);
-    drawWithRotation(playerColor);
+    if (canvasRef.current) {
+      drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
+    }
     setAngle(colorToAngleDict[playerColor]);
     if (playerColor != "") {
       playerColorRef.current = playerColor;
-      setPlayerTurn(gamePhase);
+      setIsPlayerTurn(getTurnPhaseForPlayer(gamePhase, playerColorRef.current));
       drawPieces(playerColor);
     }
   }, [playerColor]);
-
-  useEffect(() => {
-    console.log("changed view", view);
-    viewRef.current = view;
-  }, [view]);
 
   const fetchGameState = async (playerId: string) => {
     try {
@@ -646,8 +367,9 @@ export default function GameCanvas({
         playerColorRef.current,
         gameState.gamePhase
       );
-      setPlayerTurn(gameState.gamePhase);
-      applyGameState(colorToPieces);
+      setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, playerColorRef.current));
+      const players = applyGameState(colorToPieces);
+      setPlayers(players);
       setTurnOrder(gameState.turnOrder);
       setLocalTurnOrder(gameState.turnOrder);
       setGamePhase(gameState.gamePhase);
@@ -707,7 +429,9 @@ export default function GameCanvas({
     const storedId = localStorage.getItem("userId" + randomId);
 
     const refresh = async () => {
-      drawWithRotation(playerColorRef.current);
+      if (canvasRef.current) {
+        drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
+      }
       setAngle(colorToAngleDict[playerColorRef.current]);
       drawPieces(playerColorRef.current);
       console.log("start fetch");
@@ -733,34 +457,9 @@ export default function GameCanvas({
   }, [players]);
 
   useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
-
-  useEffect(() => {
-    PossibleMovesRef.current = possibleMoves;
-  }, [possibleMoves]);
-
-  useEffect(() => {
-    highlightedTilesRef.current = highlightedTiles;
-  }, [highlightedTiles]);
-  useEffect(() => {
     destinationRef.current = destination;
     drawPieces(playerColorRef.current);
   }, [destination]);
-
-  useEffect(() => {
-    currentCardRef.current = currentCard;
-  }, [currentCard]);
-
-  useEffect(() => {
-    console.log(topCardPath);
-    topCardPathRef.current = topCardPath;
-    drawWithRotation(playerColorRef.current);
-  }, [topCardPath]);
-
-  useEffect(() => {
-    currentDistanceref.current = currentDistance;
-  }, [currentDistance]);
 
   useEffect(() => {
     secondSelectedPieceRef.current = secondSelectedPiece;
@@ -773,18 +472,17 @@ export default function GameCanvas({
   }, [secondDestination]);
 
   useEffect(() => {
-    possibleSecondPawnsRef.current = possibleSecondPawns;
-  }, [possibleSecondPawns]);
-
-  useEffect(() => {
-    possibleEffectsRef.current = possibleEffects;
-  }, [possibleEffects]);
-
-  useEffect(() => {
     if (isPlayerTurn == "wait") {
       resetAllSelections();
     }
   }, [isPlayerTurn]);
+
+  useSyncedRef(loadingRef, loading);
+  useSyncedRef(PossibleMovesRef, possibleMoves);
+  useSyncedRef(destinationRef, destination);
+  useSyncedRef(currentCardRef, currentCard);
+  useSyncedRef(topCardPathRef, topCardPath);
+  useSyncedRef(currentDistanceref, currentDistance);
 
   useEffect(() => {
     if (!devMode) return;
@@ -847,214 +545,51 @@ export default function GameCanvas({
             className={`absolute top-0 left-0 z-0 pointer-events-none`}
             style={{ display: "block" }}
           />
-          {drawnPieces.map((piece, idx) => (
-            <SelectablePiece
-              key={idx}
-              piece={piece}
-              idx={idx}
-              selected={(selectedPiece === idx) || (secondSelectedPiece === idx)}
-              playerColor={playerColorRef.current}
-              handlePieceSelection={() => handlePieceSelection(piece, idx)}
-            />
-          ))}
-          {highlightedTiles
-          .filter((move) => !destination || destination === move.to)
-          .map((move, index) => (
-            <AnimatedOverlayCircle
-              key={`highlight-${index}`}
-              coord={move.to}
-              playerColor={playerColorRef.current}
-              borderColor="purple"
-              backgroundColor={destination === move.to ? "purple" : "transparent"}
-              onClick={() => handleTileHighlightClick(move)}
-              zIndex={1000}
-              animatePulse={!destination}
-              selected={destination === move.to}
-            />
-          ))}
-          {possibleSecondPawns.map(({ piece, move }, index) => {
-            if (secondSelectedPiece === -1) {
-              return (
-                <AnimatedOverlayCircle
-                  key={`second-${index}`}
-                  coord={piece.id}
-                  playerColor={playerColorRef.current}
-                  borderColor={secondSelectedPiece === index ? "none" : "purple"}
-                  onClick={() => handleSecondPawnClick(move)}
-                  zIndex={1099}
-                  selected={secondSelectedPiece === index}
-                  animatePulse={true} // make sure to pass this too if needed
-                />
-              );
-            }
-          })}
-         {secondDestination && (() => {
-            return (
-              <AnimatedOverlayCircle
-                key={`destination-${secondDestination}`}
-                coord={secondDestination}
-                playerColor={playerColorRef.current}
-                borderColor="purple"
-                backgroundColor={ "purple"}
-                onClick={() => {}}
-                zIndex={1100}
-                selected={true}
-                animatePulse={false} // make sure to pass this too if needed
-                // pass style props for position here instead of recomputing?
-              />
-            );
-          })()}
-          {/* Deck Button */}
-          <CardButton
-            onClick={handleDeckClick}
-            x={cardX1}
-            y={cardY}
-            src={deck_card}
-            label="Draw from deck"
-            animate={false} // <- no transition
+          <PiecesLayer
+            drawnPieces={drawnPieces}
+            selectedPiece={selectedPiece}
+            secondSelectedPiece={secondSelectedPiece}
+            playerColor={playerColorRef.current}
+            onPieceSelect={handlePieceSelection}
           />
-
-          {/* Top Card (with animation) */}
-          <CardButton
-            onClick={handleTopCardClick}
-            x={cardX2}
-            y={cardY}
-            src={topCardPath}
-            label="View top card"
-            animate={true} // <- or just omit this line, since true is default
+          <OverlayHighlights
+            highlightedTiles={highlightedTiles}
+            destination={destination}
+            playerColor={playerColorRef.current}
+            onTileClick={handleTileHighlightClick}
+            secondDestination={secondDestination}
+            possibleSecondPawns={possibleSecondPawns}
+            secondSelectedPiece={secondSelectedPiece}
+            onSecondPawnClick={handleSecondPawnClick}
           />
-          {isPlayerTurn == "move" && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleConfirmMoveClick();
-              }}
-              className="absolute font-bold z-20 shadow-md transition-colors duration-200 
-                bg-white text-black hover:bg-yellow-300"
-              style={{
-                top: cardY + cardH + 0.3 * tileSize,
-                left: (cardX1 + cardX2) / 2 - 0.15 * tileSize,
-                width: canvasWidth * 0.2,
-                height: canvasHeight * 0.06,
-                fontSize: canvasHeight * 0.03,
-                borderRadius: canvasHeight * 0.02,
-                pointerEvents: "auto",
-              }}
-            >
-              Submit Move
-            </button>
-          )}
+          <CardControls
+            onDeckClick={handleDeckClick}
+            onTopCardClick={handleTopCardClick}
+            topCardPath={topCardPath}
+            isPlayerTurn={isPlayerTurn}
+            gamePhase={gamePhase}
+            localTurnOrder={localTurnOrder}
+            handleConfirmMoveClick={handleConfirmMoveClick}
+          />
           {effectPopupPosition && possibleEffects.length > 1 && (
-            <div
-              style={{
-                position: "absolute",
-                left: effectPopupPosition.x,
-                top: effectPopupPosition.y,
-                zIndex: 100,
-                backgroundColor: "black",
-                border: "1px solid black",
-                borderRadius: "8px",
-                padding: "0.5rem",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+            <EffectPopup
+              position={effectPopupPosition}
+              effects={possibleEffects}
+              selectedEffect={selectedEffect}
+              onSelectEffect={(eff) => setSecondSelectedEffect(eff)}
+              onClickEffect={(eff) => {
+                setSelectedEffect(eff);
               }}
-            >
-              {possibleEffects.map((eff) => (
-                <div
-                  key={eff}
-                  onClick={() => {
-                    setSecondSelectedEffect(eff); // just select, don't close
-                  }}
-                  style={{
-                    padding: "0.25rem 0.5rem",
-                    cursor: "pointer",
-                    borderBottom: "1px solid #ccc",
-                    backgroundColor:
-                      eff === selectedEffect ? "#444" : "transparent", // 👈 highlight
-                    color: eff === selectedEffect ? "white" : "lightgray",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <button
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "inherit",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent bubbling to parent div
-                      setSelectedEffect(eff);
-                    }}
-                  >
-                    {eff === 4 ? "Swap" : "Move"}
-                  </button>
-                </div>
-              ))}
-            </div>
+            />
           )}
-          {isPlayerTurn != "move" && (
-            <div
-              style={{
-                position: "absolute",
-                top: cardY + cardH + 0.3 * tileSize,
-                left: (cardX1 + cardX2) / 2,
-                transform: "translateX(-25%)",
-                fontSize: canvasHeight * 0.03,
-                color: "white",
-                fontWeight: "bold",
-                zIndex: 20,
-                userSelect: "none",
-                textShadow: "0 0 5px rgba(0,0,0,0.7)",
-                // whiteSpace: "nowrap", // prevent wrapping
-                padding: `0 ${canvasWidth * 0.01}px`, // some horizontal padding if you want
-              }}
-            >
-              {isPlayerTurn == "wait"
-                ? `${localTurnOrder[Math.floor(gamePhase / 2)]} is playing...`
-                : "Click Deck to Draw Card"}
-            </div>
-          )}
+
         </div>
       </div>
 
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-          <div
-            className="text-6xl fo
-      nt-bold text-black"
-          >
-            ...
-          </div>
-        </div>
-      )}
+      {loading && <LoadingOverlay />}
+
       {showZoomedCard && (
-        <div
-          onClick={() => setShowZoomedCard(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-          }}
-        >
-          <img
-            src={topCardPath}
-            alt="Zoomed Card"
-            style={{
-              maxWidth: "90%",
-              maxHeight: "90%",
-              borderRadius: "8px",
-              boxShadow: "0 0 20px rgba(0,0,0,0.3)",
-            }}
-          />
-        </div>
+        <ZoomedCard imageSrc={topCardPath} onClose={() => setShowZoomedCard(false)} />
       )}
     </div>
   );
