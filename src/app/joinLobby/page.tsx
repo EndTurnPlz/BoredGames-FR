@@ -16,8 +16,8 @@ export default function JoinLobby() {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleJoin = async () => {
-    if (!username.trim() || username.length < 4) {
-      setError("Please enter a valid username more than 3 characters");
+    if (!username.trim() || username.length < 2) {
+      setError("Please enter a valid username more than 1 character");
       return;
     }
     try {
