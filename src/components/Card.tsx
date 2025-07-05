@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { cardW, cardH } from "@/utils/config";
 
 type CardButtonProps = {
@@ -19,35 +19,27 @@ const CardButton = ({
   label,
   animate = true,
 }: CardButtonProps) => {
-  const hasMounted = useRef(false);
   const [prevSrc, setPrevSrc] = useState<string | null>(null);
   const [displaySrc, setDisplaySrc] = useState(src);
 
   useEffect(() => {
-  if (!animate) {
-    setDisplaySrc(src);
-    setPrevSrc(null);
-    return;
-  }
+    if (!animate) {
+      setDisplaySrc(src);
+      setPrevSrc(null);
+      return;
+    }
 
-  // Always animate, even if src is the same
-  setPrevSrc(displaySrc);
-  setDisplaySrc("/Cards/deck.png"); // Clear image to force re-mount
+    if (src !== displaySrc) {
+      setPrevSrc(displaySrc);
+      setDisplaySrc(src);
 
-  const resetTimeout = setTimeout(() => {
-    setDisplaySrc(src);
-  }, 50); // small delay to allow unmount/remount
+      const timeout = setTimeout(() => {
+        setPrevSrc(null);
+      }, 2000);
 
-  const clearPrevTimeout = setTimeout(() => {
-    setPrevSrc(null);
-  }, 2050); // slightly longer than animation duration (2s)
-
-  return () => {
-    clearTimeout(resetTimeout);
-    clearTimeout(clearPrevTimeout);
-  };
-}, [src, animate]);
-
+      return () => clearTimeout(timeout);
+    }
+  }, [src, animate, displaySrc]);
 
   return (
     <button
@@ -69,14 +61,15 @@ const CardButton = ({
       className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2"
     >
       <div className="w-full h-full relative">
+        {/* Animate Previous Card Fade Out */}
         {animate && prevSrc && (
           <motion.img
-            key={"prev"}
+            key={"prev-" + prevSrc}
             src={prevSrc}
             alt="Previous card"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 2 }}
+            initial={{ opacity: 1, scale: 1, rotate: 0 }}
+            animate={{ opacity: 0, scale: 0.9, rotate: -10 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             style={{
               width: "100%",
               height: "100%",
@@ -88,14 +81,15 @@ const CardButton = ({
           />
         )}
 
+        {/* Animate New Card Draw In */}
         {animate ? (
           <motion.img
-            key={"current" + src}
+            key={"current-" + displaySrc}
             src={displaySrc}
             alt="Current card"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2 }}
+            initial={{ opacity: 0, y: 40, scale: 0.8, rotate: -15 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             style={{
               width: "100%",
               height: "100%",

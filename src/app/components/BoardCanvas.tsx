@@ -881,7 +881,7 @@ export default function GameCanvas({
                   playerColor={playerColorRef.current}
                   borderColor={secondSelectedPiece === index ? "none" : "purple"}
                   onClick={() => handleSecondPawnClick(move)}
-                  zIndex={1100}
+                  zIndex={1099}
                   selected={secondSelectedPiece === index}
                   animatePulse={true} // make sure to pass this too if needed
                 />
@@ -897,7 +897,7 @@ export default function GameCanvas({
                 borderColor="purple"
                 backgroundColor={ "purple"}
                 onClick={() => {}}
-                zIndex={999}
+                zIndex={1100}
                 selected={true}
                 animatePulse={false} // make sure to pass this too if needed
                 // pass style props for position here instead of recomputing?
