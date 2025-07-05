@@ -651,6 +651,9 @@ export default function GameCanvas({
       setTurnOrder(gameState.turnOrder);
       setLocalTurnOrder(gameState.turnOrder);
       setGamePhase(gameState.gamePhase);
+      if (gameState.gamePhase == 9) {
+        setGameOver(true)
+      }
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
