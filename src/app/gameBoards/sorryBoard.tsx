@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Player } from "../../components/Player"; // assumes Player has a draw(ctx) method
+import { Player } from "../../components/Player/Player"; // assumes Player has a draw(ctx) method
 import { coordStringToPixel, findPath } from "@/utils/outerPath";
 import {
   tileSize,
@@ -22,12 +22,12 @@ import { mockCardResponse7 } from "../mockData/moveset7";
 import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
 import { drawPiecesWithOffset } from "@/utils/drawUtils";
 import { useSearchParams } from "next/navigation";
-import CardControls from "@/components/CardControls";
-import OverlayHighlights from "@/components/OverlayHighlights";
-import EffectPopup from "@/components/EffectPopup";
-import LoadingOverlay from "@/components/loadingOverlay";
-import ZoomedCard from "@/components/zoomedCard";
-import PiecesLayer from "@/components/piecesLayer";
+import CardControls from "@/components/Cards/CardControls";
+import OverlayHighlights from "@/components/Pieces/OverlayHighlights";
+import EffectPopup from "@/components/Effects/EffectPopup";
+import LoadingOverlay from "@/components/Overlays/loadingOverlay";
+import ZoomedCard from "@/components/Cards/zoomedCard";
+import PiecesLayer from "@/components/Pieces/piecesLayer";
 import { drawWithRotation } from "@/utils/canvasUtils";
 import { applyGameState, getTurnPhaseForPlayer } from "@/utils/gameUtils";
 import { useSyncedRef } from "@/hooks/useSyncedRef";

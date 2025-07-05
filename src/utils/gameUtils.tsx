@@ -1,4 +1,4 @@
-import { Player } from "@/components/Player";
+import { Player } from "@/components/Player/Player";
 import { coordStringToPixel } from "./outerPath";
 import { tileSize, colorToIndex } from "./config";
 

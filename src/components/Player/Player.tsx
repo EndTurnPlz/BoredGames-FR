@@ -1,4 +1,4 @@
-import { Piece } from "./Piece";
+import { Piece } from "../Pieces/Piece";
 
 export class Player {
   color: string;
