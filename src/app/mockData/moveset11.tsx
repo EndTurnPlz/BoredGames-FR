@@ -23,7 +23,6 @@ export const mockCardResponse11 = {
                     "to": "a_1",
                     "effects": [
                         0,
-                        4
                     ]
                 }
             ]

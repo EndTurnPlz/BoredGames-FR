@@ -60,6 +60,24 @@ type BoardCanvasProps = {
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
 
+export type MoveState = {
+  selectedIdx: number;
+  destination: string | null;
+  effect: number | null;
+  possibleMoves: MoveSet[];
+  highlightedTiles: Move[];
+  possibleEffects: number[];
+  effectPopup: { x: number; y: number } | null,
+};
+
+// Type for secondMove
+export type SecondMoveState = {
+  possibleSecondPawns: { piece: DrawnPiece; move: Move }[];
+  selectedIdx: number;
+  destination: string | null;
+  effect: number | null;
+};
+
 export default function GameCanvas({
   playerColor = "red",
   setGameOver,
@@ -97,39 +115,40 @@ export default function GameCanvas({
   const viewRef = useRef<number | null>(null);
 
   const [pullGameState, setPullGamestate] = useState(false);
+ 
+  const [move, setMove] = useState<MoveState>({
+    selectedIdx: -1,
+    destination: null as string | null,
+    effect: null as number | null,
+    possibleMoves: [] as MoveSet[],
+    highlightedTiles: [] as Move[],
+    possibleEffects: [] as number[],
+    effectPopup: null as { x: number; y: number } | null,
+  });
 
-  const [possibleMoves, setPossibleMoves] = useState<MoveSet[]>([]);
-  const PossibleMovesRef = useRef<MoveSet[] | null>(null);
+  const moveRef = useRef<MoveState>({
+    selectedIdx: -1,
+    destination: null,
+    effect: null,
+    possibleMoves: [],
+    highlightedTiles: [],
+    possibleEffects: [],
+    effectPopup: null as { x: number; y: number } | null,
+  });
 
-  const [possibleSecondPawns, setPossibleSecondPawns] = useState<
-    { piece: DrawnPiece; move: Move }[]
-  >([]);
+  const secondMoveRef = useRef<SecondMoveState>({
+    possibleSecondPawns: [],
+    selectedIdx: -1,
+    destination: null,
+    effect: null,
+  });
 
-  const [highlightedTiles, setHighlightedTiles] = useState<Move[]>([]);
-
-  const [selectedPiece, setSelectedPiece] = useState<number>(-1);
-  const selectedPieceRef = useRef<number>(-1);
-
-  const [secondSelectedPiece, setSecondSelectedPiece] = useState<number>(-1);
-  const secondSelectedPieceRef = useRef<number>(-1);
-
-  const [destination, setdestination] = useState<string | null>(null);
-  const destinationRef = useRef<string | null>(null);
-
-  const [possibleEffects, setPossibleEffects] = useState<number[]>([]);
-
-  const [effectPopupPosition, setEffectPopupPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [selectedEffect, setSelectedEffect] = useState<number | null>(null);
-
-  const [secondEffect, setSecondSelectedEffect] = useState<number | null>(null);
-
-  const [secondDestination, setSecondDestination] = useState<string | null>(
-    null
-  );
-  const secondSelectedDestinationRef = useRef<string | null>(null);
+  const [secondMove, setSecondMove] = useState<SecondMoveState>({
+    possibleSecondPawns: [] as { piece: DrawnPiece; move: Move }[],
+    selectedIdx: -1,
+    destination: null as string | null,
+    effect: null as number | null,
+  });
 
   const [currentDistance, setCurrentDistance] = useState<number>(0);
   const currentDistanceref = useRef<number | null>(null);
@@ -137,20 +156,11 @@ export default function GameCanvas({
   const [showZoomedCard, setShowZoomedCard] = useState(false);
 
   const { resetSelections, resetAllSelections } = useGameSelections({
-    setSelectedPiece,
-    setdestination,
-    setHighlightedTiles,
-    setSecondDestination,
-    setPossibleSecondPawns,
-    setSecondSelectedPiece,
-    setSelectedEffect,
-    setSecondSelectedEffect,
-    setPossibleEffects,
-    setEffectPopupPosition,
-    setPossibleMoves,
+    setMove,
+    setSecondMove
   });
 
-  const drawPieces = (color: string) => {
+  const drawPieces = () => {
     const allPawns = players.flatMap((p) =>
       p.pieces.map((piece) => ({
         x: piece.x,
@@ -165,7 +175,7 @@ export default function GameCanvas({
   };
 
   const handleConfirmMoveClick = async () => {
-    if (destinationRef.current && !pullGameState) {
+    if (moveRef.current.destination && !pullGameState) {
       if (!isPlayerTurn) {
         console.log("Not your turn!");
         return true;
@@ -176,24 +186,24 @@ export default function GameCanvas({
       }
       try {
         let player_Id = localStorage.getItem("userId" + randomId) ?? "";
-        const body = secondSelectedDestinationRef.current
+        const body = secondMoveRef.current.destination
           ? {
               Move: {
-                From: drawnPieces[selectedPiece].id,
-                To: destinationRef.current,
-                Effect: selectedEffect,
+                From: drawnPieces[move.selectedIdx].id,
+                To: moveRef.current.destination,
+                Effect: move.effect,
               },
               SplitMove: {
-                From: drawnPieces[secondSelectedPieceRef.current].id,
-                To: secondSelectedDestinationRef.current,
-                Effect: secondEffect,
+                From: drawnPieces[secondMoveRef.current.selectedIdx].id,
+                To: secondMoveRef.current.destination,
+                Effect: secondMoveRef.current.effect,
               },
             }
           : {
               Move: {
-                From: drawnPieces[selectedPiece].id,
-                To: destinationRef.current,
-                Effect: selectedEffect,
+                From: drawnPieces[move.selectedIdx].id,
+                To: moveRef.current.destination,
+                Effect: move.effect,
               },
             };
         console.log(body);
@@ -223,9 +233,12 @@ export default function GameCanvas({
 
   const handleSecondPawnClick = (move: Move) => {
     const new_idx = drawnPieces.findIndex((p) => p.id == move.from);
-    setSecondDestination(move.to);
-    setSecondSelectedPiece(new_idx);
-    setSecondSelectedEffect(move.effects[0]);
+    setSecondMove({
+      ...secondMoveRef.current,
+      selectedIdx: new_idx,
+      destination: move.to,
+      effect: move.effects[0],
+    })
     const distance = findPath(move.from, move.to).length - 1;
     const current = currentDistanceref.current ?? 0;
     setCurrentDistance(current + distance);
@@ -233,12 +246,9 @@ export default function GameCanvas({
   };
 
   const handleTileHighlightClick = (tile: Move) => {
-    if (selectedPieceRef.current == -1) return false;
-
-    setdestination(tile.to);
+    if (moveRef.current.selectedIdx == -1) return false;
 
     if (tile.effects.length > 1) {
-      setPossibleEffects(tile.effects);
 
       // Calculate popup position near tile
       let coords = getUnrotatedMousePosition(
@@ -246,13 +256,22 @@ export default function GameCanvas({
         coordMap[tile.to].y,
         colorToAngleDict[playerColorRef.current]
       );
-      setEffectPopupPosition({
-        x: coords.x + tileSize / 2,
-        y: coords.y - (3 * tileSize) / 2,
-      });
+       setMove({
+        ...moveRef.current,
+        destination: tile.to,
+        possibleEffects: tile.effects,
+        effectPopup: {
+          x: coords.x + tileSize / 2,
+          y: coords.y - (3 * tileSize) / 2,
+        }
+      })
     } else {
-      setSelectedEffect(tile.effects[0]);
-      setEffectPopupPosition(null);
+      setMove({
+        ...moveRef.current,
+        destination: tile.to,
+        effect: tile.effects[0],
+        effectPopup: null
+      })
     }
     if (currentCardRef.current === 7) {
       const current = findPath(tile.from, tile.to).length - 1;
@@ -262,9 +281,9 @@ export default function GameCanvas({
       const possibleSeconds = [];
 
       for (const piece of drawnPieces) {
-        console.log(piece, selectedEffect, PossibleMovesRef.current);
-        if (PossibleMovesRef.current && drawnPieces[selectedPiece] !== piece) {
-          const matching = PossibleMovesRef.current.find(
+        console.log(piece, moveRef.current.effect, moveRef.current.possibleMoves);
+        if (moveRef.current.possibleMoves && drawnPieces[moveRef.current.selectedIdx] !== piece) {
+          const matching = moveRef.current.possibleMoves.find(
             (m) => m.pawn === piece.id
           );
           const canBeSecond = matching?.move?.find(
@@ -276,7 +295,10 @@ export default function GameCanvas({
         }
       }
       console.log("possible Second", possibleSeconds)
-      setPossibleSecondPawns(possibleSeconds);
+      setSecondMove({
+        ...secondMoveRef.current,
+        possibleSecondPawns: possibleSeconds
+      })
     }
 
     return true;
@@ -298,7 +320,10 @@ export default function GameCanvas({
         throw Error("failed to draw card");
       }
       console.log(response);
-      setPossibleMoves(response.movesets);
+      setMove({
+        ...moveRef.current,
+        possibleMoves: response.movesets
+      })
       localStorage.setItem("drawCard", JSON.stringify(response));
       setTopCardPath(card_path(numberDict[response.cardDrawn]));
       setCurrentCard(response.cardDrawn);
@@ -320,11 +345,6 @@ export default function GameCanvas({
   };
 
   useEffect(() => {
-    drawPieces(playerColorRef.current);
-    selectedPieceRef.current = selectedPiece;
-  }, [selectedPiece]);
-
-  useEffect(() => {
     console.log("color change: " + playerColor);
     if (canvasRef.current) {
       drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
@@ -333,7 +353,7 @@ export default function GameCanvas({
     if (playerColor != "") {
       playerColorRef.current = playerColor;
       setIsPlayerTurn(getTurnPhaseForPlayer(gamePhase, playerColorRef.current));
-      drawPieces(playerColor);
+      drawPieces();
     }
   }, [playerColor]);
 
@@ -433,7 +453,7 @@ export default function GameCanvas({
         drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
       }
       setAngle(colorToAngleDict[playerColorRef.current]);
-      drawPieces(playerColorRef.current);
+      drawPieces();
       console.log("start fetch");
       await fetchGameState(storedId ?? "");
       console.log("end fetch");
@@ -441,7 +461,10 @@ export default function GameCanvas({
         localStorage.getItem("drawCard") || "{}"
       );
       console.log(storedResponse);
-      setPossibleMoves(storedResponse.movesets);
+      setMove({
+        ...moveRef.current,
+        possibleMoves: storedResponse.movesets
+      })
       if (storedResponse.cardDrawn in numberDict) {
         setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]));
         setCurrentCard(storedResponse.cardDrawn);
@@ -453,23 +476,8 @@ export default function GameCanvas({
 
   useEffect(() => {
     playersref.current = players;
-    drawPieces(playerColorRef.current);
+    drawPieces();
   }, [players]);
-
-  useEffect(() => {
-    destinationRef.current = destination;
-    drawPieces(playerColorRef.current);
-  }, [destination]);
-
-  useEffect(() => {
-    secondSelectedPieceRef.current = secondSelectedPiece;
-    drawPieces(playerColorRef.current);
-  }, [secondSelectedPiece]);
-
-  useEffect(() => {
-    secondSelectedDestinationRef.current = secondDestination;
-    drawPieces(playerColorRef.current);
-  }, [secondDestination]);
 
   useEffect(() => {
     if (isPlayerTurn == "wait") {
@@ -478,8 +486,8 @@ export default function GameCanvas({
   }, [isPlayerTurn]);
 
   useSyncedRef(loadingRef, loading);
-  useSyncedRef(PossibleMovesRef, possibleMoves);
-  useSyncedRef(destinationRef, destination);
+  useSyncedRef(moveRef, move);
+  useSyncedRef(secondMoveRef, secondMove);
   useSyncedRef(currentCardRef, currentCard);
   useSyncedRef(topCardPathRef, topCardPath);
   useSyncedRef(currentDistanceref, currentDistance);
@@ -488,21 +496,25 @@ export default function GameCanvas({
     if (!devMode) return;
 
     const dummyGameState: GameState = {
-      red: ["b_14", "d_S", "d_S", "d_S"],
+      red: ["b_14", "d_3", "d_4", "d_S"],
       blue: ["a_S", "a_S", "a_S", "a_S"],
       yellow: ["c_s1", "c_s2", "d_11", "a_4"],
       green: ["c_S", "c_8", "c_S", "c_S"],
     };
 
     setGameStarted(true);
-    setPossibleMoves(mockCardResponse11.movesets);
+    setMove({
+      ...moveRef.current,
+      possibleMoves: mockCardResponse7.movesets
+    })
     playerColorRef.current = "red";
-    applyGameState(dummyGameState);
-    setCurrentCard(11)
+    const newPlayers = applyGameState(dummyGameState);
+    setPlayers(newPlayers);
+    setCurrentCard(7)
     setIsPlayerTurn("move");
     // setCurrentCard(7)
     const nextDummyGameState: GameState = {
-      red: ["b_14", "c_8", "d_S", "d_S"],
+      red: ["b_14", "c_8", "d_4", "d_S"],
       blue: ["a_S", "a_S", "a_S", "a_S"],
       yellow: ["c_s1", "c_s2", "d_11", "a_4"],
       green: ["c_S", "c_S", "c_S", "c_S"],
@@ -518,15 +530,19 @@ export default function GameCanvas({
 
   const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
     if (piece.color !== playerColorRef.current) return false;
-    resetSelections();
-    setSelectedPiece(idx);
-
-    const matching = PossibleMovesRef.current?.find((m) => m.pawn === piece.id);
+    const matching = move.possibleMoves.find((m) => m.pawn === piece.id);
 
     console.log(matching);
-    console.log(PossibleMovesRef.current, piece.id);
-
-    setHighlightedTiles(matching?.move ?? []);
+    console.log(moveRef.current);
+    setMove((prev) => ({
+      ...prev,
+      selectedIdx: idx,
+      highlightedTiles: matching?.move ?? [],
+      effect: null,
+      effectPopup: null,
+      destination: null,
+      possibleEffects: [],
+    }));
   };
   return (
     <div className="flex flex-col items-center">
@@ -547,19 +563,19 @@ export default function GameCanvas({
           />
           <PiecesLayer
             drawnPieces={drawnPieces}
-            selectedPiece={selectedPiece}
-            secondSelectedPiece={secondSelectedPiece}
+            selectedPiece={move.selectedIdx}
+            secondSelectedPiece={secondMove.selectedIdx}
             playerColor={playerColorRef.current}
             onPieceSelect={handlePieceSelection}
           />
           <OverlayHighlights
-            highlightedTiles={highlightedTiles}
-            destination={destination}
+            highlightedTiles={move.highlightedTiles}
+            destination={move.destination}
             playerColor={playerColorRef.current}
             onTileClick={handleTileHighlightClick}
-            secondDestination={secondDestination}
-            possibleSecondPawns={possibleSecondPawns}
-            secondSelectedPiece={secondSelectedPiece}
+            secondDestination={secondMove.destination}
+            possibleSecondPawns={secondMove.possibleSecondPawns}
+            secondSelectedPiece={secondMove.selectedIdx}
             onSecondPawnClick={handleSecondPawnClick}
           />
           <CardControls
@@ -571,14 +587,20 @@ export default function GameCanvas({
             localTurnOrder={localTurnOrder}
             handleConfirmMoveClick={handleConfirmMoveClick}
           />
-          {effectPopupPosition && possibleEffects.length > 1 && (
+          {move.effectPopup && move.possibleEffects.length > 1 && (
             <EffectPopup
-              position={effectPopupPosition}
-              effects={possibleEffects}
-              selectedEffect={selectedEffect}
-              onSelectEffect={(eff) => setSecondSelectedEffect(eff)}
+              position={move.effectPopup}
+              effects={move.possibleEffects}
+              selectedEffect={move.effect}
+              onSelectEffect={(eff) =>setMove({
+                                ...moveRef.current,
+                                effect: eff
+                              })}
               onClickEffect={(eff) => {
-                setSelectedEffect(eff);
+                setMove({
+                  ...moveRef.current,
+                  effect: eff
+                })
               }}
             />
           )}

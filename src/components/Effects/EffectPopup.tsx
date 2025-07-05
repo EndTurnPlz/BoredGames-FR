@@ -32,7 +32,7 @@ const EffectPopup: React.FC<EffectPopupProps> = ({
       {effects.map((eff) => (
         <div
           key={eff}
-          onClick={() => onSelectEffect(eff)}
+          onClick={(e) => {e.stopPropagation(); onSelectEffect(eff)}}
           style={{
             padding: "0.25rem 0.5rem",
             cursor: "pointer",

@@ -1,62 +1,52 @@
+import { MoveState, SecondMoveState } from "@/app/gameBoards/sorryBoard";
 import { useCallback } from "react";
 
-type Setters = {
-  setSelectedPiece: (v: number) => void;
-  setdestination: (v: string | null) => void;
-  setHighlightedTiles: (v: any[]) => void;
-  setSecondDestination: (v: string | null) => void;
-  setPossibleSecondPawns: (v: any[]) => void;
-  setSecondSelectedPiece: (v: number) => void;
-  setSelectedEffect: (v: number | null) => void;
-  setSecondSelectedEffect: (v: number | null) => void;
-  setPossibleEffects: (v: number[]) => void;
-  setEffectPopupPosition: (v: { x: number; y: number } | null) => void;
-  setPossibleMoves?: (v: any[]) => void; // optional
+type UseGameSelectionsProps = {
+  setMove: React.Dispatch<React.SetStateAction<MoveState>>;
+  setSecondMove: React.Dispatch<React.SetStateAction<SecondMoveState>>;
 };
 
-export function useGameSelections(setters: Setters) {
-  const {
-    setSelectedPiece,
-    setdestination,
-    setHighlightedTiles,
-    setSecondDestination,
-    setPossibleSecondPawns,
-    setSecondSelectedPiece,
-    setSelectedEffect,
-    setSecondSelectedEffect,
-    setPossibleEffects,
-    setEffectPopupPosition,
-    setPossibleMoves,
-  } = setters;
-
+export function useGameSelections({
+  setMove,
+  setSecondMove,
+}: UseGameSelectionsProps) {
   const resetSelections = useCallback(() => {
-    setSelectedPiece(-1);
-    setdestination(null);
-    setHighlightedTiles([]);
-    setSecondDestination(null);
-    setPossibleSecondPawns([]);
-    setSecondSelectedPiece(-1);
-    setSelectedEffect(null);
-    setSecondSelectedEffect(null);
-    setPossibleEffects([]);
-    setEffectPopupPosition(null);
-  }, [
-    setSelectedPiece,
-    setdestination,
-    setHighlightedTiles,
-    setSecondDestination,
-    setPossibleSecondPawns,
-    setSecondSelectedPiece,
-    setSelectedEffect,
-    setSecondSelectedEffect,
-    setPossibleEffects,
-    setEffectPopupPosition,
-  ]);
+    setMove((prev) => ({
+      ...prev,
+      selectedIdx: -1,
+      destination: null,
+      effect: null,
+      possibleEffects: [],
+      highlightedTiles: [],
+      effectPopup: null
+    }));
+
+    setSecondMove({
+      selectedIdx: -1,
+      destination: null,
+      effect: null,
+      possibleSecondPawns: [],
+    });
+  }, [setMove, setSecondMove]);
 
   const resetAllSelections = useCallback(() => {
-    resetSelections();
-    if (setPossibleMoves) setPossibleMoves([]);
-  }, [resetSelections, setPossibleMoves]);
+    setMove({
+      selectedIdx: -1,
+      destination: null,
+      effect: null,
+      possibleMoves: [],
+      highlightedTiles: [],
+      possibleEffects: [],
+      effectPopup: null
+    });
+
+    setSecondMove({
+      selectedIdx: -1,
+      destination: null,
+      effect: null,
+      possibleSecondPawns: [],
+    });
+  }, [setMove, setSecondMove]);
 
   return { resetSelections, resetAllSelections };
 }
