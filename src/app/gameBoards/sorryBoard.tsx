@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Player } from "../../components/Player/Player"; // assumes Player has a draw(ctx) method
-import { coordStringToPixel, findPath } from "@/utils/outerPath";
+import { findPath } from "@/utils/outerPath";
 import {
   tileSize,
   canvasWidth,

@@ -1,7 +1,7 @@
 // CardControls.tsx
 import CardButton from "@/components/Cards/Card";
 import { cardX1, cardX2, cardY, deck_card, tileSize, cardH, canvasHeight, canvasWidth } from "@/utils/config";
-import SubmitMoveButton from "../submitMoveButton";
+import SubmitMoveButton from "../SubmitButton/submitMoveButton";
 import PlayerPrompt from "../Overlays/PlayerPrompt";
 
 export default function CardControls({
