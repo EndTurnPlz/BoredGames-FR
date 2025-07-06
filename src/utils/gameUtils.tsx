@@ -1,6 +1,6 @@
 import { Player } from "@/components/Player/Player";
 import { coordStringToPixel, findPath } from "./outerPath";
-import { tileSize, colorToIndex, indexToColor, numberDict } from "./config";
+import { tileSize, colorToIndex, indexToColor, numberDict, zoneToColor } from "./config";
 import { Move } from "@/app/gameBoards/sorryBoard";
 
 export type GameState = {
@@ -51,23 +51,15 @@ type Request = {
 
 function generateMoveDescription(username: string, move: Part, steps: number): string {
   const effect = move.effect
-  const to = move.to
-  if (to.includes("_H")) {
-    return `${username} moved pawn to home`
-  }
   switch (effect) {
-    case 0: // Forward
-      return `${username} moved pawn ${steps} ${ steps == 1 ? "step" : "steps"} forward`;
-    case 2: // ExitStart
-      return `${username} moved pawn out of start`;
     case 1: // Backward
-      return `${username} moved pawn ${steps} ${ steps == 1 ? "step" : "steps"} backward`;
+      return `${username} moved pawn backward`;
     case 3: // Apologies
       return ``;
     case 4: // Swap
       return ``;
-    case 5: case 6: case 7: case 8: case 9: case 10: // Split1 to Split6
-      return `${username} moved pawn ${steps} ${ steps == 1 ? "step" : "steps"} forward`;
+    case 0: case 2: case 5: case 6: case 7: case 8: case 9: case 10: // Split1 to Split6
+      return `${username} moved pawn forward`;
     default:
       return `${username} made a move`;
   }
@@ -82,12 +74,25 @@ function generateSideEffectDescription(
     case 3: // Apologies
       return `${mainUsername} apologized and sent ${affectedUsername}'s pawn back to start`;
     case 4: // Swap
-      return `${mainUsername} swapped places with ${affectedUsername}'s pawn`;
+      return `${mainUsername} swapped pawn with ${affectedUsername}'s pawn`;
     default:
-      return `${mainUsername} killed ${affectedUsername}'s pawn`;
+      return `${affectedUsername}'s pawn was moved back to start`;
   }
 }
 
+function getSliderString(color: string, location: string): string {
+  const [zone, posStr] = location.split("_");
+  const pos = parseInt(posStr);
+
+  // Don't slide on your own color
+  if (color === zoneToColor[zone]) return "";
+
+  if (pos === 1 || pos === 9) {
+    return ` landed on a slider`;
+  }
+
+  return "";
+}
 export function generateMoveString(
   phase: number,
   new_phase: number,
@@ -113,7 +118,6 @@ export function generateMoveString(
     for (let i = 0; i < oldP.pieces.length; i++) {
       const oldPos = oldP.pieces[i].id;
       const newPos = newP.pieces[i].id;
-      const steps = getStepInfo(oldPos, newPos);
       const pieceColor = oldP.pieces[i].color;
       const isMainMove = oldPos === from;
       const isSplitMove = oldPos === secondFrom;
@@ -122,12 +126,14 @@ export function generateMoveString(
       if (pieceColor === color) {
         // This is the current player's piece
         if (moved && isMainMove && lastCompletedMove?.move) {
-          let description = generateMoveDescription(username, lastCompletedMove.move, steps)
+          const steps = getStepInfo(oldPos, lastCompletedMove.move.to);
+          let description = generateMoveDescription(username, lastCompletedMove.move, steps) + getSliderString(color, lastCompletedMove.move.to)
           if (description.length > 0) {
             moves.push(description);
           }
         } else if (moved && isSplitMove && lastCompletedMove?.splitMove) {
-          let description = generateMoveDescription(username, lastCompletedMove.splitMove, steps)
+          const steps = getStepInfo(oldPos, lastCompletedMove.splitMove.to);
+          let description = generateMoveDescription(username, lastCompletedMove.splitMove, steps) + getSliderString(color, lastCompletedMove.splitMove.to)
           if (description.length > 0) {
             moves.push(description);
           }

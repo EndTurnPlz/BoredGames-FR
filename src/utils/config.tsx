@@ -96,3 +96,10 @@ export const card_path = (id: string) => {
   return `/Cards/FaceCards/${id}.png`
 }
 
+export const zoneToColor: Record<string, string> = {
+    a: "blue",
+    b: "yellow",
+    c: "green",
+    d: "red",
+  };
+
