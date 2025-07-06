@@ -1,6 +1,6 @@
 import { Player } from "@/components/Player/Player";
 import { coordStringToPixel } from "./outerPath";
-import { tileSize, colorToIndex, indexToColor } from "./config";
+import { tileSize, colorToIndex, indexToColor, numberDict } from "./config";
 
 export type GameState = {
   [color: string]: string[];
@@ -65,10 +65,14 @@ export function generateMoveString(
     }
   }
   if (new_phase % 2 == 1) {
-    return `${color} (${username}) drew a ${card}.`;
+    if (card != 0) {
+      return `${color} (${username}) drew a ${numberDict[card]}.`;
+    } else {
+      return `${color} (${username}) drew an ${numberDict[card]}.`;
+    }
   }
   if (moves.length === 0) {
-    return `${color} (${username}) did not move.`;
+    return `${color} (${username}) could not move.`;
   }
 
   return `${color} (${username}) moved: ${moves.join(", ")}`;
