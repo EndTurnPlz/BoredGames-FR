@@ -425,7 +425,7 @@ export default function GameCanvas({
           }
         }
         // Add new move only if non-empty and not duplicate
-
+        newLog = newLog.filter(msg => !msg.includes("undefined"))
         return newLog;
       });
       setPlayers(new_players);

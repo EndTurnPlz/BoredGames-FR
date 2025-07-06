@@ -80,11 +80,11 @@ function generateSideEffectDescription(
 ): string {
   switch (effect) {
     case 3: // Apologies
-      return `${mainUsername} apologized and sent ${affectedUsername}'s pawn back to start.`;
+      return `${mainUsername} apologized and sent ${affectedUsername}'s pawn back to start`;
     case 4: // Swap
-      return `${mainUsername} swapped places with ${affectedUsername}.`;
+      return `${mainUsername} swapped places with ${affectedUsername}'s pawn`;
     default:
-      return `${mainUsername} killed ${affectedUsername}'s pawn.`;
+      return `${mainUsername} killed ${affectedUsername}'s pawn`;
   }
 }
 
@@ -107,8 +107,8 @@ export function generateMoveString(
   const moves: string[] = [];
 
   for (let p = 0; p < old_players.length; p++) {
-    const oldP = old_players[p];
-    const newP = new_players[p];
+    const oldP = old_players[(index + p) % 4];
+    const newP = new_players[(index + p) % 4];
 
     for (let i = 0; i < oldP.pieces.length; i++) {
       const oldPos = oldP.pieces[i].id;
@@ -145,8 +145,11 @@ export function generateMoveString(
     return `${color} (${username}) drew ${article} ${numberDict[card]}.`;
   }
 
-  if (moves.length === 0) {
+  if (phase != new_phase && new_phase % 2 == 0 && phase % 2 == 0) {
     return `${color} (${username}) could not move.`;
+  }
+  if (moves.length == 0) {
+    return ''
   }
 
   return `${color} (${username}) moved: ${moves.join(", ")}`;
