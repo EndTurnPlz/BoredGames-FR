@@ -395,24 +395,36 @@ export default function GameCanvas({
       const old_players = players
       const new_players = applyGameState(colorToPieces);
       setMoveLog((prevLog) => {
-        prevLog = prevLog.filter(msg => !msg.includes("joined the game"));
+        prevLog = prevLog.filter(msg => !msg.includes("joined the game") && !msg.includes("started the game"));
         let newLog = [];
 
         // Add join messages for the first 4 players from localTurnOrder if not added yet
         for (let i = 0; i < gameState.turnOrder.length; i++) {
           newLog.push(`${gameState.turnOrder[i]} joined the game`);
         }
+        if (gameState.gamePhase != 8) {
+          newLog.push(`${gameState.turnOrder[0]} started the game`);
+        }
         newLog.push(...prevLog)
 
         // Then generate the move string for current move
-        const new_move = generateMoveString(gamePhase, gameState.gamePhase, gameState.turnOrder, old_players, new_players, gameState.lastDrawnCard);
-
-        // Add new move only if non-empty and not duplicate
-        if (
-          new_move.length > 0
-        ) {
-          newLog.push(new_move);
+        if (gameState.gamePhase != 8) {
+          const new_move = generateMoveString(
+            gamePhase, 
+            gameState.gamePhase, 
+            gameState.turnOrder, 
+            old_players, 
+            new_players, 
+            gameState.lastDrawnCard, 
+            gameState.lastCompletedMove
+          );
+          if (
+            new_move.length > 0
+          ) {
+            newLog.push(new_move);
+          }
         }
+        // Add new move only if non-empty and not duplicate
 
         return newLog;
       });

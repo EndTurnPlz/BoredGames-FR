@@ -31,7 +31,7 @@ export default function MoveLog({ moveLog }: MoveLogProps) {
     if (!container) return;
 
     const { scrollTop, scrollHeight, clientHeight } = container;
-    const isUserAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+    const isUserAtBottom = scrollHeight - scrollTop - clientHeight < 200;
 
     if (isUserAtBottom) {
       jumpToBottom()
