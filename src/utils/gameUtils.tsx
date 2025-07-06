@@ -33,11 +33,6 @@ export function getTurnPhaseForPlayer(
   return "wait";
 }
 
-function getStepInfo(from: string, to: string): number {
-  const steps = findPath(from, to).length - 1;
-  return steps;
-}
-
 type Part = {
   from: string;
   to: string;
@@ -49,8 +44,12 @@ type Request = {
   splitMove?: Part
 }
 
-function generateMoveDescription(username: string, move: Part, steps: number): string {
+function generateMoveDescription(username: string, move: Part): string {
   const effect = move.effect
+  const to = move.to
+  if (to.includes("_H")) {
+    return `${username} moved pawn to home`
+  }
   switch (effect) {
     case 1: // Backward
       return `${username} moved pawn backward`;
@@ -126,14 +125,12 @@ export function generateMoveString(
       if (pieceColor === color) {
         // This is the current player's piece
         if (moved && isMainMove && lastCompletedMove?.move) {
-          const steps = getStepInfo(oldPos, lastCompletedMove.move.to);
-          let description = generateMoveDescription(username, lastCompletedMove.move, steps) + getSliderString(color, lastCompletedMove.move.to)
+          let description = generateMoveDescription(username, lastCompletedMove.move) + getSliderString(color, lastCompletedMove.move.to)
           if (description.length > 0) {
             moves.push(description);
           }
         } else if (moved && isSplitMove && lastCompletedMove?.splitMove) {
-          const steps = getStepInfo(oldPos, lastCompletedMove.splitMove.to);
-          let description = generateMoveDescription(username, lastCompletedMove.splitMove, steps) + getSliderString(color, lastCompletedMove.splitMove.to)
+          let description = generateMoveDescription(username, lastCompletedMove.splitMove) + getSliderString(color, lastCompletedMove.splitMove.to)
           if (description.length > 0) {
             moves.push(description);
           }
