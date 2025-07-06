@@ -75,7 +75,7 @@ function generateSideEffectDescription(
     case 4: // Swap
       return `${mainUsername} swapped pawn with ${affectedUsername}'s pawn`;
     default:
-      return `${affectedUsername}'s pawn was moved back to start`;
+      return `${affectedUsername}'s pawn was knocked back to start`;
   }
 }
 
