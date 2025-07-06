@@ -25,9 +25,16 @@ export function applyGameState(
 
 export function getTurnPhaseForPlayer(
   phase: number,
-  playerColor: string
+  index: number
 ): "draw" | "move" | "wait" {
-  if (phase === colorToIndex[playerColor] * 2) return "draw";
-  if (phase === colorToIndex[playerColor] * 2 + 1) return "move";
+  if (phase === index * 2) return "draw";
+  if (phase === index * 2 + 1) return "move";
   return "wait";
+}
+
+export function generateMoveString(
+  phase: number,
+  turnOrder: string[]
+): string {
+  return "hello"
 }

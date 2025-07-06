@@ -1,17 +1,20 @@
 // File: components/GameSidebarRight.tsx
 "use client";
 import { indexToColor } from "@/utils/config";
+import MoveLog from "./moveLog";
 
 export default function GameSidebarRight({
   players,
   gameStarted,
   hostId,
   handleStart,
+  moveLog = [],
 }: {
   players: string[];
   gameStarted: boolean;
   hostId: number;
   handleStart: () => void;
+  moveLog?: string[];
 }) {
   return (
     <div className="w-80 bg-slate-800/80 backdrop-blur-lg border-2 border-cyan-500/30 p-6 flex flex-col rounded-2xl shadow-lg shadow-cyan-900/20 my-2 z-90">
@@ -37,7 +40,7 @@ export default function GameSidebarRight({
           ))}
         </div>
       </div>
-
+      <MoveLog moveLog={moveLog} />
       <div className="mt-auto space-y-3">
         {!gameStarted && hostId === 0 && players.length === 4 && (
           <button

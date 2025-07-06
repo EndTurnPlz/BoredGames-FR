@@ -29,7 +29,7 @@ import LoadingOverlay from "@/components/Overlays/loadingOverlay";
 import ZoomedCard from "@/components/Cards/zoomedCard";
 import PiecesLayer from "@/components/Pieces/piecesLayer";
 import { drawWithRotation } from "@/utils/canvasUtils";
-import { applyGameState, getTurnPhaseForPlayer } from "@/utils/gameUtils";
+import { applyGameState, generateMoveString, getTurnPhaseForPlayer } from "@/utils/gameUtils";
 import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/gameUtils";
@@ -56,6 +56,7 @@ type BoardCanvasProps = {
   setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
   setTurnOrder: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
+  setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
@@ -83,8 +84,10 @@ export default function GameCanvas({
   setGameOver,
   setTurnOrder,
   setGameStarted,
+  setMoveLog,
 }: BoardCanvasProps) {
   const searchParams = useSearchParams();
+  const username = searchParams.get("username");
   const randomId = searchParams.get("randomId");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -345,14 +348,12 @@ export default function GameCanvas({
   };
 
   useEffect(() => {
-    console.log("color change: " + playerColor);
     if (canvasRef.current) {
       drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
     }
     setAngle(colorToAngleDict[playerColor]);
     if (playerColor != "") {
       playerColorRef.current = playerColor;
-      setIsPlayerTurn(getTurnPhaseForPlayer(gamePhase, playerColorRef.current));
       drawPieces();
     }
   }, [playerColor]);
@@ -382,12 +383,14 @@ export default function GameCanvas({
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row];
       }
+      const index = gameState.turnOrder.indexOf(username)
       console.log(
         colorToIndex[playerColorRef.current],
         playerColorRef.current,
         gameState.gamePhase
       );
-      setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, playerColorRef.current));
+      setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, index));
+      console.log("turn phase", getTurnPhaseForPlayer(gameState.gamePhase, index), index)
       const players = applyGameState(colorToPieces);
       setPlayers(players);
       setTurnOrder(gameState.turnOrder);
@@ -396,6 +399,10 @@ export default function GameCanvas({
       if (gameState.gamePhase == 9) {
         setGameOver(true)
       }
+      setMoveLog((prevLog) => [
+        ...prevLog,
+        generateMoveString(gameState.gamePhase, localTurnOrder),
+      ]);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -461,10 +468,10 @@ export default function GameCanvas({
         localStorage.getItem("drawCard") || "{}"
       );
       console.log(storedResponse);
-      setMove({
-        ...moveRef.current,
-        possibleMoves: storedResponse.movesets
-      })
+      setMove((prev) => ({
+        ...prev,
+        possibleMoves: storedResponse.movesets,
+      }));
       if (storedResponse.cardDrawn in numberDict) {
         setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]));
         setCurrentCard(storedResponse.cardDrawn);
@@ -481,12 +488,14 @@ export default function GameCanvas({
 
   useEffect(() => {
     if (isPlayerTurn == "wait") {
+      console.log("reset on accident")
       resetAllSelections();
     }
   }, [isPlayerTurn]);
 
   useSyncedRef(loadingRef, loading);
   useSyncedRef(moveRef, move);
+  useSyncedRef(viewRef, view);
   useSyncedRef(secondMoveRef, secondMove);
   useSyncedRef(currentCardRef, currentCard);
   useSyncedRef(topCardPathRef, topCardPath);
@@ -533,7 +542,7 @@ export default function GameCanvas({
     const matching = move.possibleMoves.find((m) => m.pawn === piece.id);
 
     console.log(matching);
-    console.log(moveRef.current);
+    console.log(move);
     setMove((prev) => ({
       ...prev,
       selectedIdx: idx,
@@ -592,15 +601,15 @@ export default function GameCanvas({
               position={move.effectPopup}
               effects={move.possibleEffects}
               selectedEffect={move.effect}
-              onSelectEffect={(eff) =>setMove({
-                                ...moveRef.current,
+              onSelectEffect={(eff) => setMove((prev) => ({
+                                ...prev,
                                 effect: eff
-                              })}
+                              }))}
               onClickEffect={(eff) => {
-                setMove({
-                  ...moveRef.current,
+                setMove((prev) => ({
+                  ...prev,
                   effect: eff
-                })
+                }))
               }}
             />
           )}

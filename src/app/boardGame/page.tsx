@@ -40,6 +40,7 @@ export default function BoardGamePage() {
   const [playerId, setPlayerId] = useState("");
   const [copied, setCopied] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [moveLog, setMoveLog] = useState<string[]>([])
 
   useEffect(() => {
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -100,6 +101,7 @@ export default function BoardGamePage() {
           setGameOver={setGameOver}
           setPlayers={setPlayers}
           setGameStarted={setGameStarted}
+          setMoveLog={setMoveLog}
         />
 
         <GameSidebarRight
@@ -107,6 +109,7 @@ export default function BoardGamePage() {
           gameStarted={gameStarted}
           hostId={hostId}
           handleStart={handleStart}
+          moveLog={moveLog}
         />
 
         <WaitingOverlays

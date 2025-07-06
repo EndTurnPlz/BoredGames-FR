@@ -10,6 +10,7 @@ export default function GameBoardCenter({
   setGameOver,
   setPlayers,
   setGameStarted,
+  setMoveLog,
 }: {
   gameStarted: boolean;
   gameOver: boolean;
@@ -19,6 +20,7 @@ export default function GameBoardCenter({
   setGameOver: (v: boolean) => void;
   setPlayers: (v: string[]) => void;
   setGameStarted: (v: boolean) => void;
+  setMoveLog: (v: string[]) => void;
 }) {
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative">
@@ -31,6 +33,7 @@ export default function GameBoardCenter({
           setGameOver={setGameOver}
           setTurnOrder={setPlayers}
           setGameStarted={setGameStarted}
+          setMoveLog={setMoveLog}
         />
       </div>
     </div>
