@@ -10,23 +10,35 @@ export default function MoveLog({ moveLog }: MoveLogProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  // Check scroll position and update isAtBottom
+  // Track manual scroll
   const handleScroll = () => {
     if (!containerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
     setIsAtBottom(scrollHeight - scrollTop - clientHeight < 50);
   };
 
-  // Attach scroll event listener
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     container.addEventListener("scroll", handleScroll);
-    // Initial check
-    handleScroll();
+    handleScroll(); // initial check
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 👇 New: Handle new moves
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isUserAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+
+    if (isUserAtBottom) {
+      jumpToBottom()
+    } else {
+      setIsAtBottom(false);
+    }
+  }, [moveLog]);
 
   if (!moveLog.length) return null;
 

@@ -15,6 +15,7 @@ import {
   deck_card,
   card_path,
   GET_GAMESTREAM,
+  indexToColor,
 } from "@/utils/config";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -391,18 +392,37 @@ export default function GameCanvas({
       );
       setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, index));
       console.log("turn phase", getTurnPhaseForPlayer(gameState.gamePhase, index), index)
-      const players = applyGameState(colorToPieces);
-      setPlayers(players);
+      const old_players = players
+      const new_players = applyGameState(colorToPieces);
+      setMoveLog((prevLog) => {
+        prevLog = prevLog.filter(msg => !msg.includes("joined the game"));
+        let newLog = [];
+
+        // Add join messages for the first 4 players from localTurnOrder if not added yet
+        for (let i = 0; i < gameState.turnOrder.length; i++) {
+          newLog.push(`${gameState.turnOrder[i]} joined the game`);
+        }
+        newLog.push(...prevLog)
+
+        // Then generate the move string for current move
+        const new_move = generateMoveString(gamePhase, gameState.gamePhase, gameState.turnOrder, old_players, new_players, gameState.lastDrawnCard);
+
+        // Add new move only if non-empty and not duplicate
+        if (
+          new_move.length > 0
+        ) {
+          newLog.push(new_move);
+        }
+
+        return newLog;
+      });
+      setPlayers(new_players);
       setTurnOrder(gameState.turnOrder);
       setLocalTurnOrder(gameState.turnOrder);
       setGamePhase(gameState.gamePhase);
       if (gameState.gamePhase == 9) {
         setGameOver(true)
       }
-      setMoveLog((prevLog) => [
-        ...prevLog,
-        generateMoveString(gameState.gamePhase, localTurnOrder),
-      ]);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;

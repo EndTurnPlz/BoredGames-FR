@@ -1,6 +1,6 @@
 import { Player } from "@/components/Player/Player";
 import { coordStringToPixel } from "./outerPath";
-import { tileSize, colorToIndex } from "./config";
+import { tileSize, colorToIndex, indexToColor } from "./config";
 
 export type GameState = {
   [color: string]: string[];
@@ -34,7 +34,42 @@ export function getTurnPhaseForPlayer(
 
 export function generateMoveString(
   phase: number,
-  turnOrder: string[]
+  new_phase: number,
+  players: string[],
+  old_players: Player[],
+  new_players: Player[],
+  card: number,
 ): string {
-  return "hello"
+  if (phase === 8) {
+    if (new_phase == 0) {
+      return `${players[0]} has started the game`
+    }
+    return "";
+  }
+  const index = Math.floor(phase / 2)
+  const color = indexToColor[index];
+  const username = players[index]
+  const oldPlayer = old_players.find(p => p.color === color);
+  const newPlayer = new_players.find(p => p.color === color);
+
+  if (!oldPlayer || !newPlayer) return `${color} (${username}}) has no recorded move.`;
+
+  const moves: string[] = [];
+
+  for (let i = 0; i < oldPlayer.pieces.length; i++) {
+    const oldPos = oldPlayer.pieces[i].id;
+    const newPos = newPlayer.pieces[i].id;
+
+    if (oldPos !== newPos) {
+      moves.push(`${oldPos} → ${newPos}`);
+    }
+  }
+  if (new_phase % 2 == 1) {
+    return `${color} (${username}) drew a ${card}.`;
+  }
+  if (moves.length === 0) {
+    return `${color} (${username}) did not move.`;
+  }
+
+  return `${color} (${username}) moved: ${moves.join(", ")}`;
 }
