@@ -1,11 +1,19 @@
 import { Player } from "@/components/Player/Player";
 import { coordStringToPixel, findPath } from "./outerPath";
 import { tileSize, colorToIndex, indexToColor, numberDict, zoneToColor } from "./config";
-import { Move } from "@/app/gameBoards/sorryBoard";
 
 export type GameState = {
   [color: string]: string[];
 };
+
+export function formatTicks(ticks: number): string {
+  const totalSeconds = Math.floor(ticks / 10_000_000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
 
 export function applyGameState(
   gameState: GameState

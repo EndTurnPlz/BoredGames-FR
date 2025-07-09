@@ -15,7 +15,7 @@ import {
   deck_card,
   card_path,
   GET_GAMESTREAM,
-  indexToColor,
+  GET_GAMESTATS,
 } from "@/utils/config";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -34,6 +34,7 @@ import { applyGameState, generateMoveString, getTurnPhaseForPlayer } from "@/uti
 import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/gameUtils";
+import { GameStats } from "../boardGame/page";
 
 export type Piece = {
   x: number;
@@ -58,6 +59,8 @@ type BoardCanvasProps = {
   setTurnOrder: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
+  setGameStats: React.Dispatch<React.SetStateAction<GameStats>>;
+  setWinner: React.Dispatch<React.SetStateAction<string>>;
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
@@ -86,6 +89,8 @@ export default function GameCanvas({
   setTurnOrder,
   setGameStarted,
   setMoveLog,
+  setGameStats,
+  setWinner
 }: BoardCanvasProps) {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
@@ -113,7 +118,7 @@ export default function GameCanvas({
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
 
-  let devMode = false;
+  let devMode = true;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -359,6 +364,22 @@ export default function GameCanvas({
     }
   }, [playerColor]);
 
+  const fetchGameStats = async(playerId: string) => {
+    try {
+      const res = await fetch(GET_GAMESTATS(playerId));
+
+      if (!res.ok) {
+        throw new Error("Failed to pull game state");
+      }
+      const gameStats = await res.json();
+      console.log("stats: ", gameStats)
+      setGameStats(gameStats)
+    } catch (err) {
+      console.error("Error fetching game state:", err);
+      return null;
+    }
+  }
+
   const fetchGameState = async (playerId: string) => {
     try {
       const res = await fetch(GET_GAMESTATE(playerId));
@@ -434,6 +455,9 @@ export default function GameCanvas({
       setGamePhase(gameState.gamePhase);
       if (gameState.gamePhase == 9) {
         setGameOver(true)
+        await fetchGameStats(playerId)
+        const player = localTurnOrder[(gamePhase - gamePhase % 2) / 2]
+        setWinner(player)
       }
     } catch (err) {
       console.error("Error fetching game state:", err);
@@ -554,6 +578,9 @@ export default function GameCanvas({
     setCurrentCard(7)
     setIsPlayerTurn("move");
     // setCurrentCard(7)
+    setGameOver(true)
+    setWinner("Rohit")
+    setGameStats({movesMade:[1,1,1,2], pawnsKilled: [0,3,4,2], TimeElapsed: 6200000000})
     const nextDummyGameState: GameState = {
       red: ["b_14", "c_8", "d_4", "d_S"],
       blue: ["a_S", "a_S", "a_S", "a_S"],
@@ -562,10 +589,10 @@ export default function GameCanvas({
     };
 
     // Optional: trigger an animation after mount
-    setTimeout(() => {
-      setTopCardPath(card_path("eleven"));
-      applyGameState(nextDummyGameState)
-    }, 3000);
+    // setTimeout(() => {
+    //   setTopCardPath(card_path("eleven"));
+    //   applyGameState(nextDummyGameState)
+    // }, 3000);
 
   }, []);
 

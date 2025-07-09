@@ -19,6 +19,12 @@ import {
   indexToColor,
 } from "@/utils/config";
 
+export type GameStats = {
+  movesMade: number[]
+  pawnsKilled: number[]
+  TimeElapsed: number
+}
+
 export default function BoardGamePage() {
   const searchParams = useSearchParams();
   const gameType = searchParams.get("game");
@@ -41,6 +47,8 @@ export default function BoardGamePage() {
   const [copied, setCopied] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [moveLog, setMoveLog] = useState<string[]>([])
+  const [gameStats, setGameStats] = useState<GameStats>()
+  const [winner, setWinner] = useState<string>("")
 
   useEffect(() => {
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -99,9 +107,11 @@ export default function BoardGamePage() {
           gameType={gameType}
           playerColor={playerColor}
           setGameOver={setGameOver}
+          setWinner={setWinner}
           setPlayers={setPlayers}
           setGameStarted={setGameStarted}
           setMoveLog={setMoveLog}
+          setGameStats={setGameStats}
         />
 
         <GameSidebarRight
@@ -127,6 +137,9 @@ export default function BoardGamePage() {
 
         <GameOverOverlay
           gameOver={gameOver}
+          winner={winner}
+          gameStats={gameStats}
+          players={players}
           onRestart={() => {
             window.location.href = "/";
           }}

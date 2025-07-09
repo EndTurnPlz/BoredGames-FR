@@ -1,4 +1,5 @@
 "use client";
+import { GameStats } from "@/app/boardGame/page";
 import dynamic from "next/dynamic";
 
 export default function GameBoardCenter({
@@ -9,8 +10,10 @@ export default function GameBoardCenter({
   playerColor,
   setGameOver,
   setPlayers,
+  setWinner,
   setGameStarted,
   setMoveLog,
+  setGameStats
 }: {
   gameStarted: boolean;
   gameOver: boolean;
@@ -18,9 +21,11 @@ export default function GameBoardCenter({
   gameType: string | null;
   playerColor: string;
   setGameOver: (v: boolean) => void;
+  setWinner: (v: string) => void;
   setPlayers: (v: string[]) => void;
   setGameStarted: (v: boolean) => void;
   setMoveLog: (v: string[]) => void;
+  setGameStats: (v: GameStats) => void;
 }) {
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative">
@@ -34,6 +39,8 @@ export default function GameBoardCenter({
           setTurnOrder={setPlayers}
           setGameStarted={setGameStarted}
           setMoveLog={setMoveLog}
+          setGameStats={setGameStats}
+          setWinner={setWinner}
         />
       </div>
     </div>
