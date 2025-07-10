@@ -35,6 +35,7 @@ import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/gameUtils";
 import { GameStats } from "../boardGame/page";
+import ReconnectOverlay from "@/components/Overlays/ReconnectOverlay";
 
 export type Piece = {
   x: number;
@@ -124,6 +125,7 @@ export default function GameCanvas({
   const viewRef = useRef<number | null>(null);
 
   const [pullGameState, setPullGamestate] = useState(false);
+  const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([])
  
   const [move, setMove] = useState<MoveState>({
     selectedIdx: -1,
@@ -459,6 +461,7 @@ export default function GameCanvas({
         const player = localTurnOrder[(gamePhase - gamePhase % 2) / 2]
         setWinner(player)
       }
+      setPlayerConnectivity(gameState.playerConnectionStatus)
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -681,6 +684,10 @@ export default function GameCanvas({
       {showZoomedCard && (
         <ZoomedCard imageSrc={topCardPath} onClose={() => setShowZoomedCard(false)} />
       )}
+      <ReconnectOverlay
+        playerConnectivity={playerConnectivity}
+        players={localTurnOrder}
+      />
     </div>
   );
 }
