@@ -95,7 +95,7 @@ function getSliderString(color: string, location: string): string {
   if (color === zoneToColor[zone]) return "";
 
   if (pos === 1 || pos === 9) {
-    return ` landed on a slider`;
+    return ` and landed on a slider`;
   }
 
   return "";
