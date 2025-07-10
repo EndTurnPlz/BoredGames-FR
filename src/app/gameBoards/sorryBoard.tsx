@@ -395,7 +395,6 @@ export default function GameCanvas({
       if (gameState.gamePhase != 8) {
         setGameStarted(true);
       }
-      setView(gameState.currentView);
       if (gameState.lastDrawnCard in numberDict && isPlayerTurn != "move") {
         setTopCardPath(card_path(numberDict[gameState.lastDrawnCard]));
         setCurrentCard(gameState.lastDrawnCard);
@@ -457,11 +456,15 @@ export default function GameCanvas({
       setGamePhase(gameState.gamePhase);
       if (gameState.gamePhase == 9) {
         setGameOver(true)
-        await fetchGameStats(playerId)
+        const statsRes = await fetchGameStats(playerId)
+        if (!statsRes) {
+           throw new Error("Failed to pull stats");
+        }
         const player = localTurnOrder[(gamePhase - gamePhase % 2) / 2]
         setWinner(player)
       }
       setPlayerConnectivity(gameState.playerConnectionStatus)
+      setView(gameState.currentView);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
