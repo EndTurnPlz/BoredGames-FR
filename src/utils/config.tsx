@@ -62,7 +62,7 @@ export const START_GAME = "/startGame"
 export const JOIN_LOBBY = "http://localhost:3000/joinLobby?game=Apologies&lobbyId="
 
 export const GET_GAMESTATS = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/getEndgameStats`
+  return `${API_STRING}/games/Apologies/${playerId}/getStats`
 }
 
 export const GET_GAMESTATE = (playerId: string)  => {

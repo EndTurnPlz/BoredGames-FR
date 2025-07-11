@@ -412,6 +412,7 @@ export default function GameCanvas({
       const gameStats = await res.json();
       console.log("stats: ", gameStats)
       setGameStats(gameStats)
+      return "ok"
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -496,8 +497,11 @@ export default function GameCanvas({
         if (!statsRes) {
            throw new Error("Failed to pull stats");
         }
-        const player = localTurnOrder[(gamePhase - gamePhase % 2) / 2]
-        setWinner(player)
+        const pieces = gameState.pieces;
+        const rowAllEndWithH = pieces.findIndex((row:string[]) =>
+          row.length > 0 && row.every(str => str.endsWith('_H'))
+        );
+        setWinner(gameState.turnOrder[rowAllEndWithH])
       }
       setPlayerConnectivity(gameState.playerConnectionStatus)
       setView(gameState.currentView);
@@ -622,7 +626,7 @@ export default function GameCanvas({
     // setCurrentCard(7)
     setGameOver(true)
     setWinner("Rohit")
-    setGameStats({movesMade:[1,1,1,2], pawnsKilled: [0,3,4,2], TimeElapsed: 6200000000})
+    setGameStats({movesMade:[1,1,1,2], pawnsKilled: [0,3,4,2], gameTimeElapsed: 6200000000})
     const nextDummyGameState: GameState = {
       red: ["b_14", "c_8", "d_4", "d_S"],
       blue: ["a_S", "a_S", "a_S", "a_S"],

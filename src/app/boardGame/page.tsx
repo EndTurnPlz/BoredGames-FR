@@ -22,7 +22,7 @@ import {
 export type GameStats = {
   movesMade: number[]
   pawnsKilled: number[]
-  TimeElapsed: number
+  gameTimeElapsed: number
 }
 
 export default function BoardGamePage() {

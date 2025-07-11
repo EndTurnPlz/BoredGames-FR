@@ -16,10 +16,11 @@ export default function GameOverOverlay({
   onRestart: () => void;
 }) {
   if (!gameOver || !gameStats) return null;
-
-  const { movesMade, pawnsKilled, TimeElapsed } = gameStats;
+  console.log(winner, gameStats)
+  const { movesMade, pawnsKilled, gameTimeElapsed } = gameStats;
 
   const formatTicks = (ticks: number): string => {
+    console.log(gameTimeElapsed, gameStats)
     const totalSeconds = Math.floor(ticks / 10_000_000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -40,7 +41,7 @@ export default function GameOverOverlay({
         <div className="text-lg text-cyan-200 bg-slate-700/70 p-4 rounded-xl border border-cyan-400/30 shadow-inner space-y-4">
           <p>
             <strong className="text-cyan-100">Time played:</strong>{" "}
-            {formatTicks(TimeElapsed)}
+            {formatTicks(gameTimeElapsed)}
           </p>
 
           <table className="w-full table-auto text-left border-collapse">
