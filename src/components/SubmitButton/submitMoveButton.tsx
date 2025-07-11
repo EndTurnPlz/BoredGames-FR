@@ -8,6 +8,7 @@ type SubmitMoveButtonProps = {
   height: number;
   fontSize: number;
   borderRadius: number;
+  selected: boolean;
 };
 
 export default function SubmitMoveButton({
@@ -18,26 +19,32 @@ export default function SubmitMoveButton({
   height,
   fontSize,
   borderRadius,
+  selected
 }: SubmitMoveButtonProps) {
-  return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className="absolute font-bold z-20 shadow-md transition-colors duration-200 
-        bg-white text-black hover:bg-yellow-300"
-      style={{
-        top,
-        left,
-        width,
-        height,
-        fontSize,
-        borderRadius,
-        pointerEvents: "auto",
-      }}
-    >
-      Submit Move
-    </button>
+  // Assume `isDisabled` is a boolean you compute elsewhere
+return (
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick();
+    }}
+    disabled={selected}
+    className={`
+      absolute z-20 font-bold shadow-md transition-colors duration-200
+      ${selected
+        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        : 'bg-white text-black hover:bg-yellow-300'}
+    `}
+    style={{
+      top,
+      left,
+      width,
+      height,
+      fontSize,
+      borderRadius,
+    }}
+  >
+    Submit Move
+  </button>
   );
 }

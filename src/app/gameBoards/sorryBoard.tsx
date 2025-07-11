@@ -660,6 +660,7 @@ export default function GameCanvas({
             gamePhase={gamePhase}
             localTurnOrder={localTurnOrder}
             handleConfirmMoveClick={handleConfirmMoveClick}
+            selected={move.selectedIdx == -1}
           />
           {move.effectPopup && move.possibleEffects.length > 1 && (
             <EffectPopup

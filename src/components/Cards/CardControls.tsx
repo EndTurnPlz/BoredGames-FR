@@ -12,6 +12,7 @@ export default function CardControls({
   gamePhase,
   localTurnOrder,
   handleConfirmMoveClick,
+  selected
 }: {
   onDeckClick: () => void;
   onTopCardClick: () => void;
@@ -20,6 +21,7 @@ export default function CardControls({
   gamePhase: number;
   localTurnOrder: string[];
   handleConfirmMoveClick: () => void;
+  selected: boolean;
 }) {
   return (
     <>
@@ -53,6 +55,7 @@ export default function CardControls({
             height={canvasHeight * 0.06}
             fontSize={canvasHeight * 0.03}
             borderRadius={canvasHeight * 0.02}
+            selected={selected}
         />
         )}
 
