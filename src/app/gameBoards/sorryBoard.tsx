@@ -660,7 +660,7 @@ export default function GameCanvas({
             gamePhase={gamePhase}
             localTurnOrder={localTurnOrder}
             handleConfirmMoveClick={handleConfirmMoveClick}
-            selected={move.selectedIdx == -1}
+            selected={move.destination === null || (currentCard === 7 && secondMove.destination === null)}
           />
           {move.effectPopup && move.possibleEffects.length > 1 && (
             <EffectPopup
