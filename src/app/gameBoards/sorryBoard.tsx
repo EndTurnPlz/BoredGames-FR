@@ -331,10 +331,46 @@ export default function GameCanvas({
         throw Error("failed to draw card");
       }
       console.log(response);
-      setMove({
-        ...moveRef.current,
-        possibleMoves: response.movesets
-      })
+      if (response.movesets.length == 1 && response.movesets[0].move.length === 1) {
+        const move = response.movesets[0].move[0]
+        const idx = drawnPieces.findIndex((p) => p.id === move.from);
+        if (move.effects.length > 1) {
+
+          // Calculate popup position near tile
+          let coords = getUnrotatedMousePosition(
+            coordMap[move.to].x,
+            coordMap[move.to].y,
+            colorToAngleDict[playerColorRef.current]
+          );
+          setMove({
+            ...moveRef.current,
+            destination: move.to,
+            highlightedTiles: [move],
+            possibleEffects: move.effects,
+            possibleMoves: response.movesets,
+            selectedIdx: idx,
+            effectPopup: {
+              x: coords.x + tileSize / 2,
+              y: coords.y - (3 * tileSize) / 2,
+            }
+          })
+        } else {
+          setMove({
+            ...moveRef.current,
+            destination: move.to,
+            effect: move.effects[0],
+            highlightedTiles: [move],
+            possibleMoves: response.movesets,
+            selectedIdx: idx,
+            effectPopup: null
+          })
+        }
+      } else {
+        setMove({
+          ...moveRef.current,
+          possibleMoves: response.movesets
+        })
+      }
       localStorage.setItem("drawCard", JSON.stringify(response));
       setTopCardPath(card_path(numberDict[response.cardDrawn]));
       setCurrentCard(response.cardDrawn);
@@ -660,7 +696,7 @@ export default function GameCanvas({
             gamePhase={gamePhase}
             localTurnOrder={localTurnOrder}
             handleConfirmMoveClick={handleConfirmMoveClick}
-            selected={move.destination === null || (currentCard === 7 && secondMove.destination === null)}
+            selected={move.destination === null || (currentCard === 7 && currentDistance != 7 && move.possibleMoves.length > 1)}
           />
           {move.effectPopup && move.possibleEffects.length > 1 && (
             <EffectPopup
