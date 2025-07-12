@@ -54,6 +54,12 @@ export default function Home() {
       // Optionally show an error message
     }
   };
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only allow alphanumeric and underscores, remove everything else
+    const raw = e.target.value;
+    const sanitized = raw.replace(/[^a-zA-Z0-9_]/g, '') // limit to 20 characters
+    setUsername(sanitized);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800">
@@ -90,7 +96,7 @@ export default function Home() {
               type="text"
               placeholder="Enter your username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => handleUsernameChange(e)}
               className="p-3 rounded-xl border-2 border-cyan-400/30 bg-slate-800/60 text-lg text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition placeholder-cyan-300/50"
               autoComplete="off"
             />
