@@ -32,32 +32,100 @@ export const drawCircle = (
   angleDegrees: number,
   playerColor: string
 ) => {
-  ctx.beginPath();
-  ctx.arc(tileX * tileSize, tileY * tileSize, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = color;
-  ctx.fill();
-
-  // Set stroke properties
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
   const centerX = tileX * tileSize;
   const centerY = tileY * tileSize;
+
+  // Create a gradient for a more modern look
+  const gradient = ctx.createRadialGradient(
+    centerX,
+    centerY,
+    0,
+    centerX,
+    centerY,
+    radius
+  );
+
+  // Determine if this is a home or start circle
+  const isHome = text.toLowerCase() === "home";
+
+  // Parse color and adjust for gradient
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+
+  // Create slightly different shades for gradient
+  const lighterColor = `rgba(${Math.min(r + 30, 255)}, ${Math.min(
+    g + 30,
+    255
+  )}, ${Math.min(b + 30, 255)}, 1)`;
+  const darkerColor = `rgba(${Math.max(r - 30, 0)}, ${Math.max(
+    g - 30,
+    0
+  )}, ${Math.max(b - 30, 0)}, 1)`;
+
+  // Set up gradient
+  gradient.addColorStop(0, lighterColor);
+  gradient.addColorStop(1, darkerColor);
+
+  // Draw main circle with gradient
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Enhanced glow effect for home circles
+  if (isHome) {
+    ctx.shadowColor = lighterColor;
+    ctx.shadowBlur = 15;
+  }
+
+  // Create a nicer border with inner shadow effect
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Reset shadow
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Adjust angle based on color
   angleDegrees += colorDistance(darkColorMap[playerColor], color) * 90;
   const angleRadians = (angleDegrees * Math.PI) / 180;
 
   ctx.save(); // Save current state
-
   ctx.translate(centerX, centerY); // Move origin to center of text
   ctx.rotate(angleRadians); // Rotate context by angle
 
-  ctx.fillStyle = "black"; // Or any contrasting color
-  ctx.font = `${1.5 * font_px}px sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+  // Enhanced text rendering
+  if (isHome) {
+    // Create text background/halo for better readability on Home circles
+    ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.65, 0, 2 * Math.PI);
+    ctx.fill();
 
-  ctx.fillText(text, 0, 0); // Draw text at origin after transform
+    // Use a bolder, more modern font for HOME
+    ctx.fillStyle = "white";
+    ctx.font = `bold ${1.6 * font_px}px Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Add text shadow for depth
+    ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+
+    // Draw text
+    ctx.fillText(text, 0, 0);
+  } else {
+    // Regular styling for other text (Start)
+    ctx.fillStyle = "white";
+    ctx.font = `${1.5 * font_px}px Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 0, 0);
+  }
 
   ctx.restore(); // Restore to previous state
 };
@@ -428,7 +496,10 @@ export const drawSafetyWord = (
 };
 
 export const drawPiecesWithOffset = (allPieces: Piece[]): DrawnPiece[] => {
-  const indexedPieces = allPieces.map((piece, index) => ({ ...piece, originalIndex: index }));
+  const indexedPieces = allPieces.map((piece, index) => ({
+    ...piece,
+    originalIndex: index,
+  }));
 
   // Step 2: Group by tile
   const tileGroups: Record<string, (Piece & { originalIndex: number })[]> = {};
