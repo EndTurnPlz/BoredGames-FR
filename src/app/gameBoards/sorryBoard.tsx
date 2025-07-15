@@ -30,7 +30,11 @@ import LoadingOverlay from "@/components/Overlays/loadingOverlay";
 import ZoomedCard from "@/components/Cards/zoomedCard";
 import PiecesLayer from "@/components/Pieces/piecesLayer";
 import { drawWithRotation } from "@/utils/canvasUtils";
-import { applyGameState, generateMoveString, getTurnPhaseForPlayer } from "@/utils/gameUtils";
+import {
+  applyGameState,
+  generateMoveString,
+  getTurnPhaseForPlayer,
+} from "@/utils/gameUtils";
 import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/gameUtils";
@@ -73,7 +77,7 @@ export type MoveState = {
   possibleMoves: MoveSet[];
   highlightedTiles: Move[];
   possibleEffects: number[];
-  effectPopup: { x: number; y: number } | null,
+  effectPopup: { x: number; y: number } | null;
 };
 
 // Type for secondMove
@@ -91,7 +95,7 @@ export default function GameCanvas({
   setGameStarted,
   setMoveLog,
   setGameStats,
-  setWinner
+  setWinner,
 }: BoardCanvasProps) {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
@@ -125,8 +129,8 @@ export default function GameCanvas({
   const viewRef = useRef<number | null>(null);
 
   const [pullGameState, setPullGamestate] = useState(false);
-  const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([])
- 
+  const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([]);
+
   const [move, setMove] = useState<MoveState>({
     selectedIdx: -1,
     destination: null as string | null,
@@ -168,7 +172,7 @@ export default function GameCanvas({
 
   const { resetSelections, resetAllSelections } = useGameSelections({
     setMove,
-    setSecondMove
+    setSecondMove,
   });
 
   const drawPieces = () => {
@@ -249,7 +253,7 @@ export default function GameCanvas({
       selectedIdx: new_idx,
       destination: move.to,
       effect: move.effects[0],
-    })
+    });
     const distance = findPath(move.from, move.to).length - 1;
     const current = currentDistanceref.current ?? 0;
     setCurrentDistance(current + distance);
@@ -260,29 +264,28 @@ export default function GameCanvas({
     if (moveRef.current.selectedIdx == -1) return false;
 
     if (tile.effects.length > 1) {
-
       // Calculate popup position near tile
       let coords = getUnrotatedMousePosition(
         coordMap[tile.to].x,
         coordMap[tile.to].y,
         colorToAngleDict[playerColorRef.current]
       );
-       setMove({
+      setMove({
         ...moveRef.current,
         destination: tile.to,
         possibleEffects: tile.effects,
         effectPopup: {
           x: coords.x + tileSize / 2,
           y: coords.y - (3 * tileSize) / 2,
-        }
-      })
+        },
+      });
     } else {
       setMove({
         ...moveRef.current,
         destination: tile.to,
         effect: tile.effects[0],
-        effectPopup: null
-      })
+        effectPopup: null,
+      });
     }
     if (currentCardRef.current === 7) {
       const current = findPath(tile.from, tile.to).length - 1;
@@ -292,8 +295,15 @@ export default function GameCanvas({
       const possibleSeconds = [];
 
       for (const piece of drawnPieces) {
-        console.log(piece, moveRef.current.effect, moveRef.current.possibleMoves);
-        if (moveRef.current.possibleMoves && drawnPieces[moveRef.current.selectedIdx] !== piece) {
+        console.log(
+          piece,
+          moveRef.current.effect,
+          moveRef.current.possibleMoves
+        );
+        if (
+          moveRef.current.possibleMoves &&
+          drawnPieces[moveRef.current.selectedIdx] !== piece
+        ) {
           const matching = moveRef.current.possibleMoves.find(
             (m) => m.pawn === piece.id
           );
@@ -305,11 +315,11 @@ export default function GameCanvas({
           }
         }
       }
-      console.log("possible Second", possibleSeconds)
+      console.log("possible Second", possibleSeconds);
       setSecondMove({
         ...secondMoveRef.current,
-        possibleSecondPawns: possibleSeconds
-      })
+        possibleSecondPawns: possibleSeconds,
+      });
     }
 
     return true;
@@ -331,11 +341,13 @@ export default function GameCanvas({
         throw Error("failed to draw card");
       }
       console.log(response);
-      if (response.movesets.length == 1 && response.movesets[0].move.length === 1) {
-        const move = response.movesets[0].move[0]
+      if (
+        response.movesets.length == 1 &&
+        response.movesets[0].move.length === 1
+      ) {
+        const move = response.movesets[0].move[0];
         const idx = drawnPieces.findIndex((p) => p.id === move.from);
         if (move.effects.length > 1) {
-
           // Calculate popup position near tile
           let coords = getUnrotatedMousePosition(
             coordMap[move.to].x,
@@ -352,8 +364,8 @@ export default function GameCanvas({
             effectPopup: {
               x: coords.x + tileSize / 2,
               y: coords.y - (3 * tileSize) / 2,
-            }
-          })
+            },
+          });
         } else {
           setMove({
             ...moveRef.current,
@@ -362,14 +374,14 @@ export default function GameCanvas({
             highlightedTiles: [move],
             possibleMoves: response.movesets,
             selectedIdx: idx,
-            effectPopup: null
-          })
+            effectPopup: null,
+          });
         }
       } else {
         setMove({
           ...moveRef.current,
-          possibleMoves: response.movesets
-        })
+          possibleMoves: response.movesets,
+        });
       }
       localStorage.setItem("drawCard", JSON.stringify(response));
       setTopCardPath(card_path(numberDict[response.cardDrawn]));
@@ -402,7 +414,7 @@ export default function GameCanvas({
     }
   }, [playerColor]);
 
-  const fetchGameStats = async(playerId: string) => {
+  const fetchGameStats = async (playerId: string) => {
     try {
       const res = await fetch(GET_GAMESTATS(playerId));
 
@@ -410,14 +422,14 @@ export default function GameCanvas({
         throw new Error("Failed to pull game state");
       }
       const gameStats = await res.json();
-      console.log("stats: ", gameStats)
-      setGameStats(gameStats)
-      return "ok"
+      console.log("stats: ", gameStats);
+      setGameStats(gameStats);
+      return "ok";
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
     }
-  }
+  };
 
   const fetchGameState = async (playerId: string) => {
     try {
@@ -443,18 +455,26 @@ export default function GameCanvas({
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row];
       }
-      const index = gameState.turnOrder.indexOf(username)
+      const index = gameState.turnOrder.indexOf(username);
       console.log(
         colorToIndex[playerColorRef.current],
         playerColorRef.current,
         gameState.gamePhase
       );
       setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, index));
-      console.log("turn phase", getTurnPhaseForPlayer(gameState.gamePhase, index), index)
-      const old_players = players
+      console.log(
+        "turn phase",
+        getTurnPhaseForPlayer(gameState.gamePhase, index),
+        index
+      );
+      const old_players = players;
       const new_players = applyGameState(colorToPieces);
       setMoveLog((prevLog) => {
-        prevLog = prevLog.filter(msg => !msg.includes("joined the game") && !msg.includes("started the game"));
+        prevLog = prevLog.filter(
+          (msg) =>
+            !msg.includes("joined the game") &&
+            !msg.includes("started the game")
+        );
         let newLog = [];
 
         // Add join messages for the first 4 players from localTurnOrder if not added yet
@@ -464,27 +484,25 @@ export default function GameCanvas({
         if (gameState.gamePhase != 8) {
           newLog.push(`${gameState.turnOrder[0]} started the game`);
         }
-        newLog.push(...prevLog)
+        newLog.push(...prevLog);
 
         // Then generate the move string for current move
         if (gameState.gamePhase != 8) {
           const new_move = generateMoveString(
-            gamePhase, 
-            gameState.gamePhase, 
-            gameState.turnOrder, 
-            old_players, 
-            new_players, 
-            gameState.lastDrawnCard, 
+            gamePhase,
+            gameState.gamePhase,
+            gameState.turnOrder,
+            old_players,
+            new_players,
+            gameState.lastDrawnCard,
             gameState.lastCompletedMove
           );
-          if (
-            new_move.length > 0
-          ) {
+          if (new_move.length > 0) {
             newLog.push(new_move);
           }
         }
         // Add new move only if non-empty and not duplicate
-        newLog = newLog.filter(msg => !msg.includes("undefined"))
+        newLog = newLog.filter((msg) => !msg.includes("undefined"));
         return newLog;
       });
       setPlayers(new_players);
@@ -492,18 +510,19 @@ export default function GameCanvas({
       setLocalTurnOrder(gameState.turnOrder);
       setGamePhase(gameState.gamePhase);
       if (gameState.gamePhase == 9) {
-        setGameOver(true)
-        const statsRes = await fetchGameStats(playerId)
+        setGameOver(true);
+        const statsRes = await fetchGameStats(playerId);
         if (!statsRes) {
-           throw new Error("Failed to pull stats");
+          throw new Error("Failed to pull stats");
         }
         const pieces = gameState.pieces;
-        const rowAllEndWithH = pieces.findIndex((row:string[]) =>
-          row.length > 0 && row.every(str => str.endsWith('_H'))
+        const rowAllEndWithH = pieces.findIndex(
+          (row: string[]) =>
+            row.length > 0 && row.every((str) => str.endsWith("_H"))
         );
-        setWinner(gameState.turnOrder[rowAllEndWithH])
+        setWinner(gameState.turnOrder[rowAllEndWithH]);
       }
-      setPlayerConnectivity(gameState.playerConnectionStatus)
+      setPlayerConnectivity(gameState.playerConnectionStatus);
       setView(gameState.currentView);
     } catch (err) {
       console.error("Error fetching game state:", err);
@@ -513,7 +532,7 @@ export default function GameCanvas({
 
   useEffect(() => {
     if (devMode) return;
-    const playerId = localStorage.getItem("userId" + randomId) ?? ""; 
+    const playerId = localStorage.getItem("userId" + randomId) ?? "";
     console.log(GET_GAMESTREAM(playerId));
     const eventSource = new EventSource(GET_GAMESTREAM(playerId));
 
@@ -559,7 +578,11 @@ export default function GameCanvas({
 
     const refresh = async () => {
       if (canvasRef.current) {
-        drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
+        drawWithRotation(
+          canvasRef.current,
+          playerColor,
+          playerColorRef.current
+        );
       }
       setAngle(colorToAngleDict[playerColorRef.current]);
       drawPieces();
@@ -590,7 +613,7 @@ export default function GameCanvas({
 
   useEffect(() => {
     if (isPlayerTurn == "wait") {
-      console.log("reset on accident")
+      console.log("reset on accident");
       resetAllSelections();
     }
   }, [isPlayerTurn]);
@@ -616,17 +639,21 @@ export default function GameCanvas({
     setGameStarted(true);
     setMove({
       ...moveRef.current,
-      possibleMoves: mockCardResponse7.movesets
-    })
+      possibleMoves: mockCardResponse7.movesets,
+    });
     playerColorRef.current = "red";
     const newPlayers = applyGameState(dummyGameState);
     setPlayers(newPlayers);
-    setCurrentCard(7)
+    setCurrentCard(7);
     setIsPlayerTurn("move");
     // setCurrentCard(7)
-    setGameOver(true)
-    setWinner("Rohit")
-    setGameStats({movesMade:[1,1,1,2], pawnsKilled: [0,3,4,2], gameTimeElapsed: 6200000000})
+    setGameOver(true);
+    setWinner("Rohit");
+    setGameStats({
+      movesMade: [1, 1, 1, 2],
+      pawnsKilled: [0, 3, 4, 2],
+      gameTimeElapsed: 6200000000,
+    });
     const nextDummyGameState: GameState = {
       red: ["b_14", "c_8", "d_4", "d_S"],
       blue: ["a_S", "a_S", "a_S", "a_S"],
@@ -639,7 +666,6 @@ export default function GameCanvas({
     //   setTopCardPath(card_path("eleven"));
     //   applyGameState(nextDummyGameState)
     // }, 3000);
-
   }, []);
 
   const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
@@ -700,33 +726,42 @@ export default function GameCanvas({
             gamePhase={gamePhase}
             localTurnOrder={localTurnOrder}
             handleConfirmMoveClick={handleConfirmMoveClick}
-            selected={move.destination === null || (currentCard === 7 && currentDistance != 7 && move.possibleMoves.length > 1)}
+            selected={
+              move.destination === null ||
+              (currentCard === 7 &&
+                currentDistance != 7 &&
+                move.possibleMoves.length > 1)
+            }
           />
           {move.effectPopup && move.possibleEffects.length > 1 && (
             <EffectPopup
               position={move.effectPopup}
               effects={move.possibleEffects}
               selectedEffect={move.effect}
-              onSelectEffect={(eff) => setMove((prev) => ({
-                                ...prev,
-                                effect: eff
-                              }))}
+              onSelectEffect={(eff) =>
+                setMove((prev) => ({
+                  ...prev,
+                  effect: eff,
+                }))
+              }
               onClickEffect={(eff) => {
                 setMove((prev) => ({
                   ...prev,
-                  effect: eff
-                }))
+                  effect: eff,
+                }));
               }}
             />
           )}
-
         </div>
       </div>
 
       {loading && <LoadingOverlay />}
 
       {showZoomedCard && (
-        <ZoomedCard imageSrc={topCardPath} onClose={() => setShowZoomedCard(false)} />
+        <ZoomedCard
+          imageSrc={topCardPath}
+          onClose={() => setShowZoomedCard(false)}
+        />
       )}
       <ReconnectOverlay
         playerConnectivity={playerConnectivity}
