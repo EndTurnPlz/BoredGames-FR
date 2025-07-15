@@ -143,6 +143,17 @@ export const fillTile = (
   // Save current drawing state
   ctx.save();
 
+  // Check if this tile is likely part of a safety zone
+  const isSafetyZoneTile =
+    // Red safety zone
+    (row === 2 && col >= 1 && col <= 5) ||
+    // Yellow safety zone
+    (row === 13 && col >= 10 && col <= 14) ||
+    // Blue safety zone
+    (col === 2 && row >= 10 && row <= 14) ||
+    // Green safety zone
+    (col === 13 && row >= 1 && row <= 5);
+
   if (color === "black") {
     // Enhanced styling for the black squares like in modern digital board games
 
@@ -182,31 +193,91 @@ export const fillTile = (
     ctx.lineTo(x, y + tileSize / 10);
     ctx.closePath();
     ctx.fill();
+  } else if (isSafetyZoneTile) {
+    // Special treatment for safety zone tiles
+
+    // Create a gradient for the tile
+    const gradient = ctx.createRadialGradient(
+      x + tileSize / 2,
+      y + tileSize / 2,
+      tileSize / 6,
+      x + tileSize / 2,
+      y + tileSize / 2,
+      tileSize
+    );
+
+    // Parse and get a brighter version of the color
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+
+    // Safety zone colors are brighter
+    const brighterColor = `rgba(${Math.min(r + 20, 255)}, ${Math.min(
+      g + 20,
+      255
+    )}, ${Math.min(b + 20, 255)}, 1)`;
+    const originalColor = color;
+    const darkerColor = `rgba(${Math.max(r - 40, 0)}, ${Math.max(
+      g - 40,
+      0
+    )}, ${Math.max(b - 40, 0)}, 1)`;
+
+    gradient.addColorStop(0, brighterColor);
+    gradient.addColorStop(0.7, originalColor);
+    gradient.addColorStop(1, darkerColor);
+
+    ctx.fillStyle = gradient;
+
+    // Add a subtle glow effect
+    ctx.shadowColor = brighterColor;
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Draw rounded corners for the safety zone tiles
+    roundRect(ctx, x + 1, y + 1, tileSize - 2, tileSize - 2, 3, true, false);
+
+    // Reset shadow
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+
+    // Add a border with inner glow effect
+    ctx.strokeStyle = brighterColor;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, x + 1, y + 1, tileSize - 2, tileSize - 2, 3, false, true);
+
+    // Add diagonal lines pattern for safety zone tiles
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.2)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + 2);
+    ctx.lineTo(x + tileSize - 2, y + tileSize - 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + tileSize - 2, y + 2);
+    ctx.lineTo(x + 2, y + tileSize - 2);
+    ctx.stroke();
   } else {
     // Handle other colors with enhanced styling
     ctx.fillStyle = color;
     ctx.fillRect(x, y, tileSize, tileSize);
 
-    // Improved border styling
+    // Add black outlines to all tiles for better differentiation
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; // Strong black outline
+    ctx.lineWidth = 1.5; // Slightly thicker line for visibility
+    ctx.strokeRect(x, y, tileSize, tileSize);
+
+    // Add inner border for depth effect
     if (color === "white") {
-      // For white tiles, use a light gray border
+      // For white tiles, use a light gray inner border
       ctx.strokeStyle = "#CCCCCC";
     } else {
-      // For colored tiles, use a darker shade of the same color
-      const darkerColor = color.startsWith("#")
-        ? color.replace(/^#/, "")
-        : color;
-
-      if (darkerColor.startsWith("rgb")) {
-        // Handle RGB colors
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-      } else {
-        // For hex colors, create a slightly darker variant
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-      }
+      // For colored tiles, use a darker shade
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
     }
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, tileSize, tileSize);
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
 
     // Add a subtle highlight to the top of colored tiles too
     if (color !== "white") {
@@ -479,18 +550,59 @@ export const drawSafetyWord = (
 
   ctx.save();
 
+  // Determine which color based on the coordinates - this is a simple way to identify which safety zone
+  let zoneColor;
+  if (safetyZone[0][1] === 2) {
+    zoneColor = "#D70000"; // red
+  } else if (safetyZone[0][1] === 13) {
+    zoneColor = "#FFCC00"; // yellow
+  } else if (safetyZone[0][0] === 2) {
+    zoneColor = "#0066FF"; // blue
+  } else {
+    zoneColor = "#00AA00"; // green
+  }
+
   // Move origin to center of text
   ctx.translate(centerX, centerY);
   // Rotate the canvas
   ctx.rotate(rotationRad);
 
-  ctx.font = `${font_px * 1.5}px sans-serif`;
-  ctx.fillStyle = "black";
+  // Create a semi-transparent background for better visibility
+  const textWidth = tileSize * 5; // Approximate width based on text length
+  const textHeight = tileSize * 0.7;
+  const backgroundPadding = 8;
+
+  // Draw a rounded rectangle background
+  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+  roundRect(
+    ctx,
+    offsetX - textWidth / 2 - backgroundPadding,
+    offsetY - textHeight / 2 - backgroundPadding / 2,
+    textWidth + backgroundPadding * 2,
+    textHeight + backgroundPadding,
+    6, // corner radius
+    true, // filled
+    false // no stroke
+  );
+
+  // Add a subtle glow effect
+  ctx.shadowColor = zoneColor;
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Use a bolder, more modern font
+  ctx.font = `bold ${font_px * 1.6}px Arial, sans-serif`;
+  ctx.fillStyle = "white";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   // Draw text at origin (0,0) because we've translated to center
   ctx.fillText(word, offsetX, offsetY);
+
+  // Reset shadow
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
 
   ctx.restore();
 };
@@ -540,3 +652,30 @@ export const drawPiecesWithOffset = (allPieces: Piece[]): DrawnPiece[] => {
 
   return drawnPieces;
 };
+
+// Helper function to draw rounded rectangles
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  fill: boolean,
+  stroke: boolean
+) {
+  // Use a single radius value for all corners
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+  if (fill) {
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.stroke();
+  }
+}
