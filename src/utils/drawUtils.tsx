@@ -77,11 +77,18 @@ export const drawCircle = (
   if (isHome) {
     ctx.shadowColor = lighterColor;
     ctx.shadowBlur = 15;
+  } else {
+    // Subtle glow for start circles
+    ctx.shadowColor = lighterColor;
+    ctx.shadowBlur = 10;
   }
 
   // Create a nicer border with inner shadow effect
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-  ctx.lineWidth = 3;
+  const borderColor = isHome
+    ? "rgba(255, 255, 255, 0.8)"
+    : "rgba(255, 255, 255, 0.7)";
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = isHome ? 3 : 2.5;
   ctx.stroke();
 
   // Reset shadow
@@ -119,11 +126,27 @@ export const drawCircle = (
     // Draw text
     ctx.fillText(text, 0, 0);
   } else {
-    // Regular styling for other text (Start)
+    // Enhanced styling for Start circles, similar to Home circles
+
+    // Create a subtle background/halo for better readability
+    ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Use a bold, modern font for START, similar to HOME
     ctx.fillStyle = "white";
-    ctx.font = `${1.5 * font_px}px Arial, sans-serif`;
+    ctx.font = `bold ${1.5 * font_px}px Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+
+    // Add text shadow for depth, slightly lighter than home
+    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+
+    // Draw text
     ctx.fillText(text, 0, 0);
   }
 
