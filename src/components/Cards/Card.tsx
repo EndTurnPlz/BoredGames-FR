@@ -70,11 +70,12 @@ const CardButton = ({
         overflow: "hidden",
         zIndex: 30,
         background: "none",
+        backgroundImage: "none",
         perspective: "1200px",
       }}
       className="relative group hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2"
     >
-      <div className="w-full h-full relative">
+      <div className="w-full h-full relative bg-transparent">
         {/* Previous card fading out */}
         {animate && prevSrc && (
           <motion.div
@@ -88,17 +89,16 @@ const CardButton = ({
               position: "absolute",
               top: 0,
               left: 0,
+              background: "transparent",
             }}
           >
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full bg-transparent">
               <Image
                 src={prevSrc}
                 alt="Previous card"
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                style={{
-                  objectFit: "contain",
-                }}
+                style={{ objectFit: "contain" }}
               />
             </div>
           </motion.div>
@@ -108,18 +108,9 @@ const CardButton = ({
         {animate && isFlipping ? (
           <motion.div
             key={"flip-card-" + displaySrc}
-            initial={{
-              x: -cardW / 2,
-              rotateY: 0,
-            }}
-            animate={{
-              x: 0,
-              rotateY: 180,
-            }}
-            transition={{
-              duration: 0.8,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
+            initial={{ x: -cardW / 2, rotateY: 0 }}
+            animate={{ x: 0, rotateY: 180 }}
+            transition={{ duration: 0.8, ease: [0.4, 0.0, 0.2, 1] }}
             style={{
               width: "100%",
               height: "100%",
@@ -127,6 +118,7 @@ const CardButton = ({
               top: 0,
               left: 0,
               transformStyle: "preserve-3d",
+              background: "transparent",
             }}
           >
             {/* Card Back (initially visible) */}
@@ -139,17 +131,16 @@ const CardButton = ({
                 left: 0,
                 backfaceVisibility: "hidden",
                 transformStyle: "preserve-3d",
+                background: "transparent",
               }}
             >
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full bg-transparent">
                 <Image
                   src={cardBackImage}
                   alt="Card back"
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{
-                    objectFit: "contain",
-                  }}
+                  style={{ objectFit: "contain" }}
                 />
               </div>
             </motion.div>
@@ -165,43 +156,38 @@ const CardButton = ({
                 transform: "rotateY(180deg)",
                 backfaceVisibility: "hidden",
                 transformStyle: "preserve-3d",
+                background: "transparent",
               }}
             >
-              <motion.div
-                initial={{ filter: "drop-shadow(0 0 0 rgba(255, 215, 0, 0))" }}
-                animate={{
-                  filter: impactEffect
-                    ? "drop-shadow(0 0 15px rgba(255, 215, 0, 0.9))"
-                    : "drop-shadow(0 0 5px rgba(255, 215, 0, 0.5))",
-                }}
-                transition={{ duration: 0.3, delay: impactEffect ? 0.8 : 0.5 }}
-                className="relative w-full h-full"
-              >
+              {/* Glow effect as a separate element */}
+              {impactEffect && (
                 <motion.div
-                  animate={
-                    impactEffect
-                      ? {
-                          scale: [1, 1.08, 1],
-                        }
-                      : {}
-                  }
-                  transition={{
-                    duration: 0.3,
-                    delay: 0.8,
-                    ease: "easeOut",
+                  className="absolute inset-0 bg-transparent"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 0.6, times: [0, 0.3, 1] }}
+                  style={{
+                    boxShadow: "0 0 20px 10px rgba(255, 215, 0, 0.7)",
+                    borderRadius: "5px",
+                    pointerEvents: "none",
                   }}
-                  className="relative w-full h-full"
-                >
-                  <Image
-                    src={displaySrc}
-                    alt="Card front"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{
-                      objectFit: "contain",
-                    }}
-                  />
-                </motion.div>
+                />
+              )}
+
+              {/* Card content */}
+              <motion.div
+                className="relative w-full h-full bg-transparent"
+                animate={impactEffect ? { scale: [1, 1.08, 1] } : {}}
+                transition={{ duration: 0.3, delay: 0.8, ease: "easeOut" }}
+              >
+                <Image
+                  src={displaySrc}
+                  alt="Card front"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: "contain" }}
+                  className="bg-transparent"
+                />
               </motion.div>
             </motion.div>
           </motion.div>
@@ -218,31 +204,28 @@ const CardButton = ({
               position: "absolute",
               top: 0,
               left: 0,
+              background: "transparent",
             }}
           >
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full bg-transparent">
               <Image
                 src={displaySrc}
                 alt="Current card"
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                style={{
-                  objectFit: "contain",
-                }}
+                style={{ objectFit: "contain" }}
               />
             </div>
           </motion.div>
         ) : (
           // Static card for non-animated state
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full bg-transparent">
             <Image
               src={src}
               alt="Card"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              style={{
-                objectFit: "contain",
-              }}
+              style={{ objectFit: "contain" }}
             />
           </div>
         )}
