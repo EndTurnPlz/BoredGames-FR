@@ -17,6 +17,7 @@ import {
   START_GAME,
   JOIN_LOBBY,
   indexToColor,
+  GET_START,
 } from "@/utils/config";
 
 export type GameStats = {
@@ -63,6 +64,7 @@ export default function BoardGamePage() {
   useEffect(() => {
     const index = players.indexOf(username ?? "");
     setHostId(index);
+    console.log(players, index)
     if (index != -1 && playerColor == "") {
       setPlayerColor(indexToColor[index]);
     }
@@ -71,10 +73,14 @@ export default function BoardGamePage() {
   const handleStart = async () => {
     try {
       const lobbyId = localStorage.getItem("lobbyId");
-      const res = await fetch(API_STRING + "/" + playerId + START_GAME, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lobbyId),
+      const playerId = localStorage.getItem("userId" + randomId) ?? "";
+      const res = await fetch(GET_START(lobbyId ?? ""), {
+        method: "POST",
+        headers: 
+        { 
+          "Content-Type": "application/json",
+          "X-Player-Key": playerId
+        },
       });
 
       if (!res.ok) return;

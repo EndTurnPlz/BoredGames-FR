@@ -21,8 +21,8 @@ export default function Home() {
     }
     try {
       setIsTransitioning(true);
-      const res = await fetch(API_STRING + CREATE_GAME, {
-        method: "PUT",
+      const res = await fetch(`${API_STRING}${CREATE_GAME}?gameType=${gameType}`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -38,7 +38,7 @@ export default function Home() {
       const response = await res.json();
       const randomId = Math.random().toString(36).substring(2, 10);
       localStorage.setItem("userId" + randomId, response.playerId);
-      localStorage.setItem("lobbyId", response.lobbyId);
+      localStorage.setItem("lobbyId", response.roomId);
       setError("");
       // Only after successful response
       setTimeout(() => {

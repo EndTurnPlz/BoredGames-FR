@@ -56,21 +56,29 @@ export const cardH = 5 * tileSize;
 
 export const API_STRING = "http://localhost:5000"
 
-export const CREATE_GAME = "/createGame"
-export const JOIN_GAME = "/joinGame"
+export const CREATE_GAME = "/room/create"
+export const JOIN_GAME = "/room/join"
 export const START_GAME = "/startGame"
 export const JOIN_LOBBY = "http://localhost:3000/joinLobby?game=Apologies&lobbyId="
+
+export const GET_JOIN = (roomId: string)  => {
+  return `${API_STRING}/room/${roomId}/join`
+}
+
+export const GET_START = (roomId: string)  => {
+  return `${API_STRING}/room/${roomId}/startGame`
+}
 
 export const GET_GAMESTATS = (playerId: string)  => {
   return `${API_STRING}/games/Apologies/${playerId}/getStats`
 }
 
-export const GET_GAMESTATE = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/pullGameState`
+export const GET_GAMESTATE = (lobbyId: string)  => {
+  return `${API_STRING}/room/${lobbyId}/snapshot`
 }
 
-export const GET_GAMESTREAM= (playerId: string)  => {
-  return `${API_STRING}/${playerId}/gameViewStream`
+export const GET_GAMESTREAM= (lobbyId: string)  => {
+  return `${API_STRING}/room/${lobbyId}/stream`
 }
 
 export const DRAW_CARD = (playerId: string)  => {

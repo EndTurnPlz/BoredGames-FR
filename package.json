@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "eventsource-parser": "^3.0.3",
     "framer-motion": "^12.23.0",
     "fuse.js": "^7.1.0",
     "next": "15.3.4",
