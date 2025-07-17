@@ -77,11 +77,11 @@ export const GET_ROOMSTATE = (lobbyId: string)  => {
   return `${API_STRING}/room/${lobbyId}/snapshot`
 }
 
-export const GET_GAMESTATE = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/snapshot`
+export const GET_GAMESTATE = (lobbyId: string)  => {
+  return `${API_STRING}/games/Apologies/${"temp"}/${lobbyId}/snapshot`
 }
 
-export const GET_GAMESTREAM= (lobbyId: string, playerId: string)  => {
+export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
   return `${API_STRING}/room/${lobbyId}/stream?playerId=${playerId}`
 }
 

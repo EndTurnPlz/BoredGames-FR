@@ -445,6 +445,19 @@ export default function GameCanvas({
     }
   };
 
+  function phaseToInt(phase: string) {
+    if (phase === "P1Draw") return 0;
+    if (phase === "P1Move") return 1;
+    if (phase === "P2Draw") return 2;
+    if (phase === "P2Move") return 3;
+    if (phase === "P3Draw") return 4;
+    if (phase === "P3Move") return 5;
+    if (phase === "P4Draw") return 6;
+    if (phase === "P4Move") return 7;
+    if (phase === "End") return 9;
+    return 8;
+  }
+
   const fetchGameState = async (playerId: string, lobbyId: string) => {
     try {
       const res = await fetch(GET_ROOMSTATE(lobbyId));
@@ -455,44 +468,39 @@ export default function GameCanvas({
 
       const response = await res.json();
       console.log("reponse:", response);
-      const gameSnapshot = response.gameSnapshot
       if (response.state == "GameEnded") {
         setGameStarted(true);
       }
       setTurnOrder(response.players);
       setLocalTurnOrder(response.players);
-      if (response.state =="WaitingForPlayers") {
-        setView(response.players.length)
+      setView(response.viewNum)
+      if (response.state == "WaitingForPlayers") {
         return;
       }
-      const gameRes = await fetch(GET_GAMESTATE(playerId));
-      if (!gameRes.ok) {
-        throw new Error("Failed to pull game state");
+      
+      const gameSnapshot = response.gameSnapshot
+      console.log(gameSnapshot)
+      if (gameSnapshot.lastDrawnCard in numberDict && isPlayerTurn != "move") {
+        setTopCardPath(card_path(numberDict[gameSnapshot.lastDrawnCard]));
+        setCurrentCard(gameSnapshot.lastDrawnCard);
       }
-      const gameResponse = await gameRes.json();
-      console.log(gameResponse)
-      const gameState = gameResponse.gameState;
-      if (gameState.lastDrawnCard in numberDict && isPlayerTurn != "move") {
-        setTopCardPath(card_path(numberDict[gameState.lastDrawnCard]));
-        setCurrentCard(gameState.lastDrawnCard);
-      }
-      let pieces = gameState.pieces;
+      let pieces = gameSnapshot.pieces;
       const colorOrder = ["blue", "yellow", "green", "red"];
       const colorToPieces: Record<string, string[]> = {};
       for (let row = 0; row < pieces.length; row++) {
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row];
       }
-      const index = gameState.turnOrder.indexOf(username);
+      const index = gameSnapshot.turnOrder.indexOf(username);
       console.log(
         colorToIndex[playerColorRef.current],
         playerColorRef.current,
-        gameState.gamePhase
+        gameSnapshot.gameState
       );
-      setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, index));
+      setIsPlayerTurn(getTurnPhaseForPlayer(phaseToInt(gameSnapshot.gameState), index));
       console.log(
         "turn phase",
-        getTurnPhaseForPlayer(gameState.gamePhase, index),
+        getTurnPhaseForPlayer(phaseToInt(gameSnapshot.gameState), index),
         index
       );
       const old_players = players;
@@ -515,15 +523,15 @@ export default function GameCanvas({
         newLog.push(...prevLog);
 
         // Then generate the move string for current move
-        if (gameState.gamePhase != 8) {
+        if (phaseToInt(gameSnapshot.gameState) != 8) {
           const new_move = generateMoveString(
             gamePhase,
-            gameState.gamePhase,
+            gameSnapshot.gameState,
             response.players,
             old_players,
             new_players,
-            gameState.lastDrawnCard,
-            gameState.lastCompletedMove
+            gameSnapshot.lastDrawnCard,
+            gameSnapshot.lastCompletedMove
           );
           if (new_move.length > 0) {
             newLog.push(new_move);
@@ -534,22 +542,22 @@ export default function GameCanvas({
         return newLog;
       });
       setPlayers(new_players);
-      setGamePhase(gameState.gamePhase);
-      if (gameState.gamePhase == 9) {
+      setGamePhase(phaseToInt(gameSnapshot.gameState));
+      if (phaseToInt(gameSnapshot.gameState) == 9) {
         setGameOver(true);
         const statsRes = await fetchGameStats(playerId);
         if (!statsRes) {
           throw new Error("Failed to pull stats");
         }
-        const pieces = gameState.pieces;
+        const pieces = gameSnapshot.pieces;
         const rowAllEndWithH = pieces.findIndex(
           (row: string[]) =>
             row.length > 0 && row.every((str) => str.endsWith("_H"))
         );
-        setWinner(gameState.turnOrder[rowAllEndWithH]);
+        setWinner(gameSnapshot.turnOrder[rowAllEndWithH]);
       }
-      setPlayerConnectivity(gameState.playerConnectionStatus);
-      setView(gameState.currentView);
+      setPlayerConnectivity(gameSnapshot.playerConnectionStatus);
+      setView(response.viewNum);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
