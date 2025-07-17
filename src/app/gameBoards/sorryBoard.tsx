@@ -16,6 +16,7 @@ import {
   card_path,
   GET_GAMESTREAM,
   GET_GAMESTATS,
+  GET_ROOMSTATE,
 } from "@/utils/config";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -40,7 +41,6 @@ import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/gameUtils";
 import { GameStats } from "../boardGame/page";
 import ReconnectOverlay from "@/components/Overlays/ReconnectOverlay";
-import { createParser, EventSourceMessage } from "eventsource-parser";
 
 export type Piece = {
   x: number;
@@ -343,6 +343,7 @@ export default function GameCanvas({
     setLoading(true);
     try {
       let player_Id = localStorage.getItem("userId" + randomId) ?? "";
+      console.log(DRAW_CARD(player_Id))
       const res = await fetch(DRAW_CARD(player_Id), {
         method: "GET",
         headers: {
@@ -446,15 +447,15 @@ export default function GameCanvas({
 
   const fetchGameState = async (playerId: string, lobbyId: string) => {
     try {
-      const res = await fetch(GET_GAMESTATE(lobbyId));
+      const res = await fetch(GET_ROOMSTATE(lobbyId));
 
       if (!res.ok) {
         throw new Error("Failed to pull game state");
       }
 
       const response = await res.json();
-      const gameState = response.gameState
       console.log("reponse:", response);
+      const gameSnapshot = response.gameSnapshot
       if (response.state == "GameEnded") {
         setGameStarted(true);
       }
@@ -464,6 +465,13 @@ export default function GameCanvas({
         setView(response.players.length)
         return;
       }
+      const gameRes = await fetch(GET_GAMESTATE(playerId));
+      if (!gameRes.ok) {
+        throw new Error("Failed to pull game state");
+      }
+      const gameResponse = await gameRes.json();
+      console.log(gameResponse)
+      const gameState = gameResponse.gameState;
       if (gameState.lastDrawnCard in numberDict && isPlayerTurn != "move") {
         setTopCardPath(card_path(numberDict[gameState.lastDrawnCard]));
         setCurrentCard(gameState.lastDrawnCard);
@@ -548,61 +556,30 @@ export default function GameCanvas({
     }
   };
 
-  async function sseFetchStream(url: string, request_headers: Record<string, string>, abortSignal: AbortSignal) {
-    // Wrap in a loop for auto‑reconnect
-    while (true) {
-      const resp = await fetch(url, { 
-        method: "GET",
-        headers: request_headers
-      });
-      console.log(resp)
-      // HTTP errors
-      if (!resp.ok) throw new Error(`SSE request failed: ${resp.status}`);
-
-      // `eventsource-parser` turns raw bytes into JS events
-      const parser = createParser({
-        onEvent: (event: EventSourceMessage) => {
-          if (parseInt(event.data, 10) != viewRef.current) {
-            console.log(event.data, viewRef.current)
-            setPullGamestate(true);
-          }
-          console.log("Received:", event.data);
-        }
-      });
-
-      // Read the stream chunk‑by‑chunk
-      const reader = resp.body!.getReader();
-      const decoder = new TextDecoder();
-
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break; // server closed connection
-          parser.feed(decoder.decode(value, { stream: true }));
-        }
-      } catch (err) {
-        // network lost mid‑read etc.
-        console.warn("SSE read error:", err);
-      }
-
-      // Optional: back‑off delay before reconnect
-      await new Promise(r => setTimeout(r, 1000));
-    }
-  }
-
   useEffect(() => {
     if (devMode) return;
-    const controller = new AbortController();
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
-    console.log(GET_GAMESTREAM(playerId));
-    sseFetchStream(
-      GET_GAMESTREAM(lobbyId),
-      { "X-Player-Key": playerId },
-      controller.signal
-    )
-    return () => controller.abort(); // clean up on unmount
+    console.log(GET_GAMESTREAM(lobbyId, playerId));
+    const eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
+
+    eventSource.onmessage = (event) => {
+      if (event.data != viewRef.current) {
+        setPullGamestate(true);
+      }
+      console.log("Received:", event.data); // You will get the viewNum here
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE error:", err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close(); // Clean up when the component unmounts
+    };
   }, []);
+
 
   useEffect(() => {
     const cardPaths = Object.values(numberDict).map(

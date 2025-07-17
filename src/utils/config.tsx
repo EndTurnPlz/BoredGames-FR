@@ -73,20 +73,24 @@ export const GET_GAMESTATS = (playerId: string)  => {
   return `${API_STRING}/games/Apologies/${playerId}/getStats`
 }
 
-export const GET_GAMESTATE = (lobbyId: string)  => {
+export const GET_ROOMSTATE = (lobbyId: string)  => {
   return `${API_STRING}/room/${lobbyId}/snapshot`
 }
 
-export const GET_GAMESTREAM= (lobbyId: string)  => {
-  return `${API_STRING}/room/${lobbyId}/stream`
+export const GET_GAMESTATE = (playerId: string)  => {
+  return `${API_STRING}/games/Apologies/${playerId}/snapshot`
+}
+
+export const GET_GAMESTREAM= (lobbyId: string, playerId: string)  => {
+  return `${API_STRING}/room/${lobbyId}/stream?playerId=${playerId}`
 }
 
 export const DRAW_CARD = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/drawCard`
+  return `${API_STRING}/games/Apologies/${playerId}/draw`
 }
 
 export const MOVE_PAWN = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/movePawn`
+  return `${API_STRING}/games/Apologies/${playerId}/move`
 }
 
 export const indexToColor: Record<number, string> = {
