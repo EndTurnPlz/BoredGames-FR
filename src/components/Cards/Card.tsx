@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { cardW, cardH } from "@/utils/config";
 import Image from "next/image";
+import CardBack from "./CardBack";
 
 type CardButtonProps = {
   onClick: () => void;
@@ -24,9 +25,6 @@ const CardButton = ({
   const [displaySrc, setDisplaySrc] = useState(src);
   const [impactEffect, setImpactEffect] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
-
-  // Card back image - this would be your card back design
-  const cardBackImage = "/Cards/deck.png";
 
   useEffect(() => {
     if (!animate) {
@@ -134,15 +132,7 @@ const CardButton = ({
                 background: "transparent",
               }}
             >
-              <div className="relative w-full h-full bg-transparent">
-                <Image
-                  src={cardBackImage}
-                  alt="Card back"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
+              <CardBack />
             </motion.div>
 
             {/* Card Front (initially hidden, becomes visible during flip) */}
@@ -220,13 +210,17 @@ const CardButton = ({
         ) : (
           // Static card for non-animated state
           <div className="relative w-full h-full bg-transparent">
-            <Image
-              src={src}
-              alt="Card"
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              style={{ objectFit: "contain" }}
-            />
+            {src === "/Cards/deck.png" ? (
+              <CardBack />
+            ) : (
+              <Image
+                src={src}
+                alt="Card"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                style={{ objectFit: "contain" }}
+              />
+            )}
           </div>
         )}
       </div>
