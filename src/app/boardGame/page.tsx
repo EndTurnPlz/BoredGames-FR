@@ -20,10 +20,10 @@ import {
 } from "@/utils/config";
 
 export type GameStats = {
-  movesMade: number[]
-  pawnsKilled: number[]
-  gameTimeElapsed: number
-}
+  movesMade: number[];
+  pawnsKilled: number[];
+  gameTimeElapsed: number;
+};
 
 export default function BoardGamePage() {
   const searchParams = useSearchParams();
@@ -46,9 +46,9 @@ export default function BoardGamePage() {
   const [playerId, setPlayerId] = useState("");
   const [copied, setCopied] = useState(false);
   const [shareLink, setShareLink] = useState("");
-  const [moveLog, setMoveLog] = useState<string[]>([])
-  const [gameStats, setGameStats] = useState<GameStats>()
-  const [winner, setWinner] = useState<string>("")
+  const [moveLog, setMoveLog] = useState<string[]>([]);
+  const [gameStats, setGameStats] = useState<GameStats>();
+  const [winner, setWinner] = useState<string>("");
 
   useEffect(() => {
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -84,10 +84,13 @@ export default function BoardGamePage() {
     }
   };
 
-  const GameComponent = gameType === "Apologies" ? BoardCanvas : () => <p>Unknown game type: {gameType}</p>;
+  const GameComponent =
+    gameType === "Apologies"
+      ? BoardCanvas
+      : () => <p>Unknown game type: {gameType}</p>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-blue-800 to-slate-600">
       <Header />
       <main className="flex h-screen pt-20 px-4 gap-4">
         <GameSidebarLeft
