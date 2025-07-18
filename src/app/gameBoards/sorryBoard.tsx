@@ -458,6 +458,85 @@ export default function GameCanvas({
     return 8;
   }
 
+  async function setGameWinner(phase: number, playerId: string, pieces: string[][], turnOrder: string[]) {
+    setGamePhase(phase);
+    if (gamePhase == 9) {
+      setGameOver(true);
+      const statsRes = await fetchGameStats(playerId);
+      if (!statsRes) {
+        throw new Error("Failed to pull stats");
+      }
+      const rowAllEndWithH = pieces.findIndex(
+        (row: string[]) =>
+          row.length > 0 && row.every((str) => str.endsWith("_H"))
+      );
+      setWinner(turnOrder[rowAllEndWithH]);
+    }
+  }
+
+  function getNewPlayers(pieces:string[][]) {
+      const colorOrder = ["blue", "yellow", "green", "red"];
+      const colorToPieces: Record<string, string[]> = {};
+      for (let row = 0; row < pieces.length; row++) {
+        const color = colorOrder[row];
+        colorToPieces[color] = pieces[row];
+      }
+      return applyGameState(colorToPieces)
+  }
+
+  function getIsPlayerTurn(turnOrder: string[], phase: string, username: string | null) {
+    const index = turnOrder.indexOf(username ?? "");
+
+    setIsPlayerTurn(getTurnPhaseForPlayer(phaseToInt(phase), index));
+    console.log(
+      "turn phase",
+      getTurnPhaseForPlayer(phaseToInt(phase), index),
+      index
+    );
+  }
+
+  function handleRoomState(response: any): boolean {
+    setTurnOrder(response.players);
+    setLocalTurnOrder(response.players);
+    setView(response.viewNum)
+    if (response.state == "WaitingForPlayers") {
+      return false;
+    } else if (response.state == "GameInProgress") {
+      setGameStarted(true);
+    }
+    return true
+  }
+
+  function handleNewMove(prevLog: string[], old_players: Player[], new_players: Player[], gameSnapshot: any, response: any): string[] {
+    let newLog = [];
+    newLog.push(...prevLog);
+
+    // Then generate the move string for current move
+    if (phaseToInt(gameSnapshot.gameState) != 8) {
+      const new_move = generateMoveString(
+        gamePhase,
+        gameSnapshot.gameState,
+        response.players,
+        old_players,
+        new_players,
+        gameSnapshot.lastDrawnCard,
+        gameSnapshot.lastCompletedMove
+      );
+      if (new_move.length > 0) {
+        newLog.push(new_move);
+      }
+    }
+    // Add new move only if non-empty and not duplicate
+    newLog = newLog.filter((msg) => !msg.includes("undefined"));
+    return newLog
+  }
+
+  function getCardPaths(gameSnapshot: any) {
+    if (gameSnapshot.lastDrawnCard in numberDict && isPlayerTurn != "move") {
+        setTopCardPath(card_path(numberDict[gameSnapshot.lastDrawnCard]));
+        setCurrentCard(gameSnapshot.lastDrawnCard);
+      }
+  }
   const fetchGameState = async (playerId: string, lobbyId: string) => {
     try {
       const res = await fetch(GET_ROOMSTATE(lobbyId));
@@ -468,94 +547,28 @@ export default function GameCanvas({
 
       const response = await res.json();
       console.log("reponse:", response);
-      if (response.state == "GameEnded") {
-        setGameStarted(true);
-      }
-      setTurnOrder(response.players);
-      setLocalTurnOrder(response.players);
-      setView(response.viewNum)
-      if (response.state == "WaitingForPlayers") {
+
+      if (!handleRoomState(response)) {
+        console.log("hello")
         return;
       }
       
       const gameSnapshot = response.gameSnapshot
       console.log(gameSnapshot)
-      if (gameSnapshot.lastDrawnCard in numberDict && isPlayerTurn != "move") {
-        setTopCardPath(card_path(numberDict[gameSnapshot.lastDrawnCard]));
-        setCurrentCard(gameSnapshot.lastDrawnCard);
-      }
-      let pieces = gameSnapshot.pieces;
-      const colorOrder = ["blue", "yellow", "green", "red"];
-      const colorToPieces: Record<string, string[]> = {};
-      for (let row = 0; row < pieces.length; row++) {
-        const color = colorOrder[row];
-        colorToPieces[color] = pieces[row];
-      }
-      const index = gameSnapshot.turnOrder.indexOf(username);
-      console.log(
-        colorToIndex[playerColorRef.current],
-        playerColorRef.current,
-        gameSnapshot.gameState
-      );
-      setIsPlayerTurn(getTurnPhaseForPlayer(phaseToInt(gameSnapshot.gameState), index));
-      console.log(
-        "turn phase",
-        getTurnPhaseForPlayer(phaseToInt(gameSnapshot.gameState), index),
-        index
-      );
-      const old_players = players;
-      const new_players = applyGameState(colorToPieces);
+      getCardPaths(gameSnapshot)
+
+      const old_players = players
+      const new_players = getNewPlayers(gameSnapshot.pieces)
+      getIsPlayerTurn(gameSnapshot.turnOrder, gameSnapshot.gameState, username)
+
       setMoveLog((prevLog) => {
-        prevLog = prevLog.filter(
-          (msg) =>
-            !msg.includes("joined the game") &&
-            !msg.includes("started the game")
-        );
-        let newLog = [];
-
-        // // Add join messages for the first 4 players from localTurnOrder if not added yet
-        // for (let i = 0; i < gameState.turnOrder.length; i++) {
-        //   newLog.push(`${gameState.turnOrder[i]} joined the game`);
-        // }
-        // if (gameState.gamePhase != 8) {
-        //   newLog.push(`${gameState.turnOrder[0]} started the game`);
-        // }
-        newLog.push(...prevLog);
-
-        // Then generate the move string for current move
-        if (phaseToInt(gameSnapshot.gameState) != 8) {
-          const new_move = generateMoveString(
-            gamePhase,
-            gameSnapshot.gameState,
-            response.players,
-            old_players,
-            new_players,
-            gameSnapshot.lastDrawnCard,
-            gameSnapshot.lastCompletedMove
-          );
-          if (new_move.length > 0) {
-            newLog.push(new_move);
-          }
-        }
-        // Add new move only if non-empty and not duplicate
-        newLog = newLog.filter((msg) => !msg.includes("undefined"));
-        return newLog;
+          return handleNewMove(prevLog, old_players, new_players, gameSnapshot, response)
       });
-      setPlayers(new_players);
-      setGamePhase(phaseToInt(gameSnapshot.gameState));
-      if (phaseToInt(gameSnapshot.gameState) == 9) {
-        setGameOver(true);
-        const statsRes = await fetchGameStats(playerId);
-        if (!statsRes) {
-          throw new Error("Failed to pull stats");
-        }
-        const pieces = gameSnapshot.pieces;
-        const rowAllEndWithH = pieces.findIndex(
-          (row: string[]) =>
-            row.length > 0 && row.every((str) => str.endsWith("_H"))
-        );
-        setWinner(gameSnapshot.turnOrder[rowAllEndWithH]);
-      }
+
+      const gamePhase = phaseToInt(gameSnapshot.gameState)
+
+      await setGameWinner(gamePhase, playerId, gameSnapshot.pieces, gameSnapshot.turnOrder)
+      setPlayers(new_players)
       setPlayerConnectivity(gameSnapshot.playerConnectionStatus);
       setView(response.viewNum);
     } catch (err) {

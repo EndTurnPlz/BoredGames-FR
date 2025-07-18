@@ -70,7 +70,7 @@ export const GET_START = (roomId: string)  => {
 }
 
 export const GET_GAMESTATS = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/getStats`
+  return `${API_STRING}/games/Apologies/${playerId}/Stats`
 }
 
 export const GET_ROOMSTATE = (lobbyId: string)  => {
