@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apologies! Card 8 Design</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      .card {
+        width: 240px;
+        height: 360px;
+        background: linear-gradient(
+          135deg,
+          #2c5aa0 0%,
+          #1e3a8a 25%,
+          #7c2d12 50%,
+          #991b1b 75%,
+          #7c2d12 100%
+        );
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        border: 3px solid #fbbf24;
+      }
+
+      /* Background pattern */
+      .background-pattern {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0.15;
+        background-image: radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 255, 255, 0.3) 2px,
+            transparent 2px
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(255, 255, 255, 0.3) 2px,
+            transparent 2px
+          ),
+          radial-gradient(
+            circle at 40% 60%,
+            rgba(255, 255, 255, 0.2) 1px,
+            transparent 1px
+          ),
+          radial-gradient(
+            circle at 60% 40%,
+            rgba(255, 255, 255, 0.2) 1px,
+            transparent 1px
+          ),
+          repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 15px,
+            rgba(255, 255, 255, 0.1) 15px,
+            rgba(255, 255, 255, 0.1) 16px
+          );
+        background-size: 60px 60px, 80px 80px, 40px 40px, 50px 50px, 30px 30px;
+      }
+
+      /* Top left corner number */
+      .corner-number-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50px;
+        height: 50px;
+        background: #2c2c2c;
+        clip-path: polygon(0 0, 100% 0, 0 100%);
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 8px 0 0 8px;
+        box-sizing: border-box;
+      }
+
+      .corner-number-top .number {
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        line-height: 1;
+      }
+
+      /* Bottom right corner number */
+      .corner-number-bottom {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 50px;
+        height: 50px;
+        background: #2c2c2c;
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 0 8px 8px 0;
+        box-sizing: border-box;
+      }
+
+      .corner-number-bottom .number {
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        line-height: 1;
+        transform: rotate(180deg);
+      }
+
+      /* Main text */
+      .main-text {
+        position: absolute;
+        top: 40px;
+        left: 20px;
+        right: 20px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        color: #ffffff;
+        line-height: 1.2;
+        z-index: 10;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      }
+
+      /* Central circle design */
+      .circle-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 160px;
+        height: 160px;
+      }
+
+      /* Outer colored ring */
+      .colored-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 0deg,
+          #ff4757 0deg 90deg,
+          #32cd32 90deg 180deg,
+          #4285f4 180deg 270deg,
+          #ffdd59 270deg 360deg
+        );
+        animation: rotate 4s linear infinite;
+      }
+
+      /* Rotation animation */
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Inner dark circle */
+      .inner-circle {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: calc(100% - 16px);
+        height: calc(100% - 16px);
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at center,
+          #4a4a4a 0%,
+          #2c2c2c 30%,
+          #1a1a1a 70%,
+          #000 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      /* Center number */
+      .center-number {
+        color: white;
+        font-size: 64px;
+        font-weight: bold;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        z-index: 2;
+      }
+
+      /* Bottom text */
+      .bottom-text {
+        position: absolute;
+        bottom: 40px;
+        left: 20px;
+        right: 20px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        color: #ffffff;
+        line-height: 1.2;
+        transform: rotate(180deg);
+        z-index: 10;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      }
+
+      /* Subtle glow effect */
+      .glow-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(255, 255, 255, 0.2) 0%,
+          rgba(255, 255, 255, 0.1) 30%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      /* Ring segments with black borders */
+      .ring-segment {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid #2c2c2c;
+        box-sizing: border-box;
+      }
+
+      /* Inner ring border */
+      .inner-ring-border {
+        position: absolute;
+        width: calc(100% - 16px);
+        height: calc(100% - 16px);
+        border-radius: 50%;
+        border: 3px solid #2c2c2c;
+        top: 8px;
+        left: 8px;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="background-pattern"></div>
+      <div class="glow-overlay"></div>
+
+      <!-- Top left corner number -->
+      <div class="corner-number-top">
+        <div class="number">8</div>
+      </div>
+
+      <!-- Bottom right corner number -->
+      <div class="corner-number-bottom">
+        <div class="number">8</div>
+      </div>
+
+      <!-- Main instruction text -->
+      <div class="main-text">Move a pawn forward<br />eight spaces.</div>
+
+      <!-- Central circle design -->
+      <div class="circle-container">
+        <div class="colored-ring"></div>
+        <div class="inner-ring-border"></div>
+        <div class="inner-circle">
+          <div class="center-number">8</div>
+        </div>
+      </div>
+
+      <!-- Bottom text (rotated) -->
+      <div class="bottom-text">Move a pawn forward<br />eight spaces.</div>
+    </div>
+  </body>
+</html>
