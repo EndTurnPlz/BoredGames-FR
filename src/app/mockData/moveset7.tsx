@@ -4,7 +4,7 @@ export const mockCardResponse7 = {
     "movesets": [
         {
             "pawn": "d_4",
-            "move": [
+            "opts": [
                 {
                     "from": "d_4",
                     "to": "d_11",
@@ -23,7 +23,7 @@ export const mockCardResponse7 = {
         },
          {
             "pawn": "d_3",
-            "move": [
+            "opts": [
                 {
                     "from": "d_3",
                     "to": "d_8",
@@ -35,7 +35,7 @@ export const mockCardResponse7 = {
         },
          {
             "pawn": "d_5",
-            "move": [
+            "opts": [
                 {
                     "from": "d_5",
                     "to": "d_10",

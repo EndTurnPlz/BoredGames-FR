@@ -50,7 +50,7 @@ export type Piece = {
 };
 export type MoveSet = {
   pawn: string;
-  move: Move[];
+  opts: Move[];
 };
 export type Move = {
   from: string;
@@ -323,7 +323,7 @@ export default function GameCanvas({
           const matching = moveRef.current.possibleMoves.find(
             (m) => m.pawn === piece.id
           );
-          const canBeSecond = matching?.move?.find(
+          const canBeSecond = matching?.opts?.find(
             (m) => findPath(m.from, m.to).length - 1 === target
           );
           if (canBeSecond) {
@@ -746,7 +746,7 @@ export default function GameCanvas({
     setMove((prev) => ({
       ...prev,
       selectedIdx: idx,
-      highlightedTiles: matching?.move ?? [],
+      highlightedTiles: matching?.opts ?? [],
       effect: null,
       effectPopup: null,
       destination: null,
