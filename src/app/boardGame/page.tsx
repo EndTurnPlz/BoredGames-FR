@@ -72,9 +72,9 @@ export default function BoardGamePage() {
 
   const handleStart = async () => {
     try {
-      const lobbyId = localStorage.getItem("lobbyId");
+      const lobbyId = localStorage.getItem("lobbyId")  ?? "";
       const playerId = localStorage.getItem("userId" + randomId) ?? "";
-      const res = await fetch(GET_START(lobbyId ?? ""), {
+      const res = await fetch(GET_START(lobbyId), {
         method: "POST",
         headers: 
         { 

@@ -66,31 +66,27 @@ export const GET_JOIN = (roomId: string)  => {
 }
 
 export const GET_START = (roomId: string)  => {
-  return `${API_STRING}/room/${roomId}/startGame`
+  return `${API_STRING}/game/${roomId}/start`
 }
 
-export const GET_GAMESTATS = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/Stats`
+export const GET_GAMESTATS = (roomId: string)  => {
+  return `${API_STRING}/game/${roomId}/action?action=Stats`
 }
 
 export const GET_ROOMSTATE = (lobbyId: string)  => {
   return `${API_STRING}/room/${lobbyId}/snapshot`
 }
 
-export const GET_GAMESTATE = (lobbyId: string)  => {
-  return `${API_STRING}/games/Apologies/${"temp"}/${lobbyId}/snapshot`
-}
-
 export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
   return `${API_STRING}/room/${lobbyId}/stream?playerId=${playerId}`
 }
 
-export const DRAW_CARD = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/draw`
+export const DRAW_CARD = (roomId: string)  => {
+  return `${API_STRING}/game/${roomId}/action?action=draw`
 }
 
-export const MOVE_PAWN = (playerId: string)  => {
-  return `${API_STRING}/games/Apologies/${playerId}/move`
+export const MOVE_PAWN = (roomId: string)  => {
+  return `${API_STRING}/game/Apologies/${roomId}/action?action=move`
 }
 
 export const indexToColor: Record<number, string> = {

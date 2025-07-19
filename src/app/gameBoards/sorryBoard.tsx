@@ -8,7 +8,6 @@ import {
   canvasHeight,
   numberDict,
   colorToAngleDict,
-  GET_GAMESTATE,
   DRAW_CARD,
   MOVE_PAWN,
   colorToIndex,
@@ -214,6 +213,7 @@ export default function GameCanvas({
       }
       try {
         let player_Id = localStorage.getItem("userId" + randomId) ?? "";
+        let lobbyId = localStorage.getItem("lobbyId") ?? "";
         const body = secondMoveRef.current.destination
           ? {
               Move: {
@@ -236,10 +236,11 @@ export default function GameCanvas({
             };
         console.log(body);
 
-        const res = await fetch(MOVE_PAWN(player_Id), {
+        const res = await fetch(MOVE_PAWN(lobbyId), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Player-Key": player_Id
           },
           body: JSON.stringify(body),
         });
@@ -343,11 +344,13 @@ export default function GameCanvas({
     setLoading(true);
     try {
       let player_Id = localStorage.getItem("userId" + randomId) ?? "";
+      let lobbyId = localStorage.getItem("lobbyId") ?? "";
       console.log(DRAW_CARD(player_Id))
-      const res = await fetch(DRAW_CARD(player_Id), {
-        method: "GET",
+      const res = await fetch(DRAW_CARD(lobbyId), {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Player-Key": player_Id
         },
       });
       const response = await res.json();
@@ -428,9 +431,14 @@ export default function GameCanvas({
     }
   }, [playerColor]);
 
-  const fetchGameStats = async (playerId: string) => {
+  const fetchGameStats = async (playerId: string, lobbyId: string) => {
     try {
-      const res = await fetch(GET_GAMESTATS(playerId));
+      const res = await fetch(GET_GAMESTATS(lobbyId), {
+        method: "POST",
+        headers: {
+          "X-Player-Key": playerId
+        }
+      });
 
       if (!res.ok) {
         throw new Error("Failed to pull game state");
@@ -458,11 +466,11 @@ export default function GameCanvas({
     return 8;
   }
 
-  async function setGameWinner(phase: number, playerId: string, pieces: string[][], turnOrder: string[]) {
+  async function setGameWinner(phase: number, playerId: string, pieces: string[][], turnOrder: string[], lobbyId: string) {
     setGamePhase(phase);
     if (gamePhase == 9) {
       setGameOver(true);
-      const statsRes = await fetchGameStats(playerId);
+      const statsRes = await fetchGameStats(playerId, lobbyId);
       if (!statsRes) {
         throw new Error("Failed to pull stats");
       }
@@ -498,8 +506,8 @@ export default function GameCanvas({
   function handleRoomState(response: any): boolean {
     setTurnOrder(response.players);
     setLocalTurnOrder(response.players);
-    setView(response.viewNum)
     if (response.state == "WaitingForPlayers") {
+      setView(response.players.length)
       return false;
     } else if (response.state == "GameInProgress") {
       setGameStarted(true);
@@ -567,10 +575,10 @@ export default function GameCanvas({
 
       const gamePhase = phaseToInt(gameSnapshot.gameState)
 
-      await setGameWinner(gamePhase, playerId, gameSnapshot.pieces, gameSnapshot.turnOrder)
+      await setGameWinner(gamePhase, playerId, gameSnapshot.pieces, gameSnapshot.turnOrder, lobbyId)
       setPlayers(new_players)
       setPlayerConnectivity(gameSnapshot.playerConnectionStatus);
-      setView(response.viewNum);
+      setView((prev) => { return Math.max(prev + 1, gameSnapshot.viewNum) });
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
@@ -585,10 +593,10 @@ export default function GameCanvas({
     const eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
 
     eventSource.onmessage = (event) => {
-      if (event.data != viewRef.current) {
+      if (event.data != viewRef.current && !pullGameState) {
         setPullGamestate(true);
       }
-      console.log("Received:", event.data); // You will get the viewNum here
+      console.log("Received:", event.data, viewRef.current); // You will get the viewNum here
     };
 
     eventSource.onerror = (err) => {
