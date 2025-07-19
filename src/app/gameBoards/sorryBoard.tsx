@@ -400,6 +400,8 @@ export default function GameCanvas({
             selectedIdx: idx,
             effectPopup: null,
           });
+          const distance = findPath(move.from, move.to).length - 1;
+          setCurrentDistance(distance)
         }
       } else {
         setMove({
@@ -798,8 +800,7 @@ export default function GameCanvas({
             selected={
               move.destination === null ||
               (currentCard === 7 &&
-                currentDistance != 7 &&
-                move.possibleMoves.length > 1)
+                currentDistance != 7)
             }
           />
           {move.effectPopup && move.possibleEffects.length > 1 && (
