@@ -216,7 +216,7 @@ export default function GameCanvas({
         let lobbyId = localStorage.getItem("lobbyId") ?? "";
         const body = secondMoveRef.current.destination
           ? {
-              "$type": "movepawnargs",
+              "$action": "move",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
@@ -229,7 +229,7 @@ export default function GameCanvas({
               },
             }
           : {
-             "$type": "movepawnargs",
+              "$action": "move",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
@@ -348,13 +348,18 @@ export default function GameCanvas({
       let player_Id = localStorage.getItem("userId" + randomId) ?? "";
       let lobbyId = localStorage.getItem("lobbyId") ?? "";
       console.log(DRAW_CARD(player_Id))
+      const body = {
+        "$action": "draw"
+      }
       const res = await fetch(DRAW_CARD(lobbyId), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Player-Key": player_Id
         },
+        body: JSON.stringify(body)
       });
+
       const response = await res.json();
       if (!res.ok) {
         throw Error("failed to draw card");
@@ -362,9 +367,9 @@ export default function GameCanvas({
       console.log(response);
       if (
         response.movesets.length == 1 &&
-        response.movesets[0].move.length === 1
+        response.movesets[0].opts.length === 1
       ) {
-        const move = response.movesets[0].move[0];
+        const move = response.movesets[0].opts[0];
         const idx = drawnPieces.findIndex((p) => p.id === move.from);
         if (move.effects.length > 1) {
           // Calculate popup position near tile
@@ -405,7 +410,7 @@ export default function GameCanvas({
       localStorage.setItem("drawCard", JSON.stringify(response));
       setTopCardPath(card_path(numberDict[response.cardDrawn]));
       setCurrentCard(response.cardDrawn);
-      setView(response.view + 5);
+      setView(response.view);
       setLoading(false);
       return true;
     } catch (err) {
@@ -435,11 +440,15 @@ export default function GameCanvas({
 
   const fetchGameStats = async (playerId: string, lobbyId: string) => {
     try {
+       const body = {
+        "$action": "stats"
+      }
       const res = await fetch(GET_GAMESTATS(lobbyId), {
         method: "POST",
         headers: {
           "X-Player-Key": playerId
-        }
+        },
+        body: JSON.stringify(body)
       });
 
       if (!res.ok) {
@@ -580,7 +589,7 @@ export default function GameCanvas({
       await setGameWinner(gamePhase, playerId, gameSnapshot.pieces, gameSnapshot.turnOrder, lobbyId)
       setPlayers(new_players)
       setPlayerConnectivity(gameSnapshot.playerConnectionStatus);
-      setView(gameSnapshot.viewNum + 5);
+      setView(gameSnapshot.viewNum);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
