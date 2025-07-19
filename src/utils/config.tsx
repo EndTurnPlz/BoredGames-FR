@@ -70,7 +70,7 @@ export const GET_START = (roomId: string)  => {
 }
 
 export const GET_GAMESTATS = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action?action=Stats`
+  return `${API_STRING}/game/${roomId}/action?actionType=Stats`
 }
 
 export const GET_ROOMSTATE = (lobbyId: string)  => {
@@ -82,11 +82,11 @@ export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
 }
 
 export const DRAW_CARD = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action?action=draw`
+  return `${API_STRING}/game/${roomId}/action?actionType=Draw`
 }
 
 export const MOVE_PAWN = (roomId: string)  => {
-  return `${API_STRING}/game/Apologies/${roomId}/action?action=move`
+  return `${API_STRING}/game/${roomId}/action?actionType=Move`
 }
 
 export const indexToColor: Record<number, string> = {

@@ -403,7 +403,7 @@ export default function GameCanvas({
       localStorage.setItem("drawCard", JSON.stringify(response));
       setTopCardPath(card_path(numberDict[response.cardDrawn]));
       setCurrentCard(response.cardDrawn);
-      setView(response.view);
+      setView(response.view + 5);
       setLoading(false);
       return true;
     } catch (err) {
@@ -578,7 +578,7 @@ export default function GameCanvas({
       await setGameWinner(gamePhase, playerId, gameSnapshot.pieces, gameSnapshot.turnOrder, lobbyId)
       setPlayers(new_players)
       setPlayerConnectivity(gameSnapshot.playerConnectionStatus);
-      setView((prev) => { return Math.max(prev + 1, gameSnapshot.viewNum) });
+      setView(gameSnapshot.viewNum + 5);
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
