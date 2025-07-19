@@ -216,6 +216,7 @@ export default function GameCanvas({
         let lobbyId = localStorage.getItem("lobbyId") ?? "";
         const body = secondMoveRef.current.destination
           ? {
+              "$type": "movepawnargs",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
@@ -228,6 +229,7 @@ export default function GameCanvas({
               },
             }
           : {
+             "$type": "movepawnargs",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
