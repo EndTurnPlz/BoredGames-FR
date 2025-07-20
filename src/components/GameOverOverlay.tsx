@@ -21,7 +21,7 @@ export default function GameOverOverlay({
 
   const formatTicks = (ticks: number): string => {
     console.log(gameTimeElapsed, gameStats)
-    const totalSeconds = Math.floor(ticks / 10_000_000);
+    const totalSeconds = ticks;
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
