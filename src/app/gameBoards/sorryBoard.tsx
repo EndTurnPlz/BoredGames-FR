@@ -430,7 +430,7 @@ export default function GameCanvas({
           ...secondMoveRef.current,
           selectedIdx: secondIdx,
           destination: splitMove.to,
-          effect: move.effects[0],
+          effect: splitMove.effects[0],
         });
         setCurrentDistance(7)
 
@@ -474,9 +474,11 @@ export default function GameCanvas({
        const body = {
         "$action": "stats"
       }
+      console.log(GET_GAMESTATS(lobbyId))
       const res = await fetch(GET_GAMESTATS(lobbyId), {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "X-Player-Key": playerId
         },
         body: JSON.stringify(body)
@@ -510,8 +512,10 @@ export default function GameCanvas({
 
   async function setGameWinner(phase: number, playerId: string, pieces: string[][], turnOrder: string[], lobbyId: string) {
     setGamePhase(phase);
+    console.log("This is phase:", phase)
     if (gamePhase == 9) {
       setGameOver(true);
+      console.log("fetching stats")
       const statsRes = await fetchGameStats(playerId, lobbyId);
       if (!statsRes) {
         throw new Error("Failed to pull stats");
@@ -520,6 +524,7 @@ export default function GameCanvas({
         (row: string[]) =>
           row.length > 0 && row.every((str) => str.endsWith("_H"))
       );
+      console.log(rowAllEndWithH, statsRes)
       setWinner(turnOrder[rowAllEndWithH]);
     }
   }
@@ -583,8 +588,10 @@ export default function GameCanvas({
 
   function getCardPaths(gameSnapshot: any) {
     let card_string = gameSnapshot.lastDrawnCard.toLowerCase()
-    setTopCardPath(card_path(card_string));
-    setCurrentCard(stringDict[card_string]);
+    if (card_string in stringDict) {
+      setTopCardPath(card_path(card_string));
+      setCurrentCard(stringDict[card_string]);
+    }
   }
   const fetchGameState = async (playerId: string, lobbyId: string) => {
     try {
@@ -664,10 +671,13 @@ export default function GameCanvas({
   useEffect(() => {
     let userId = localStorage.getItem("userId" + randomId) ?? "";
     let lobbyId = localStorage.getItem("lobbyId") ?? "";
-    if (pullGameState) {
-      fetchGameState(userId, lobbyId);
+    let updates = async () => {
+      if (pullGameState) {
+        await fetchGameState(userId, lobbyId);
+      }
+      setPullGamestate(false);
     }
-    setPullGamestate(false);
+    updates();
   }, [pullGameState]);
 
   useEffect(() => {
