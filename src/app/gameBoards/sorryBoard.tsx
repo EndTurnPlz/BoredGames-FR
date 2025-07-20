@@ -410,9 +410,6 @@ export default function GameCanvas({
         });
       }
       localStorage.setItem("drawCard", JSON.stringify(response));
-      setTopCardPath(card_path(numberDict[response.cardDrawn]));
-      setCurrentCard(response.cardDrawn);
-      setView(response.view);
       setLoading(false);
       return true;
     } catch (err) {
@@ -520,7 +517,7 @@ export default function GameCanvas({
     setTurnOrder(response.players);
     setLocalTurnOrder(response.players);
     if (response.state == "WaitingForPlayers") {
-      setView(response.players.length)
+      setView(response.viewNum)
       return false;
     } else if (response.state == "GameInProgress") {
       setGameStarted(true);
@@ -553,10 +550,8 @@ export default function GameCanvas({
   }
 
   function getCardPaths(gameSnapshot: any) {
-    if (gameSnapshot.lastDrawnCard in numberDict && isPlayerTurn != "move") {
-        setTopCardPath(card_path(numberDict[gameSnapshot.lastDrawnCard]));
-        setCurrentCard(gameSnapshot.lastDrawnCard);
-      }
+    setTopCardPath(card_path(gameSnapshot.lastDrawnCard.toLowerCase()));
+    setCurrentCard(gameSnapshot.lastDrawnCard);
   }
   const fetchGameState = async (playerId: string, lobbyId: string) => {
     try {
@@ -591,7 +586,7 @@ export default function GameCanvas({
       await setGameWinner(gamePhase, playerId, gameSnapshot.pieces, gameSnapshot.turnOrder, lobbyId)
       setPlayers(new_players)
       setPlayerConnectivity(gameSnapshot.playerConnectionStatus);
-      setView(gameSnapshot.viewNum);
+      setView(response.viewNum)
     } catch (err) {
       console.error("Error fetching game state:", err);
       return null;
