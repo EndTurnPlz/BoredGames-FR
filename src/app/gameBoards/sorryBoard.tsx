@@ -512,8 +512,8 @@ export default function GameCanvas({
 
   async function setGameWinner(phase: number, playerId: string, pieces: string[][], turnOrder: string[], lobbyId: string) {
     setGamePhase(phase);
-    console.log("This is phase:", phase)
-    if (gamePhase == 9) {
+    console.log("This is phase:", phase, gamePhase == 9)
+    if (phase == 9) {
       setGameOver(true);
       console.log("fetching stats")
       const statsRes = await fetchGameStats(playerId, lobbyId);
