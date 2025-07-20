@@ -20,6 +20,21 @@ export const numberDict: { [key: number]: string } = {
   12: "twelve"
 };
 
+export const stringDict: { [key: string]: number } = {
+  "apologies": 0,
+  "one": 1,
+  "two": 2,
+  "three": 3,
+  "four": 4,
+  "five": 5,
+  "seven": 7,
+  "eight": 8,
+  "ten": 10,
+  "eleven": 11,
+  "twelve": 12
+};
+
+
 export const colorToAngleDict: { [key: string]: number } = {
     "yellow": 0,
     "green": 270,

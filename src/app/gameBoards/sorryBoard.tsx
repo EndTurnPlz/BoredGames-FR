@@ -16,6 +16,7 @@ import {
   GET_GAMESTREAM,
   GET_GAMESTATS,
   GET_ROOMSTATE,
+  stringDict,
 } from "@/utils/config";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -303,6 +304,7 @@ export default function GameCanvas({
         effectPopup: null,
       });
     }
+    console.log("current Card", currentCardRef.current)
     if (currentCardRef.current === 7) {
       const current = findPath(tile.from, tile.to).length - 1;
       setCurrentDistance(current);
@@ -403,6 +405,35 @@ export default function GameCanvas({
           const distance = findPath(move.from, move.to).length - 1;
           setCurrentDistance(distance)
         }
+      } else if (
+        response.cardDrawn == 7 &&
+        response.movesets.length == 2 &&
+        response.movesets[0].opts.length === 1 && 
+        response.movesets[1].opts.length === 1 &&
+        response.movesets[0].opts[0].effects[0] >=5
+      ) {
+        const move = response.movesets[0].opts[0];
+        const splitMove = response.movesets[1].opts[0];
+
+        const idx = drawnPieces.findIndex((p) => p.id === move.from);
+        const secondIdx = drawnPieces.findIndex((p) => p.id === splitMove.from);
+        setMove({
+          ...moveRef.current,
+          destination: move.to,
+          effect: move.effects[0],
+          highlightedTiles: [move],
+          possibleMoves: response.movesets,
+          selectedIdx: idx,
+          effectPopup: null,
+        });
+        setSecondMove({
+          ...secondMoveRef.current,
+          selectedIdx: secondIdx,
+          destination: splitMove.to,
+          effect: move.effects[0],
+        });
+        setCurrentDistance(7)
+
       } else {
         setMove({
           ...moveRef.current,
@@ -410,6 +441,7 @@ export default function GameCanvas({
         });
       }
       localStorage.setItem("drawCard", JSON.stringify(response));
+      setCurrentCard(response.cardDrawn)
       setLoading(false);
       return true;
     } catch (err) {
@@ -550,8 +582,9 @@ export default function GameCanvas({
   }
 
   function getCardPaths(gameSnapshot: any) {
-    setTopCardPath(card_path(gameSnapshot.lastDrawnCard.toLowerCase()));
-    setCurrentCard(gameSnapshot.lastDrawnCard);
+    let card_string = gameSnapshot.lastDrawnCard.toLowerCase()
+    setTopCardPath(card_path(card_string));
+    setCurrentCard(stringDict[card_string]);
   }
   const fetchGameState = async (playerId: string, lobbyId: string) => {
     try {
@@ -749,6 +782,12 @@ export default function GameCanvas({
       destination: null,
       possibleEffects: [],
     }));
+    setSecondMove({
+      possibleSecondPawns: [],
+      selectedIdx: -1,
+      destination: null,
+      effect: null,
+    });
   };
   return (
     <div className="flex flex-col items-center">
