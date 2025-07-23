@@ -1,3 +1,4 @@
+import { GameStats } from "@/app/boardGame/page";
 import { Part, Request } from "./gameUtils";
 
 export class GameResponseAdapter {
@@ -55,6 +56,10 @@ export class GameResponseAdapter {
 
   get snapshotType(): string {
     return this.snapshot["$type"] ?? "";
+  }
+
+  get gameStats(): GameStats {
+    return this.snapshot.GameStats
   }
 }
 
@@ -125,5 +130,38 @@ export class RequestAdapter {
 
   getMove(): Part {
     return this.movePart;
+  }
+}
+
+
+export class GameStatsAdapter {
+  private raw: any;
+
+  constructor(rawData: any) {
+    this.raw = rawData;
+  }
+
+  public isValid(): boolean {
+    return (
+      Array.isArray(this.raw.MovesMade) &&
+      Array.isArray(this.raw.PawnsKilled) &&
+      typeof this.raw.GameTimeElapsed === "number" &&
+      this.raw.MovesMade.length === 4 &&
+      this.raw.PawnsKilled.length === 4 &&
+      this.raw.MovesMade.every((n:number) => typeof n === "number") &&
+      this.raw.PawnsKilled.every((n:number) => typeof n === "number")
+    );
+  }
+
+  public toGameStats(): GameStats {
+    if (!this.isValid()) {
+      throw new Error("Invalid GameStats data");
+    }
+
+    return {
+      movesMade: this.raw.MovesMade,
+      pawnsKilled: this.raw.PawnsKilled,
+      gameTimeElapsed: this.raw.GameTimeElapsed,
+    };
   }
 }

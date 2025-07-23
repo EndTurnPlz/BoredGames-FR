@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Player } from "../../components/Player/Player"; // assumes Player has a draw(ctx) method
 import { findPath } from "@/utils/outerPath";
-import { GameResponseAdapter } from "@/utils/adapters";
+import { GameResponseAdapter, GameStatsAdapter } from "@/utils/adapters";
 import {
   tileSize,
   canvasWidth,
@@ -41,7 +41,6 @@ import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/gameUtils";
 import { GameStats } from "../boardGame/page";
 import ReconnectOverlay from "@/components/Overlays/ReconnectOverlay";
-import { adapter } from "next/dist/server/web/adapter";
 
 export type Piece = {
   x: number;
@@ -59,18 +58,6 @@ export type Move = {
   to: string;
   effects: number[];
 };
-
-type SSEEvent =
-  | {
-      type: 'event';
-      data: string;
-      event?: string;
-      id?: string;
-    }
-  | {
-      type: 'reconnect-interval';
-      value: number;
-    };
 
 type BoardCanvasProps = {
   playerColor: string;
@@ -470,34 +457,6 @@ export default function GameCanvas({
     }
   }, [playerColor]);
 
-  const fetchGameStats = async (playerId: string, lobbyId: string) => {
-    try {
-       const body = {
-        "$action": "stats"
-      }
-      // console.log(GET_GAMESTATS(lobbyId))
-      const res = await fetch(GET_GAMESTATS(lobbyId), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Player-Key": playerId
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to pull game state");
-      }
-      const gameStats = await res.json();
-      // console.log("stats: ", gameStats);
-      setGameStats(gameStats);
-      return "ok";
-    } catch (err) {
-      console.error("Error fetching game state:", err);
-      return null;
-    }
-  };
-
   function phaseToInt(phase: string) {
     if (phase === "P1Draw") return 0;
     if (phase === "P1Move") return 1;
@@ -511,16 +470,13 @@ export default function GameCanvas({
     return 8;
   }
 
-  async function setGameWinner(phase: number, playerId: string, pieces: string[][], turnOrder: string[], lobbyId: string) {
+  async function setGameWinner(phase: number, pieces: string[][], turnOrder: string[], gameStats: GameStatsAdapter) {
     setGamePhase(phase);
     // console.log("This is phase:", phase, gamePhase == 9)
     if (phase == 9) {
       setGameOver(true);
       // console.log("fetching stats")
-      const statsRes = await fetchGameStats(playerId, lobbyId);
-      if (!statsRes) {
-        throw new Error("Failed to pull stats");
-      }
+      setGameStats(gameStats.toGameStats());
       const rowAllEndWithH = pieces.findIndex(
         (row: string[]) =>
           row.length > 0 && row.every((str) => str.endsWith("_H"))
@@ -619,6 +575,8 @@ export default function GameCanvas({
     const lastCompletedMove = adapter.lastCompletedMove
     const gamePhase = phaseToInt(gameState)
 
+    const gameStats = new GameStatsAdapter(adapter.gameStats)
+
     if (!handleRoomState(player_names, state, viewNum)) {
       return;
     }
@@ -637,7 +595,7 @@ export default function GameCanvas({
     });
 
 
-    await setGameWinner(gamePhase, playerId, pieces, turnOrder, lobbyId)
+    await setGameWinner(gamePhase, pieces, turnOrder, gameStats)
     setPlayers(new_players)
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)
