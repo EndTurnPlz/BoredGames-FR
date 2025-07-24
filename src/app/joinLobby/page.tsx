@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { API_STRING, JOIN_GAME } from "@/utils/config";
+import { API_STRING, GET_JOIN, JOIN_GAME } from "@/utils/config";
 import Header from "@/components/Header";
 
 export default function JoinLobby() {
@@ -22,8 +22,8 @@ export default function JoinLobby() {
     }
     try {
       setIsTransitioning(true);
-      const res = await fetch(API_STRING + JOIN_GAME + "?lobbyId=" + lobbyID, {
-        method: "PUT",
+      const res = await fetch(GET_JOIN(lobbyID), {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },

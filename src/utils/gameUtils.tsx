@@ -1,6 +1,7 @@
 import { Player } from "@/components/Player/Player";
 import { coordStringToPixel, findPath } from "./outerPath";
 import { tileSize, colorToIndex, indexToColor, numberDict, zoneToColor } from "./config";
+import { RequestAdapter } from "./adapters";
 
 export type GameState = {
   [color: string]: string[];
@@ -41,13 +42,13 @@ export function getTurnPhaseForPlayer(
   return "wait";
 }
 
-type Part = {
+export type Part = {
   from: string;
   to: string;
   effect: number;
 }
 
-type Request = {
+export type Request = {
   move: Part
   splitMove?: Part
 }
@@ -109,13 +110,15 @@ export function generateMoveString(
   card: number,
   lastCompletedMove: Request | null,
 ): string {
-  const from = lastCompletedMove?.move.from;
-  const secondFrom = lastCompletedMove?.splitMove?.from;
+  if (!lastCompletedMove) return "";
+  const adapter = new RequestAdapter(lastCompletedMove);
+  const from = adapter.getMoveFrom();
+  const secondFrom = adapter.getSplitFrom();
+  const effect = adapter.getMoveEffect();
   const index = Math.floor(phase / 2);
   const color = indexToColor[index];
   const username = players[index];
-  const effect = lastCompletedMove?.move.effect;
-
+  console.log(phase, color)
   const moves: string[] = [];
 
   for (let p = 0; p < old_players.length; p++) {
@@ -129,22 +132,26 @@ export function generateMoveString(
       const isMainMove = oldPos === from;
       const isSplitMove = oldPos === secondFrom;
       const moved = oldPos !== newPos;
-
       if (pieceColor === color) {
-        // This is the current player's piece
-        if (moved && isMainMove && lastCompletedMove?.move) {
-          let description = generateMoveDescription(username, lastCompletedMove.move) + getSliderString(color, lastCompletedMove.move.to)
+        // Current player's piece
+        console.log(oldPos, newPos)
+        if (moved && isMainMove && adapter.hasMove()) {
+          const move = adapter.getMove()
+          let description = generateMoveDescription(username, move) +
+                            getSliderString(color, adapter.getMoveTo());
           if (description.length > 0) {
             moves.push(description);
           }
-        } else if (moved && isSplitMove && lastCompletedMove?.splitMove) {
-          let description = generateMoveDescription(username, lastCompletedMove.splitMove) + getSliderString(color, lastCompletedMove.splitMove.to)
+        } else if (moved && isSplitMove && adapter.hasSplitMove()) {
+          const splitMove = adapter.getSplitMove()!;
+          let description = generateMoveDescription(username, splitMove) +
+                            getSliderString(color, splitMove.to);
           if (description.length > 0) {
             moves.push(description);
           }
         }
       } else if (moved) {
-        // This is another player's piece that was affected
+        // Another player's piece affected
         const affectedUsername = players[colorToIndex[pieceColor]];
         moves.push(generateSideEffectDescription(username, affectedUsername, effect ?? -1));
       }

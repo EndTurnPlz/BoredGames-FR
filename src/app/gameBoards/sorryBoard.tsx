@@ -2,20 +2,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Player } from "../../components/Player/Player"; // assumes Player has a draw(ctx) method
 import { findPath } from "@/utils/outerPath";
+import { GameResponseAdapter, GameStatsAdapter } from "@/utils/adapters";
 import {
   tileSize,
   canvasWidth,
   canvasHeight,
   numberDict,
   colorToAngleDict,
-  GET_GAMESTATE,
   DRAW_CARD,
   MOVE_PAWN,
-  colorToIndex,
   deck_card,
   card_path,
   GET_GAMESTREAM,
   GET_GAMESTATS,
+  stringDict,
 } from "@/utils/config";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
@@ -34,6 +34,7 @@ import {
   applyGameState,
   generateMoveString,
   getTurnPhaseForPlayer,
+  Request,
 } from "@/utils/gameUtils";
 import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { useGameSelections } from "@/hooks/useGameSelections";
@@ -50,7 +51,7 @@ export type Piece = {
 };
 export type MoveSet = {
   pawn: string;
-  move: Move[];
+  opts: Move[];
 };
 export type Move = {
   from: string;
@@ -122,13 +123,13 @@ export default function GameCanvas({
 
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
+  const gamePhaseRef = useRef<number>(8)
 
   let devMode = false;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
 
-  const [pullGameState, setPullGamestate] = useState(false);
   const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([]);
 
   const [move, setMove] = useState<MoveState>({
@@ -190,19 +191,21 @@ export default function GameCanvas({
   };
 
   const handleConfirmMoveClick = async () => {
-    if (moveRef.current.destination && !pullGameState) {
+    if (moveRef.current.destination) {
       if (!isPlayerTurn) {
         console.log("Not your turn!");
         return true;
       }
-      console.log("hello");
+      // console.log("hello");
       if (currentCardRef.current === 7 && currentDistanceref.current !== 7) {
         return true;
       }
       try {
         let player_Id = localStorage.getItem("userId" + randomId) ?? "";
+        let lobbyId = localStorage.getItem("lobbyId") ?? "";
         const body = secondMoveRef.current.destination
           ? {
+              "$action": "move",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
@@ -215,18 +218,20 @@ export default function GameCanvas({
               },
             }
           : {
+              "$action": "move",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
                 Effect: move.effect,
               },
             };
-        console.log(body);
+        // console.log(body);
 
-        const res = await fetch(MOVE_PAWN(player_Id), {
+        const res = await fetch(MOVE_PAWN(lobbyId), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Player-Key": player_Id
           },
           body: JSON.stringify(body),
         });
@@ -287,6 +292,7 @@ export default function GameCanvas({
         effectPopup: null,
       });
     }
+    // console.log("current Card", currentCardRef.current)
     if (currentCardRef.current === 7) {
       const current = findPath(tile.from, tile.to).length - 1;
       setCurrentDistance(current);
@@ -295,11 +301,11 @@ export default function GameCanvas({
       const possibleSeconds = [];
 
       for (const piece of drawnPieces) {
-        console.log(
-          piece,
-          moveRef.current.effect,
-          moveRef.current.possibleMoves
-        );
+        // console.log(
+        //   piece,
+        //   moveRef.current.effect,
+        //   moveRef.current.possibleMoves
+        // );
         if (
           moveRef.current.possibleMoves &&
           drawnPieces[moveRef.current.selectedIdx] !== piece
@@ -307,7 +313,7 @@ export default function GameCanvas({
           const matching = moveRef.current.possibleMoves.find(
             (m) => m.pawn === piece.id
           );
-          const canBeSecond = matching?.move?.find(
+          const canBeSecond = matching?.opts?.find(
             (m) => findPath(m.from, m.to).length - 1 === target
           );
           if (canBeSecond) {
@@ -315,7 +321,7 @@ export default function GameCanvas({
           }
         }
       }
-      console.log("possible Second", possibleSeconds);
+      // console.log("possible Second", possibleSeconds);
       setSecondMove({
         ...secondMoveRef.current,
         possibleSecondPawns: possibleSeconds,
@@ -326,26 +332,34 @@ export default function GameCanvas({
   };
 
   const handleDeckClick = async () => {
-    console.log("Deck clicked! Sending to backend...");
+    // console.log("Deck clicked! Sending to backend...");
     setLoading(true);
     try {
       let player_Id = localStorage.getItem("userId" + randomId) ?? "";
-      const res = await fetch(DRAW_CARD(player_Id), {
-        method: "GET",
+      let lobbyId = localStorage.getItem("lobbyId") ?? "";
+      // console.log(DRAW_CARD(player_Id))
+      const body = {
+        "$action": "draw"
+      }
+      const res = await fetch(DRAW_CARD(lobbyId), {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Player-Key": player_Id
         },
+        body: JSON.stringify(body)
       });
+
       const response = await res.json();
       if (!res.ok) {
         throw Error("failed to draw card");
       }
-      console.log(response);
+      // console.log(response);
       if (
         response.movesets.length == 1 &&
-        response.movesets[0].move.length === 1
+        response.movesets[0].opts.length === 1
       ) {
-        const move = response.movesets[0].move[0];
+        const move = response.movesets[0].opts[0];
         const idx = drawnPieces.findIndex((p) => p.id === move.from);
         if (move.effects.length > 1) {
           // Calculate popup position near tile
@@ -376,7 +390,38 @@ export default function GameCanvas({
             selectedIdx: idx,
             effectPopup: null,
           });
+          const distance = findPath(move.from, move.to).length - 1;
+          setCurrentDistance(distance)
         }
+      } else if (
+        response.cardDrawn == 7 &&
+        response.movesets.length == 2 &&
+        response.movesets[0].opts.length === 1 && 
+        response.movesets[1].opts.length === 1 &&
+        response.movesets[0].opts[0].effects[0] >=5
+      ) {
+        const move = response.movesets[0].opts[0];
+        const splitMove = response.movesets[1].opts[0];
+
+        const idx = drawnPieces.findIndex((p) => p.id === move.from);
+        const secondIdx = drawnPieces.findIndex((p) => p.id === splitMove.from);
+        setMove({
+          ...moveRef.current,
+          destination: move.to,
+          effect: move.effects[0],
+          highlightedTiles: [move],
+          possibleMoves: response.movesets,
+          selectedIdx: idx,
+          effectPopup: null,
+        });
+        setSecondMove({
+          ...secondMoveRef.current,
+          selectedIdx: secondIdx,
+          destination: splitMove.to,
+          effect: splitMove.effects[0],
+        });
+        setCurrentDistance(7)
+
       } else {
         setMove({
           ...moveRef.current,
@@ -384,9 +429,7 @@ export default function GameCanvas({
         });
       }
       localStorage.setItem("drawCard", JSON.stringify(response));
-      setTopCardPath(card_path(numberDict[response.cardDrawn]));
-      setCurrentCard(response.cardDrawn);
-      setView(response.view);
+      setCurrentCard(response.cardDrawn)
       setLoading(false);
       return true;
     } catch (err) {
@@ -397,7 +440,7 @@ export default function GameCanvas({
   };
 
   const handleTopCardClick = () => {
-    console.log("top card clicked! zooming in...");
+    // console.log("top card clicked! zooming in...");
     console.log(topCardPath);
     setShowZoomedCard(true);
     return true;
@@ -414,133 +457,169 @@ export default function GameCanvas({
     }
   }, [playerColor]);
 
-  const fetchGameStats = async (playerId: string) => {
-    try {
-      const res = await fetch(GET_GAMESTATS(playerId));
+  function phaseToInt(phase: string) {
+    if (phase === "P1Draw") return 0;
+    if (phase === "P1Move") return 1;
+    if (phase === "P2Draw") return 2;
+    if (phase === "P2Move") return 3;
+    if (phase === "P3Draw") return 4;
+    if (phase === "P3Move") return 5;
+    if (phase === "P4Draw") return 6;
+    if (phase === "P4Move") return 7;
+    if (phase === "End") return 9;
+    return 8;
+  }
 
-      if (!res.ok) {
-        throw new Error("Failed to pull game state");
-      }
-      const gameStats = await res.json();
-      console.log("stats: ", gameStats);
-      setGameStats(gameStats);
-      return "ok";
-    } catch (err) {
-      console.error("Error fetching game state:", err);
-      return null;
+  async function setGameWinner(phase: number, pieces: string[][], turnOrder: string[], gameStats: GameStatsAdapter) {
+    setGamePhase(phase);
+    // console.log("This is phase:", phase, gamePhase == 9)
+    if (phase == 9) {
+      setGameOver(true);
+      // console.log("fetching stats")
+      setGameStats(gameStats.toGameStats());
+      const rowAllEndWithH = pieces.findIndex(
+        (row: string[]) =>
+          row.length > 0 && row.every((str) => str.endsWith("_H"))
+      );
+      // console.log(rowAllEndWithH, statsRes)
+      setWinner(turnOrder[rowAllEndWithH]);
     }
-  };
+  }
 
-  const fetchGameState = async (playerId: string) => {
-    try {
-      const res = await fetch(GET_GAMESTATE(playerId));
-
-      if (!res.ok) {
-        throw new Error("Failed to pull game state");
-      }
-
-      const gameState = await res.json();
-      console.log("Game State:", gameState, gameState.currentView);
-      if (gameState.gamePhase != 8) {
-        setGameStarted(true);
-      }
-      if (gameState.lastDrawnCard in numberDict && isPlayerTurn != "move") {
-        setTopCardPath(card_path(numberDict[gameState.lastDrawnCard]));
-        setCurrentCard(gameState.lastDrawnCard);
-      }
-      let pieces = gameState.pieces;
+  function getNewPlayers(pieces:string[][]) {
       const colorOrder = ["blue", "yellow", "green", "red"];
       const colorToPieces: Record<string, string[]> = {};
       for (let row = 0; row < pieces.length; row++) {
         const color = colorOrder[row];
         colorToPieces[color] = pieces[row];
       }
-      const index = gameState.turnOrder.indexOf(username);
-      console.log(
-        colorToIndex[playerColorRef.current],
-        playerColorRef.current,
-        gameState.gamePhase
-      );
-      setIsPlayerTurn(getTurnPhaseForPlayer(gameState.gamePhase, index));
-      console.log(
-        "turn phase",
-        getTurnPhaseForPlayer(gameState.gamePhase, index),
-        index
-      );
-      const old_players = players;
-      const new_players = applyGameState(colorToPieces);
-      setMoveLog((prevLog) => {
-        prevLog = prevLog.filter(
-          (msg) =>
-            !msg.includes("joined the game") &&
-            !msg.includes("started the game")
-        );
-        let newLog = [];
+      return applyGameState(colorToPieces)
+  }
 
-        // Add join messages for the first 4 players from localTurnOrder if not added yet
-        for (let i = 0; i < gameState.turnOrder.length; i++) {
-          newLog.push(`${gameState.turnOrder[i]} joined the game`);
-        }
-        if (gameState.gamePhase != 8) {
-          newLog.push(`${gameState.turnOrder[0]} started the game`);
-        }
-        newLog.push(...prevLog);
+  function getIsPlayerTurn(turnOrder: string[], phase: string, username: string | null) {
+    const index = turnOrder.indexOf(username ?? "");
 
-        // Then generate the move string for current move
-        if (gameState.gamePhase != 8) {
-          const new_move = generateMoveString(
-            gamePhase,
-            gameState.gamePhase,
-            gameState.turnOrder,
-            old_players,
-            new_players,
-            gameState.lastDrawnCard,
-            gameState.lastCompletedMove
-          );
-          if (new_move.length > 0) {
-            newLog.push(new_move);
-          }
-        }
-        // Add new move only if non-empty and not duplicate
-        newLog = newLog.filter((msg) => !msg.includes("undefined"));
-        return newLog;
-      });
-      setPlayers(new_players);
-      setTurnOrder(gameState.turnOrder);
-      setLocalTurnOrder(gameState.turnOrder);
-      setGamePhase(gameState.gamePhase);
-      if (gameState.gamePhase == 9) {
-        setGameOver(true);
-        const statsRes = await fetchGameStats(playerId);
-        if (!statsRes) {
-          throw new Error("Failed to pull stats");
-        }
-        const pieces = gameState.pieces;
-        const rowAllEndWithH = pieces.findIndex(
-          (row: string[]) =>
-            row.length > 0 && row.every((str) => str.endsWith("_H"))
-        );
-        setWinner(gameState.turnOrder[rowAllEndWithH]);
-      }
-      setPlayerConnectivity(gameState.playerConnectionStatus);
-      setView(gameState.currentView);
-    } catch (err) {
-      console.error("Error fetching game state:", err);
-      return null;
+    setIsPlayerTurn(getTurnPhaseForPlayer(phaseToInt(phase), index));
+    // console.log(
+    //   "turn phase",
+    //   getTurnPhaseForPlayer(phaseToInt(phase), index),
+    //   index
+    // );
+  }
+
+  function handleRoomState(players: string[], state: string, viewNum: number): boolean {
+    setTurnOrder(players);
+    setLocalTurnOrder(players);
+    if (state == "WaitingForPlayers") {
+      setView(viewNum)
+      return false;
+    } else if (state == "GameInProgress") {
+      setGameStarted(true);
     }
-  };
+    return true
+  }
+
+  function handleNewMove(prevLog: string[], old_players: Player[], new_players: Player[], newGamePhase: number, player_names: string[], lastDrawnCard: number, lastCompletedMove: Request): string[] {
+    let newLog = [];
+    newLog.push(...prevLog);
+    console.log("phases:", gamePhase, newGamePhase)
+    // Then generate the move string for current move
+    if (newGamePhase != 8) {
+      const new_move = generateMoveString(
+        gamePhaseRef.current,
+        newGamePhase,
+        player_names,
+        old_players,
+        new_players,
+        lastDrawnCard,
+        lastCompletedMove
+      );
+      if (new_move.length > 0) {
+        newLog.push(new_move);
+      }
+    }
+    // Add new move only if non-empty and not duplicate
+    newLog = newLog.filter((msg) => !msg.includes("undefined"));
+    console.log(newLog)
+    return newLog
+  }
+
+  function getCardPaths(lastDrawnCard: string): number {
+    let card_string = lastDrawnCard.toLowerCase()
+    if (card_string in stringDict) {
+      const card_number = stringDict[card_string]
+      setTopCardPath(card_path(card_string));
+      setCurrentCard(card_number);
+      return card_number
+    }
+    return -1
+  }
+  
+  const updateGameState = async (response: any) => {
+    const adapter = new GameResponseAdapter(response);
+    const playerId = localStorage.getItem("userId" + randomId) ?? "";
+    const lobbyId = localStorage.getItem("lobbyId") ?? "";
+    console.log("reponse:", adapter);
+
+    const viewNum = adapter.viewNum
+    const player_names = adapter.players
+    const state = adapter.state
+
+    const gameSnapshot = adapter.gameSnapshot
+    const turnOrder = adapter.turnOrder
+    const gameState = adapter.gameState
+    console.log("gamesetate", gameState)
+    const pieces = adapter.pieces
+    const playerConnectionStatus = adapter.playerConnectionStatus
+    const lastDrawnCard = adapter.lastDrawnCard
+    const lastCompletedMove = adapter.lastCompletedMove
+    const gamePhase = phaseToInt(gameState)
+
+    const gameStats = new GameStatsAdapter(adapter.gameStats)
+
+    if (!handleRoomState(player_names, state, viewNum)) {
+      return;
+    }
+    
+
+    console.log(gameSnapshot)
+    const card_number = getCardPaths(lastDrawnCard)
+
+    const old_players = playersref.current
+    const new_players = getNewPlayers(pieces)
+    console.log(new_players, old_players)
+    getIsPlayerTurn(turnOrder, gameState, username)
+
+    setMoveLog((prevLog) => {
+        return handleNewMove(prevLog, old_players, new_players, gamePhase, player_names, card_number, lastCompletedMove)
+    });
+
+
+    await setGameWinner(gamePhase, pieces, turnOrder, gameStats)
+    setPlayers(new_players)
+    setPlayerConnectivity(playerConnectionStatus);
+    setView(viewNum)
+  }
 
   useEffect(() => {
     if (devMode) return;
-    const playerId = localStorage.getItem("userId" + randomId) ?? "";
-    console.log(GET_GAMESTREAM(playerId));
-    const eventSource = new EventSource(GET_GAMESTREAM(playerId));
 
-    eventSource.onmessage = (event) => {
-      if (event.data != viewRef.current) {
-        setPullGamestate(true);
+    const playerId = localStorage.getItem("userId" + randomId) ?? "";
+    const lobbyId = localStorage.getItem("lobbyId") ?? "";
+    // console.log(GET_GAMESTREAM(lobbyId, playerId));
+
+    const eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
+
+    eventSource.onmessage = async (event) => {
+      try {
+        const data = JSON.parse(event.data); // If your server sends JSON
+        if (data.ViewNum !== viewRef.current) {
+          await updateGameState(data);
+        }
+        // console.log("Received:", data.ViewNum, viewRef.current);
+      } catch (err) {
+        console.error("Failed to process event data:", err);
       }
-      console.log("Received:", event.data); // You will get the viewNum here
     };
 
     eventSource.onerror = (err) => {
@@ -549,9 +628,11 @@ export default function GameCanvas({
     };
 
     return () => {
-      eventSource.close(); // Clean up when the component unmounts
+      eventSource.close();
     };
   }, []);
+
+
 
   useEffect(() => {
     const cardPaths = Object.values(numberDict).map(
@@ -564,18 +645,8 @@ export default function GameCanvas({
   }, []);
 
   useEffect(() => {
-    let userId = localStorage.getItem("userId" + randomId);
-    if (pullGameState) {
-      fetchGameState(userId ?? "");
-    }
-    setPullGamestate(false);
-  }, [pullGameState]);
-
-  useEffect(() => {
     if (devMode) return;
-    console.log("refreshed");
-    const storedId = localStorage.getItem("userId" + randomId);
-
+    // console.log("refreshed");
     const refresh = async () => {
       if (canvasRef.current) {
         drawWithRotation(
@@ -586,13 +657,10 @@ export default function GameCanvas({
       }
       setAngle(colorToAngleDict[playerColorRef.current]);
       drawPieces();
-      console.log("start fetch");
-      await fetchGameState(storedId ?? "");
-      console.log("end fetch");
       const storedResponse = JSON.parse(
         localStorage.getItem("drawCard") || "{}"
       );
-      console.log(storedResponse);
+      // console.log(storedResponse);
       setMove((prev) => ({
         ...prev,
         possibleMoves: storedResponse.movesets,
@@ -613,12 +681,13 @@ export default function GameCanvas({
 
   useEffect(() => {
     if (isPlayerTurn == "wait") {
-      console.log("reset on accident");
+      // console.log("reset on accident");
       resetAllSelections();
     }
   }, [isPlayerTurn]);
 
   useSyncedRef(loadingRef, loading);
+  useSyncedRef(gamePhaseRef, gamePhase);
   useSyncedRef(moveRef, move);
   useSyncedRef(viewRef, view);
   useSyncedRef(secondMoveRef, secondMove);
@@ -672,17 +741,23 @@ export default function GameCanvas({
     if (piece.color !== playerColorRef.current) return false;
     const matching = move.possibleMoves.find((m) => m.pawn === piece.id);
 
-    console.log(matching);
-    console.log(move);
+    // console.log(matching);
+    // console.log(move);
     setMove((prev) => ({
       ...prev,
       selectedIdx: idx,
-      highlightedTiles: matching?.move ?? [],
+      highlightedTiles: matching?.opts ?? [],
       effect: null,
       effectPopup: null,
       destination: null,
       possibleEffects: [],
     }));
+    setSecondMove({
+      possibleSecondPawns: [],
+      selectedIdx: -1,
+      destination: null,
+      effect: null,
+    });
   };
   return (
     <div className="flex flex-col items-center">
@@ -729,8 +804,7 @@ export default function GameCanvas({
             selected={
               move.destination === null ||
               (currentCard === 7 &&
-                currentDistance != 7 &&
-                move.possibleMoves.length > 1)
+                currentDistance != 7)
             }
           />
           {move.effectPopup && move.possibleEffects.length > 1 && (
