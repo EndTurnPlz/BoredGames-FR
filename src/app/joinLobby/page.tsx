@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { API_STRING, GET_JOIN, JOIN_GAME } from "@/utils/config";
-import Header from "@/components/Header";
+import { GET_JOIN } from "@/utils/Apologies/config";
+import Header from "@/components/Apologies/Header";
 
 export default function JoinLobby() {
   const router = useRouter();

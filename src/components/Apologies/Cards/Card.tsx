@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { cardW, cardH } from "@/utils/config";
+import { cardW, cardH } from "@/utils/Apologies/config";
 import Image from "next/image";
 import CardBack from "./CardBack";
 

@@ -1,5 +1,5 @@
 import { GameStats } from "@/app/boardGame/page";
-import { Part, Request } from "./gameUtils";
+import { Part } from "./gameUtils";
 
 export class GameResponseAdapter {
   private raw: any;

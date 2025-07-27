@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_STRING, CREATE_GAME } from "@/utils/config";
-import GameCarousel from "@/components/GameCarousel";
-import Header from "@/components/Header";
+import GameCarousel from "@/components/Apologies/GameCarousel";
+import Header from "@/components/Apologies/Header";
 
 export default function Home() {
   const router = useRouter();
@@ -21,24 +21,24 @@ export default function Home() {
     }
     try {
       setIsTransitioning(true);
-      const res = await fetch(`${API_STRING}${CREATE_GAME}?gameType=${gameType}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(username), // Note: not an object, just a GUID string
-      });
+      // const res = await fetch(`${API_STRING}${CREATE_GAME}?gameType=${gameType}`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(username), // Note: not an object, just a GUID string
+      // });
 
-      if (!res.ok) {
-        setError("Failed to connect to server");
-        setIsTransitioning(false);
-        return;
-      }
+      // if (!res.ok) {
+      //   setError("Failed to connect to server");
+      //   setIsTransitioning(false);
+      //   return;
+      // }
 
-      const response = await res.json();
+      // const response = await res.json();
       const randomId = Math.random().toString(36).substring(2, 10);
-      localStorage.setItem("userId" + randomId, response.playerId);
-      localStorage.setItem("lobbyId", response.roomId);
+      // localStorage.setItem("userId" + randomId, response.playerId);
+      // localStorage.setItem("lobbyId", response.roomId);
       setError("");
       // Only after successful response
       setTimeout(() => {

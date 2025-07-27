@@ -1,5 +1,5 @@
 "use client";
-import { SelectablePiece } from "@/components/Pieces/Piece";
+import { SelectablePiece } from "@/components/Apologies/Pieces/Piece";
 import { DrawnPiece } from "@/app/gameBoards/sorryBoard";
 
 interface PiecesLayerProps {

@@ -36,10 +36,10 @@ export default function GameCarousel({
         tags: ["board game", "strategy", "classic", "two player"],
       },
       {
-        name: "Pokim",
-        description: "Texas Hold'em poker with friends",
-        icon: "🎰",
-        tags: ["card game", "betting", "multiplayer", "texas holdem"],
+        name: "Ups And Downs",
+        description: "The classic race-to-the-finish game for all ages",
+        icon: "🎲",
+        tags: ["board game", "chance", "family", "multiplayer", "classic"]
       },
     ],
     []

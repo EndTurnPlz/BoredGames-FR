@@ -1,7 +1,7 @@
 // File: components/GameSidebarRight.tsx
 "use client";
 import { indexToColor } from "@/utils/Apologies/config";
-import MoveLog from "./Apologies/moveLog";
+import MoveLog from "./moveLog";
 
 export default function GameSidebarRight({
   players,

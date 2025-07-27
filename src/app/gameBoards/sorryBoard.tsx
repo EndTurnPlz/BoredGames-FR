@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Player } from "../../components/Player/Player"; // assumes Player has a draw(ctx) method
-import { findPath } from "@/utils/outerPath";
-import { GameResponseAdapter, GameStatsAdapter } from "@/utils/adapters";
+import { Player } from "../../components/Apologies/Player/Player"; // assumes Player has a draw(ctx) method
+import { findPath } from "@/utils/Apologies/outerPath";
+import { GameResponseAdapter, GameStatsAdapter } from "@/utils/Apologies/adapters";
 import {
   tileSize,
   canvasWidth,
@@ -16,31 +16,31 @@ import {
   GET_GAMESTREAM,
   GET_GAMESTATS,
   stringDict,
-} from "@/utils/config";
+} from "@/utils/Apologies/config";
 import { mockCardResponse2 } from "../mockData/moveset2";
 import { mockCardResponse11 } from "../mockData/moveset11";
 import { mockCardResponse7 } from "../mockData/moveset7";
-import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
-import { drawPiecesWithOffset } from "@/utils/drawUtils";
+import { coordMap, getUnrotatedMousePosition } from "@/utils/Apologies/outerPath";
+import { drawPiecesWithOffset } from "@/utils/Apologies/drawUtils";
 import { useSearchParams } from "next/navigation";
-import CardControls from "@/components/Cards/CardControls";
-import OverlayHighlights from "@/components/Pieces/OverlayHighlights";
-import EffectPopup from "@/components/Effects/EffectPopup";
-import LoadingOverlay from "@/components/Overlays/loadingOverlay";
-import ZoomedCard from "@/components/Cards/zoomedCard";
-import PiecesLayer from "@/components/Pieces/piecesLayer";
-import { drawWithRotation } from "@/utils/canvasUtils";
+import CardControls from "@/components/Apologies/Cards/CardControls";
+import OverlayHighlights from "@/components/Apologies/Pieces/OverlayHighlights";
+import EffectPopup from "@/components/Apologies/Effects/EffectPopup";
+import LoadingOverlay from "@/components/Apologies/Overlays/loadingOverlay";
+import ZoomedCard from "@/components/Apologies/Cards/zoomedCard";
+import PiecesLayer from "@/components/Apologies/Pieces/piecesLayer";
+import { drawWithRotation } from "@/utils/Apologies/canvasUtils";
 import {
   applyGameState,
   generateMoveString,
   getTurnPhaseForPlayer,
   Request,
-} from "@/utils/gameUtils";
+} from "@/utils/Apologies/gameUtils";
 import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { useGameSelections } from "@/hooks/useGameSelections";
-import { GameState } from "@/utils/gameUtils";
+import { GameState } from "@/utils/Apologies/gameUtils";
 import { GameStats } from "../boardGame/page";
-import ReconnectOverlay from "@/components/Overlays/ReconnectOverlay";
+import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
 
 export type Piece = {
   x: number;
@@ -89,7 +89,7 @@ export type SecondMoveState = {
   effect: number | null;
 };
 
-export default function GameCanvas({
+export default function ApologiesBoard({
   playerColor = "red",
   setGameOver,
   setTurnOrder,

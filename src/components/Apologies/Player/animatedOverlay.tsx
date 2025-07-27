@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { tileSize, colorToAngleDict } from "@/utils/config";
-import { coordStringToPixel, getUnrotatedMousePosition } from "@/utils/outerPath";
+import { tileSize, colorToAngleDict } from "@/utils/Apologies/config";
+import { coordStringToPixel, getUnrotatedMousePosition } from "@/utils/Apologies/outerPath";
 
 type AnimatedOverlayCircleProps = {
   coord: string; // tile coordinate like "b_4"

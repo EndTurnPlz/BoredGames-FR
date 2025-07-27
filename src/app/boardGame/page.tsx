@@ -3,23 +3,18 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import Header from "@/components/Header";
-import GameSidebarLeft from "@/components/leftSidebar";
-import GameBoardCenter from "@/components/gameCenter";
-import GameSidebarRight from "@/components/rightSidebar";
-import WaitingOverlays from "@/components/WaitingOverlays";
-import RulesModal from "@/components/rulesModal";
-import GameOverOverlay from "@/components/GameOverOverlay";
+import Header from "@/components/Apologies/Header";
+import GameSidebarLeft from "@/components/Apologies/leftSidebar";
+import GameBoardCenter from "@/components/Apologies/gameCenter";
+import GameSidebarRight from "@/components/Apologies/rightSidebar";
+import WaitingOverlays from "@/components/Apologies/WaitingOverlays";
+import RulesModal from "@/components/Apologies/rulesModal";
+import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
 
-import BoardCanvas from "../gameBoards/sorryBoard";
-import {
-  API_STRING,
-  START_GAME,
-  JOIN_LOBBY,
-  indexToColor,
-  GET_START,
-} from "@/utils/config";
-
+import { indexToColor, GET_START } from "@/utils/Apologies/config";
+import { GET_LOBBY } from "@/utils/config";
+import UpAndDownBaord from "../gameBoards/upDownBaord";
+import ApologiesBoard from "../gameBoards/sorryBoard";
 export type GameStats = {
   movesMade: number[];
   pawnsKilled: number[];
@@ -56,7 +51,8 @@ export default function BoardGamePage() {
     setPlayerId(playerId);
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
     if (lobbyId) {
-      const link = `${JOIN_LOBBY}${lobbyId}`;
+      console.log()
+      const link = GET_LOBBY(gameType ?? "", lobbyId);
       setShareLink(link);
     }
   }, [randomId]);
@@ -92,9 +88,11 @@ export default function BoardGamePage() {
 
   const GameComponent =
     gameType === "Apologies"
-      ? BoardCanvas
+      ? ApologiesBoard
+      : gameType === "Ups And Downs"
+      ? UpAndDownBaord
       : () => <p>Unknown game type: {gameType}</p>;
-
+      
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-700 via-blue-800 to-slate-600">
       <Header />

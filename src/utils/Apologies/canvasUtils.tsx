@@ -4,9 +4,9 @@ import {
   fillTile,
   drawStripWithTriangleAndCircle,
   drawSafetyWord,
-} from "@/utils/drawUtils";
-import { tileSize, canvasWidth, canvasHeight, darkColorMap } from "@/utils/config";
-import { wordToAngleDict } from "@/utils/config";
+} from "@/utils/Apologies/drawUtils";
+import { tileSize, canvasWidth, canvasHeight, darkColorMap } from "@/utils/Apologies/config";
+import { wordToAngleDict } from "@/utils/Apologies/config";
 import { getRotationAngleForColor } from "./rotation";
 
 export function drawBoard(ctx: CanvasRenderingContext2D, playerColor: string) {
