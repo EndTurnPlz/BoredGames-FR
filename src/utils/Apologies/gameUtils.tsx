@@ -158,7 +158,7 @@ export function generateMoveString(
     }
   }
 
-  if (new_phase % 2 === 1) {
+  if (new_phase % 2 === 1 && new_phase != 9) {
     const article = numberDict[card].match(/^[aeiou]/i) ? "an" : "a";
     return `${color} (${username}) drew ${article} ${numberDict[card]}.`;
   }
