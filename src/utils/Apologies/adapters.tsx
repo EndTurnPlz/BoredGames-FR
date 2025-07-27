@@ -43,7 +43,7 @@ export class GameResponseAdapter {
   }
 
   get playerConnectionStatus(): boolean[] {
-    return this.PlayerConnSatus ?? this.snapshot.PlayerConnectionStatus ?? [];
+    return this.raw.PlayerConnSatus ?? this.snapshot.PlayerConnectionStatus ?? [];
   }
 
   get pieces(): string[][] {
