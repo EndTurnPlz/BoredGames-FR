@@ -19,7 +19,7 @@ export class GameResponseAdapter {
   }
 
   get players(): string[] {
-    return this.raw.Players ?? [];
+    return this.raw.Players ?? this.raw.PlayerNames ?? [];
   }
 
   get gameSnapshot(): any {
@@ -43,7 +43,7 @@ export class GameResponseAdapter {
   }
 
   get playerConnectionStatus(): boolean[] {
-    return this.snapshot.PlayerConnectionStatus ?? [];
+    return this.PlayerConnSatus ?? this.snapshot.PlayerConnectionStatus ?? [];
   }
 
   get pieces(): string[][] {
