@@ -39,7 +39,7 @@ const UpsAndDownsCanvas: React.FC<BoardProps> = ({ size = 500, rows = 10, cols =
         ctx.strokeRect(x, y, tileSize, tileSize);
 
         ctx.fillStyle = "#000";
-        ctx.fillText((100 - index).toString(), x + tileSize / 2, y + tileSize / 2);
+        ctx.fillText(((100 - 10*row + 1) - (100 - index) + (9 - row) * 10).toString(), x + tileSize / 2, y + tileSize / 2);
       }
     }
   }, [size, canvasRef]);
