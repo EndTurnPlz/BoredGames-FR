@@ -91,11 +91,11 @@ export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
 }
 
 export const DRAW_CARD = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action`
+  return `${API_STRING}/game/${roomId}/action/draw`
 }
 
 export const MOVE_PAWN = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action`
+  return `${API_STRING}/game/${roomId}/action/move`
 }
 
 export const indexToColor: Record<number, string> = {

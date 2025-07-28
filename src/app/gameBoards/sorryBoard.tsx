@@ -205,7 +205,6 @@ export default function ApologiesBoard({
         let lobbyId = localStorage.getItem("lobbyId") ?? "";
         const body = secondMoveRef.current.destination
           ? {
-              "$action": "move",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
@@ -218,7 +217,6 @@ export default function ApologiesBoard({
               },
             }
           : {
-              "$action": "move",
               Move: {
                 From: drawnPieces[move.selectedIdx].id,
                 To: moveRef.current.destination,
@@ -338,16 +336,12 @@ export default function ApologiesBoard({
       let player_Id = localStorage.getItem("userId" + randomId) ?? "";
       let lobbyId = localStorage.getItem("lobbyId") ?? "";
       // console.log(DRAW_CARD(player_Id))
-      const body = {
-        "$action": "draw"
-      }
       const res = await fetch(DRAW_CARD(lobbyId), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Player-Key": player_Id
-        },
-        body: JSON.stringify(body)
+        }
       });
 
       const response = await res.json();
