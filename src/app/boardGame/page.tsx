@@ -94,7 +94,7 @@ export default function BoardGamePage() {
       : () => <p>Unknown game type: {gameType}</p>;
       
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-black-800 to-slate-600">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">
       <Header />
       <main className="flex h-screen pt-20 px-4 gap-4">
         <GameSidebarLeft
