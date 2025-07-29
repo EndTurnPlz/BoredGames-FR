@@ -159,7 +159,7 @@ export default function GameCarousel({
                   key={game.name}
                   onClick={() => { const gameName = game.name.replaceAll(" ", ""); onGameSelect(gameName) } }
                   className={`p-6 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 w-[220px] h-[180px] flex flex-col justify-between ${
-                    gameType === game.name
+                    gameType === game.name.replaceAll(" ", "")
                       ? "bg-cyan-400/10 border-2 border-cyan-400 shadow-lg shadow-cyan-400/30"
                       : "bg-slate-800/40 border-2 border-cyan-400/20 hover:border-cyan-400/50 hover:bg-slate-800/60"
                   }`}

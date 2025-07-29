@@ -14,3 +14,7 @@ export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
 export const GET_JOIN = (roomId: string)  => {
   return `${API_STRING}/api/room/${roomId}/join`
 }
+
+export const GET_CREATE = (gameType: string) => {
+  return `${API_STRING}${CREATE_GAME}?gameType=${gameType}`
+}

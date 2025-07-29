@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Player } from "../../components/Apologies/Player/Player"; // assumes Player has a draw(ctx) method
 import { findPath } from "@/utils/Apologies/outerPath";
-import { GameResponseAdapter, GameStatsAdapter } from "@/utils/Apologies/adapters";
+import { ApologiesGameResponseAdapter, GameStatsAdapter } from "@/utils/Apologies/adapters";
 import {
   tileSize,
   canvasWidth,
@@ -550,7 +550,7 @@ export default function ApologiesBoard({
   }
   
   const updateGameState = async (response: any) => {
-    const adapter = new GameResponseAdapter(response);
+    const adapter = new ApologiesGameResponseAdapter(response);
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
     console.log("reponse:", adapter);

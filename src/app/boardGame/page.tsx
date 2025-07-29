@@ -13,7 +13,7 @@ import GameOverOverlay from "@/components/GameOverOverlay";
 
 import { indexToColor, GET_START } from "@/utils/Apologies/config";
 import { GET_LOBBY } from "@/utils/config";
-import UpAndDownBaord from "../gameBoards/upDownBaord";
+import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
 export type GameStats = {
   movesMade: number[];
@@ -89,8 +89,8 @@ export default function BoardGamePage() {
   const GameComponent =
     gameType === "Apologies"
       ? ApologiesBoard
-      : gameType === "Ups And Downs"
-      ? UpAndDownBaord
+      : gameType === "UpsAndDowns"
+      ? UpAndDownBoard
       : () => <p>Unknown game type: {gameType}</p>;
       
   return (
