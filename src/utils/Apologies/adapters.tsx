@@ -113,7 +113,7 @@ export class UpsAndDownsGameResponseAdapter {
     return this.raw.PlayerConnStatus ?? this.snapshot.PlayerConnectionStatus ?? [];
   }
 
-  get playerLocations(): string[][] {
+  get playerLocations(): number[] {
     return this.snapshot.PlayerLocations ?? [];
   }
   

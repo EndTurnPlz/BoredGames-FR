@@ -7,6 +7,7 @@ import { canvasHeight, canvasWidth } from "@/utils/Apologies/config";
 import { GET_GAMESTREAM } from "@/utils/config";
 import { UpsAndDownsGameResponseAdapter } from "@/utils/Apologies/adapters";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
+import { Player } from "@/components/UpsAndDowns/Player/Player";
 
 type BoardCanvasProps = {
   playerColor: string;
@@ -35,7 +36,7 @@ export default function UpAndDownBoard({
   const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState("draw");
 
-//   const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
 //   const playersref = useRef<Player[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export default function UpAndDownBoard({
   const [gamePhase, setGamePhase] = useState<number>(8);
   const gamePhaseRef = useRef<number>(8)
 
-  let devMode = false;
+  let devMode = true;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -63,6 +64,10 @@ export default function UpAndDownBoard({
     }
     return true
   }
+  const updatePlayers = (players: number[]) => {
+    const new_player = players.map(m => { return new Player(m)})
+    setPlayers(new_player)
+  }
 
   const updateGameState = async (response: any) => {
     const adapter = new UpsAndDownsGameResponseAdapter(response);
@@ -76,6 +81,7 @@ export default function UpAndDownBoard({
     const BoardLayout = adapter.BoardLayout
     const lastDieRoll = adapter.lastDieRoll
     const player_locations = adapter.playerLocations
+    updatePlayers(player_locations)
 
     if (!handleRoomState(player_names, state, viewNum)) {
       return;
@@ -117,12 +123,28 @@ export default function UpAndDownBoard({
     };
   }, []);
 
+  useEffect(() => {
+    if (!devMode) return;
+
+    const playerId = localStorage.getItem("userId" + randomId) ?? "";
+    const lobbyId = localStorage.getItem("lobbyId") ?? "";
+    setGameStarted(true)
+    const newPlayers = [
+      new Player(0),
+      new Player(1),
+      new Player(2),
+      new Player(3),
+    ];
+    setPlayers(newPlayers)
+
+  }, []);
+
   return (
     <div className="flex flex-col items-center">
       <div className="min-h-screen flex items-center justify-center bg-white-200">
         <div>
           <div>
-            <UpsAndDownsCanvas size={600} canvasRef={canvasRef} />
+            <UpsAndDownsCanvas size={600} canvasRef={canvasRef} players={players} />
           </div>
         </div>
       </div>
