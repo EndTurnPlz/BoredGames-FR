@@ -13,7 +13,6 @@ import {
   MOVE_PAWN,
   deck_card,
   card_path,
-  GET_GAMESTREAM,
   GET_GAMESTATS,
   stringDict,
 } from "@/utils/Apologies/config";
@@ -41,6 +40,7 @@ import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/Apologies/gameUtils";
 import { GameStats } from "../boardGame/page";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
+import { GET_GAMESTREAM } from "@/utils/config";
 
 export type Piece = {
   x: number;
