@@ -6,6 +6,7 @@ import { GameStats } from "../boardGame/page";
 import { canvasHeight, canvasWidth } from "@/utils/Apologies/config";
 import { GET_GAMESTREAM } from "@/utils/config";
 import { UpsAndDownsGameResponseAdapter } from "@/utils/Apologies/adapters";
+import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
 
 type BoardCanvasProps = {
   playerColor: string;
@@ -33,7 +34,6 @@ export default function UpAndDownBoard({
 
   const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState("draw");
-
 
 //   const [players, setPlayers] = useState<Player[]>([]);
 //   const playersref = useRef<Player[]>([]);
@@ -123,9 +123,13 @@ export default function UpAndDownBoard({
         <div>
           <div>
             <UpsAndDownsCanvas size={600} canvasRef={canvasRef} />
-            </div>
+          </div>
         </div>
       </div>
+      <ReconnectOverlay
+        playerConnectivity={playerConnectivity}
+        players={localTurnOrder}
+      />
     </div>
   );
 }

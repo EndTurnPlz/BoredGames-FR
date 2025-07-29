@@ -43,7 +43,7 @@ export class ApologiesGameResponseAdapter {
   }
 
   get playerConnectionStatus(): boolean[] {
-    return this.raw.PlayerConnSatus ?? this.snapshot.PlayerConnectionStatus ?? [];
+    return this.raw.PlayerConnStatus ?? this.snapshot.PlayerConnectionStatus ?? [];
   }
 
   get pieces(): string[][] {
@@ -63,7 +63,7 @@ export class ApologiesGameResponseAdapter {
   }
 }
 
-type Warp = {
+export type Warp = {
   From: string,
   To: string
 }
@@ -110,7 +110,7 @@ export class UpsAndDownsGameResponseAdapter {
   }
 
   get playerConnectionStatus(): boolean[] {
-    return this.raw.PlayerConnSatus ?? this.snapshot.PlayerConnectionStatus ?? [];
+    return this.raw.PlayerConnStatus ?? this.snapshot.PlayerConnectionStatus ?? [];
   }
 
   get playerLocations(): string[][] {
@@ -120,7 +120,7 @@ export class UpsAndDownsGameResponseAdapter {
   get BoardLayout(): Warp[] {
     return this.snapshot.BoardLayout ?? []
   }
-  
+
   get snapshotType(): string {
     return this.snapshot["$type"] ?? "";
   }
