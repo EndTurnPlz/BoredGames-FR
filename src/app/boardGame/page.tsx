@@ -4,12 +4,12 @@
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Header from "@/components/Apologies/Header";
-import GameSidebarLeft from "@/components/Apologies/leftSidebar";
-import GameBoardCenter from "@/components/Apologies/gameCenter";
-import GameSidebarRight from "@/components/Apologies/rightSidebar";
+import GameSidebarLeft from "@/components/leftSidebar";
+import GameBoardCenter from "@/components/gameCenter";
+import GameSidebarRight from "@/components/rightSidebar";
 import WaitingOverlays from "@/components/Apologies/WaitingOverlays";
-import RulesModal from "@/components/Apologies/rulesModal";
-import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
+import RulesModal from "@/components/rulesModal";
+import GameOverOverlay from "@/components/GameOverOverlay";
 
 import { indexToColor, GET_START } from "@/utils/Apologies/config";
 import { GET_LOBBY } from "@/utils/config";
