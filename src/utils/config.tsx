@@ -1,4 +1,4 @@
-export const API_STRING = "http://localhost:5000/"
+export const API_STRING = "http://localhost:5000"
 
 export const CREATE_GAME = "/api/room/create"
 export const START_GAME = "/startGame"
