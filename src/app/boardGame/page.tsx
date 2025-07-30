@@ -11,8 +11,8 @@ import WaitingOverlays from "@/components/Apologies/WaitingOverlays";
 import RulesModal from "@/components/rulesModal";
 import GameOverOverlay from "@/components/GameOverOverlay";
 
-import { indexToColor, GET_START } from "@/utils/Apologies/config";
-import { GET_LOBBY } from "@/utils/config";
+import { GET_START } from "@/utils/Apologies/config";
+import { GET_LOBBY, indexToColor } from "@/utils/config";
 import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
 export type GameStats = {
@@ -92,6 +92,15 @@ export default function BoardGamePage() {
       : gameType === "UpsAndDowns"
       ? UpAndDownBoard
       : () => <p>Unknown game type: {gameType}</p>;
+
+  const enoughPlayers = (length: number) => {
+    if (gameType === "Apologies" && length == 4) {
+      return true;
+    } else if (gameType === "UpsAndDowns" && 2 <= length && length <= 8) {
+      return true;
+    }
+    return false
+  }
       
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">
@@ -126,11 +135,13 @@ export default function BoardGamePage() {
           gameStarted={gameStarted}
           hostId={hostId}
           handleStart={handleStart}
+          enoughPlayers={enoughPlayers}
           moveLog={moveLog}
         />
 
         <WaitingOverlays
           players={players}
+          enoughPlayers={enoughPlayers}
           gameStarted={gameStarted}
           hostId={hostId}
         />

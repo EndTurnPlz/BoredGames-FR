@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import UpsAndDownsCanvas, { coordsMap } from "@/utils/UpAndDown/canvasUtils";
 import { GameStats } from "../boardGame/page";
-import { indexToColor } from "@/utils/UpAndDown/config";
+import { indexToColor } from "@/utils/config";
 import { GET_GAMESTREAM } from "@/utils/config";
 import { UpsAndDownsGameResponseAdapter, Warp } from "@/utils/adapters";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
@@ -50,7 +50,7 @@ export default function UpAndDownBoard({
   const [gamePhase, setGamePhase] = useState<number>(8);
   const gamePhaseRef = useRef<number>(8)
 
-  let devMode = true;
+  let devMode = false;
 
   const [view, setView] = useState(-1);
   const viewRef = useRef<number | null>(null);
@@ -83,6 +83,7 @@ export default function UpAndDownBoard({
     const state = adapter.state
     const playerConnectionStatus = adapter.playerConnectionStatus
     const BoardLayout = adapter.BoardLayout
+    console.log(BoardLayout)
     const lastDieRoll = adapter.lastDieRoll
     const player_locations = adapter.playerLocations
     updatePlayers(player_locations)
@@ -156,7 +157,7 @@ export default function UpAndDownBoard({
       new Player(2, coordsMap[3].x, coordsMap[3].y, indexToColor[2]),
       new Player(3, coordsMap[4].x, coordsMap[4].y, indexToColor[3]),
     ];
-    setBoardLayout([{ From: "1", To: "38" }, { From: "38", To: "4" }]);
+    setBoardLayout([{ Tile: "1", Dest: "38" }, { Tile: "38", Dest: "4" }]);
     setPlayers(newPlayers)
 
   }, []);
@@ -167,7 +168,7 @@ export default function UpAndDownBoard({
       <div>
         {/* 🔧 This is the key wrapper */}
         <div style={{ position: "relative", width: 600, height: 600 }}>
-          <UpsAndDownsCanvas size={600} canvasRef={canvasRef} players={players} warps={boardLayout} />
+          <UpsAndDownsCanvas canvasRef={canvasRef} players={players} warps={boardLayout} />
 
           {/* Overlayed components absolutely positioned inside the relative div */}
           <PiecesLayer pieces={players.map((p) => p.piece)} />

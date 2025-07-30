@@ -64,8 +64,8 @@ export class ApologiesGameResponseAdapter {
 }
 
 export type Warp = {
-  From: string,
-  To: string
+  Tile: string,
+  Dest: string
 }
 
 export class UpsAndDownsGameResponseAdapter {

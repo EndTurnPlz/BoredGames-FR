@@ -18,3 +18,14 @@ export const GET_JOIN = (roomId: string)  => {
 export const GET_CREATE = (gameType: string) => {
   return `${API_STRING}${CREATE_GAME}?gameType=${gameType}`
 }
+
+export const indexToColor: Record<number, string> = {
+  0: "blue",
+  1: "yellow",
+  2: "green",
+  3: "red",
+  4: "purple",     
+  5: "orange",    
+  6: "teal",     
+  7: "magenta",  
+};

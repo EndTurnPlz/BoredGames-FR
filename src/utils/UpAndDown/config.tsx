@@ -12,10 +12,3 @@ export const font_px = canvasWidth / 40;
 export const SUBMIT_MOVE = (roomID: string) => {
     return `${API_STRING}/api/game/${roomID}/action/move`
 }
-
-export const indexToColor: Record<number, string> = {
-  0: "blue",
-  1: "yellow",
-  2: "green",
-  3: "red",
-};

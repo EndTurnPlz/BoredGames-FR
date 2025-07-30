@@ -87,13 +87,6 @@ export const MOVE_PAWN = (roomId: string)  => {
   return `${API_STRING}${prefix}${roomId}/action/move`
 }
 
-export const indexToColor: Record<number, string> = {
-  0: "blue",
-  1: "yellow",
-  2: "green",
-  3: "red",
-};
-
 export const colorToIndex: Record<string, number> = {
   "blue": 0,
  "yellow": 1,

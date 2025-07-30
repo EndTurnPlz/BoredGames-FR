@@ -50,15 +50,15 @@ const UpsAndDownsCanvas: React.FC<BoardProps> = ({ size = canvasWidth, rows = nu
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.fillText(`${number}`, x + 4, y + 4);
-        const warp = warps.find((w) => parseInt(w.From) === number);
+        const warp = warps.find((w) => parseInt(w.Tile) === number);
         if (warp) {
-          const from = parseInt(warp.From);
-          const to = parseInt(warp.To);
+          const from = parseInt(warp.Tile);
+          const to = parseInt(warp.Dest);
           const isUp = to > from;
 
           const arrow = isUp ? "↑" : "↓";
           const color = isUp ? "green" : "red";
-          const label = warp.To
+          const label = warp.Dest
 
           const smallFontSize = tileSize / 4;
           ctx.font = `bold ${smallFontSize}px Arial`;
