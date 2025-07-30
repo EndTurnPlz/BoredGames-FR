@@ -48,20 +48,6 @@ const UpsAndDownsCanvas: React.FC<BoardProps> = ({ size = 600, rows = 10, cols =
         ctx.fillText(number.toString(), x + tileSize / 2, y + tileSize / 2);
       }
     }
-
-    players.forEach((player, index) => {
-      const location = player.location; // assuming this is a number
-      const coords = coordsMap[location + 1];
-      console.log(coords)
-      if (!coords) return;
-
-      const {x, y} = coords;
-
-      ctx.beginPath();
-      ctx.arc(x, y, 15, 0, 2 * Math.PI); // radius 15px
-      ctx.fill();
-    });
-
   }, [size, canvasRef, players]);
 
   return <canvas ref={canvasRef} width={size} height={size} />;

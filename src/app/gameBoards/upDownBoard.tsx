@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import UpsAndDownsCanvas from "@/utils/UpAndDown/canvasUtils";
+import UpsAndDownsCanvas, { coordsMap } from "@/utils/UpAndDown/canvasUtils";
 import { GameStats } from "../boardGame/page";
-import { canvasHeight, canvasWidth } from "@/utils/Apologies/config";
+import { indexToColor } from "@/utils/UpAndDown/config";
 import { GET_GAMESTREAM } from "@/utils/config";
 import { UpsAndDownsGameResponseAdapter } from "@/utils/Apologies/adapters";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
 import { Player } from "@/components/UpsAndDowns/Player/Player";
+import { SUBMIT_MOVE } from "@/utils/UpAndDown/config";
+import PiecesLayer from "@/components/UpsAndDowns/Pieces/piecesLayer";
 
 type BoardCanvasProps = {
   playerColor: string;
@@ -65,7 +67,7 @@ export default function UpAndDownBoard({
     return true
   }
   const updatePlayers = (players: number[]) => {
-    const new_player = players.map(m => { return new Player(m)})
+    const new_player = players.map((m, index) => { const location = coordsMap[m]; const color = indexToColor[index];  return new Player(m, location.x, location.y, color)})
     setPlayers(new_player)
   }
 
@@ -123,35 +125,74 @@ export default function UpAndDownBoard({
     };
   }, []);
 
+  const handleMoveClick = async () =>  {
+    let lobbyId = localStorage.getItem("lobbyId") ?? "";
+    let player_Id = localStorage.getItem("userId" + randomId) ?? "";
+    const res = await fetch(SUBMIT_MOVE(lobbyId), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Player-Key": player_Id
+      },
+    });
+    if (!res.ok) {
+      throw Error("failed to post move");
+    }
+  }
+
   useEffect(() => {
     if (!devMode) return;
 
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
     setGameStarted(true)
+    console.log(coordsMap)
     const newPlayers = [
-      new Player(0),
-      new Player(1),
-      new Player(2),
-      new Player(3),
+      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[0]),
+      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[1]),
+      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[2]),
+      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[3]),
     ];
     setPlayers(newPlayers)
 
   }, []);
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="min-h-screen flex items-center justify-center bg-white-200">
-        <div>
-          <div>
-            <UpsAndDownsCanvas size={600} canvasRef={canvasRef} players={players} />
-          </div>
-        </div>
+   <div className="flex flex-col items-center">
+  <div className="min-h-screen flex items-center justify-center bg-white-200">
+    <div>
+      {/* 🔧 This is the key wrapper */}
+      <div style={{ position: "relative", width: 600, height: 600 }}>
+        <UpsAndDownsCanvas size={600} canvasRef={canvasRef} players={players} />
+
+        {/* Overlayed components absolutely positioned inside the relative div */}
+        <PiecesLayer pieces={players.map((p) => p.piece)} />
+
+        <button
+          style={{
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            zIndex: 10,
+            padding: "10px 15px",
+            background: "#007bff",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+          }}
+          onClick={async () => { await handleMoveClick(); }}
+        >
+          Overlay Button
+        </button>
       </div>
-      <ReconnectOverlay
-        playerConnectivity={playerConnectivity}
-        players={localTurnOrder}
-      />
     </div>
+  </div>
+
+  <ReconnectOverlay
+    playerConnectivity={playerConnectivity}
+    players={localTurnOrder}
+  />
+</div>
+
   );
 }
