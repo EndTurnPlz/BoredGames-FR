@@ -2,7 +2,8 @@ import { API_STRING } from "../config"
 
 export const canvasWidth = 600;
 export const canvasHeight = 600;
-export const tileSize = canvasWidth / 16;
+export const number_rows = 10
+export const tileSize = canvasWidth / number_rows;
 
 export const radius = tileSize / 2 - 3;
 

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Player } from "../../components/Apologies/Player/Player"; // assumes Player has a draw(ctx) method
 import { findPath } from "@/utils/Apologies/outerPath";
-import { ApologiesGameResponseAdapter, GameStatsAdapter } from "@/utils/Apologies/adapters";
+import { ApologiesGameResponseAdapter, GameStatsAdapter } from "@/utils/adapters";
 import {
   tileSize,
   canvasWidth,

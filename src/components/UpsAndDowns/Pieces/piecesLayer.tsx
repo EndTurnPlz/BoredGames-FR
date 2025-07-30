@@ -32,11 +32,11 @@ export default function PiecesLayer({ pieces }: PiecesLayerProps) {
             key={`${piece.location}-${indexInGroup}`}
             style={{
               position: "absolute",
-              top: piece.y - tileSize / 2 + offsetY,
-              left: piece.x - tileSize / 2 + offsetX,
+              top: piece.y - 3* tileSize / 8 + offsetY,
+              left: piece.x - 3* tileSize / 8 + offsetX,
               backgroundColor: piece.color,
-              width: "40px",
-              height: "40px",
+              width: `${3* tileSize / 4}px`,
+              height: `${3*tileSize / 4}px`,
               borderRadius: "50%",
               border: "2px solid black",
               cursor: "pointer",

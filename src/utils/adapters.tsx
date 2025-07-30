@@ -1,5 +1,5 @@
 import { GameStats } from "@/app/boardGame/page";
-import { Part } from "./gameUtils";
+import { Part } from "./Apologies/gameUtils";
 
 export class ApologiesGameResponseAdapter {
   private raw: any;
@@ -97,7 +97,7 @@ export class UpsAndDownsGameResponseAdapter {
     return this.snapshot.GameState ?? "";
   }
 
-  get lastDieRoll(): string {
+  get lastDieRoll(): number {
     return this.snapshot.LastDieRoll ?? "";
   }
 

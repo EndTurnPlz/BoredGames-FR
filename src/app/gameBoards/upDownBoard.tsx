@@ -5,7 +5,7 @@ import UpsAndDownsCanvas, { coordsMap } from "@/utils/UpAndDown/canvasUtils";
 import { GameStats } from "../boardGame/page";
 import { indexToColor } from "@/utils/UpAndDown/config";
 import { GET_GAMESTREAM } from "@/utils/config";
-import { UpsAndDownsGameResponseAdapter } from "@/utils/Apologies/adapters";
+import { UpsAndDownsGameResponseAdapter, Warp } from "@/utils/adapters";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
 import { Player } from "@/components/UpsAndDowns/Player/Player";
 import { SUBMIT_MOVE } from "@/utils/UpAndDown/config";
@@ -37,6 +37,8 @@ export default function UpAndDownBoard({
 
   const [angle, setAngle] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState("draw");
+  const [lastDieRoll, setLastDieRoll] = useState(0);
+  const [boardLayout, setBoardLayout] = useState<Warp[]>([]);
 
   const [players, setPlayers] = useState<Player[]>([]);
 //   const playersref = useRef<Player[]>([]);
@@ -88,7 +90,8 @@ export default function UpAndDownBoard({
     if (!handleRoomState(player_names, state, viewNum)) {
       return;
     }
-    
+    setLastDieRoll(lastDieRoll)
+    setBoardLayout(BoardLayout)
 
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)
@@ -148,51 +151,52 @@ export default function UpAndDownBoard({
     setGameStarted(true)
     console.log(coordsMap)
     const newPlayers = [
-      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[0]),
-      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[1]),
-      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[2]),
-      new Player(0, coordsMap[1].x, coordsMap[1].y, indexToColor[3]),
+      new Player(0, coordsMap[0].x, coordsMap[0].y, indexToColor[0]),
+      new Player(1, coordsMap[2].x, coordsMap[2].y, indexToColor[1]),
+      new Player(2, coordsMap[3].x, coordsMap[3].y, indexToColor[2]),
+      new Player(3, coordsMap[4].x, coordsMap[4].y, indexToColor[3]),
     ];
+    setBoardLayout([{ From: "1", To: "38" }, { From: "38", To: "4" }]);
     setPlayers(newPlayers)
 
   }, []);
 
   return (
    <div className="flex flex-col items-center">
-  <div className="min-h-screen flex items-center justify-center bg-white-200">
-    <div>
-      {/* 🔧 This is the key wrapper */}
-      <div style={{ position: "relative", width: 600, height: 600 }}>
-        <UpsAndDownsCanvas size={600} canvasRef={canvasRef} players={players} />
+    <div className="min-h-screen flex items-center justify-center bg-white-200">
+      <div>
+        {/* 🔧 This is the key wrapper */}
+        <div style={{ position: "relative", width: 600, height: 600 }}>
+          <UpsAndDownsCanvas size={600} canvasRef={canvasRef} players={players} warps={boardLayout} />
 
-        {/* Overlayed components absolutely positioned inside the relative div */}
-        <PiecesLayer pieces={players.map((p) => p.piece)} />
+          {/* Overlayed components absolutely positioned inside the relative div */}
+          <PiecesLayer pieces={players.map((p) => p.piece)} />
 
-        <button
-          style={{
-            position: "absolute",
-            top: "20px",
-            left: "20px",
-            zIndex: 10,
-            padding: "10px 15px",
-            background: "#007bff",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-          }}
-          onClick={async () => { await handleMoveClick(); }}
-        >
-          Overlay Button
-        </button>
+          <button
+            style={{
+              position: "absolute",
+              top: "20px",
+              left: "20px",
+              zIndex: 10,
+              padding: "10px 15px",
+              background: "#007bff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "5px",
+            }}
+            onClick={async () => { await handleMoveClick(); }}
+          >
+            Overlay Button
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <ReconnectOverlay
-    playerConnectivity={playerConnectivity}
-    players={localTurnOrder}
-  />
-</div>
+    <ReconnectOverlay
+      playerConnectivity={playerConnectivity}
+      players={localTurnOrder}
+    />
+  </div>
 
   );
 }
