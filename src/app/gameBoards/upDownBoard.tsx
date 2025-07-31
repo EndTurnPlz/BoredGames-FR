@@ -120,6 +120,7 @@ export default function UpAndDownBoard({
     if (lastDieRoll >= 1 && lastDieRoll <= 6) {
       await updateDie(lastDieRoll, player_names, phase)
     }
+    setLastDieRoll(lastDieRoll)
     setGameWinner(phase, player_names, player_locations)
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)
@@ -174,7 +175,6 @@ export default function UpAndDownBoard({
   const updateDie = async (lastDieRoll: number, players_names: string[], phase: number) => {
     setLoading(true)
     setTimeout(() => {
-      setLastDieRoll(lastDieRoll)
       setLoading(false);
       setMoveLog((prev) => {
         const new_move = generateMoveDescription(players_names, phase, lastDieRoll)
