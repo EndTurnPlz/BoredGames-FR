@@ -115,9 +115,10 @@ export default function UpAndDownBoard({
     if (!handleRoomState(player_names, state, viewNum)) {
       return;
     }
-    setLastDieRoll(lastDieRoll)
     setBoardLayout(BoardLayout)
     const phase = phaseToInt(gameState)
+
+    await updateDie(lastDieRoll)
     setMoveLog((prev) => {
       const new_move = generateMoveDescription(player_names, phase, lastDieRoll)
       let newLog = [];
@@ -179,6 +180,14 @@ export default function UpAndDownBoard({
     };
   }, []);
 
+  const updateDie = async (lastDieRoll: number) => {
+    setLoading(true)
+    setTimeout(() => {
+      setLastDieRoll(lastDieRoll)
+      setLoading(false);
+    }, 1000);
+  }
+
   const handleMoveClick = async () =>  {
     let lobbyId = localStorage.getItem("lobbyId") ?? "";
     let player_Id = localStorage.getItem("userId" + randomId) ?? "";
@@ -192,6 +201,9 @@ export default function UpAndDownBoard({
     if (!res.ok) {
       throw Error("failed to post move");
     }
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
   }
 
   useEffect(() => {
@@ -229,9 +241,9 @@ export default function UpAndDownBoard({
               // Trigger roll logic
               setLoading(true)
               await handleMoveClick();
-              setLoading(false)
             }}
             rolling={loading}
+            result={lastDieRoll}
           />
         </div>
       </div>
