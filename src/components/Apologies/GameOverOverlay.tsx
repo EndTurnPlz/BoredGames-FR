@@ -2,7 +2,7 @@
 
 import { GameStats } from "@/app/boardGame/page";
 
-export default function GameOverOverlay({
+export default function ApologiesGameOverOverlay({
   gameOver,
   winner,
   gameStats,

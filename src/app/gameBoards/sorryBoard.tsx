@@ -464,7 +464,7 @@ export default function ApologiesBoard({
     return 8;
   }
 
-  async function setGameWinner(phase: number, pieces: string[][], turnOrder: string[], gameStats: GameStatsAdapter) {
+  function setGameWinner(phase: number, pieces: string[][], turnOrder: string[], gameStats: GameStatsAdapter) {
     setGamePhase(phase);
     // console.log("This is phase:", phase, gamePhase == 9)
     if (phase == 9) {
@@ -516,7 +516,6 @@ export default function ApologiesBoard({
   function handleNewMove(prevLog: string[], old_players: Player[], new_players: Player[], newGamePhase: number, player_names: string[], lastDrawnCard: number, lastCompletedMove: Request): string[] {
     let newLog = [];
     newLog.push(...prevLog);
-    console.log("phases:", gamePhase, newGamePhase)
     // Then generate the move string for current move
     if (newGamePhase != 8) {
       const new_move = generateMoveString(
@@ -534,7 +533,6 @@ export default function ApologiesBoard({
     }
     // Add new move only if non-empty and not duplicate
     newLog = newLog.filter((msg) => !msg.includes("undefined"));
-    console.log(newLog)
     return newLog
   }
 
@@ -589,7 +587,7 @@ export default function ApologiesBoard({
     });
 
 
-    await setGameWinner(gamePhase, pieces, turnOrder, gameStats)
+    setGameWinner(gamePhase, pieces, turnOrder, gameStats)
     setPlayers(new_players)
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)

@@ -10,6 +10,7 @@ import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
 import { Player } from "@/components/UpsAndDowns/Player/Player";
 import { SUBMIT_MOVE } from "@/utils/UpAndDown/config";
 import PiecesLayer from "@/components/UpsAndDowns/Pieces/piecesLayer";
+import RollOverlay from "@/components/UpsAndDowns/RollOverlay";
 
 type BoardCanvasProps = {
   playerColor: string;
@@ -73,7 +74,29 @@ export default function UpAndDownBoard({
     setPlayers(new_player)
   }
 
-  const updateGameState = async (response: any) => {
+  const generateMoveDescription = (player_names: string[], phase: number, lastDieRoll: number): string => {
+    if (phase == 9) {
+      return ""
+    }
+    const player = player_names[phase]
+    const move_description = `${player} rolled a ${lastDieRoll}`
+    return move_description
+  }
+
+    function phaseToInt(phase: string) {
+    if (phase === "P1Turn") return 0;
+    if (phase === "P2Turn") return 1;
+    if (phase === "P3Turn") return 2;
+    if (phase === "P4Turn") return 3;
+    if (phase === "P5Turn") return 4;
+    if (phase === "P6Turn") return 5;
+    if (phase === "P7Turn") return 6;
+    if (phase === "P8Turn") return 7;
+    if (phase === "End") return 9;
+    return 8;
+  }
+
+  const updateGameState = async (response: any) =>  {
     const adapter = new UpsAndDownsGameResponseAdapter(response);
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
@@ -86,6 +109,7 @@ export default function UpAndDownBoard({
     console.log(BoardLayout)
     const lastDieRoll = adapter.lastDieRoll
     const player_locations = adapter.playerLocations
+    const gameState = adapter.gameState
     updatePlayers(player_locations)
 
     if (!handleRoomState(player_names, state, viewNum)) {
@@ -93,9 +117,35 @@ export default function UpAndDownBoard({
     }
     setLastDieRoll(lastDieRoll)
     setBoardLayout(BoardLayout)
-
+    const phase = phaseToInt(gameState)
+    setMoveLog((prev) => {
+      const new_move = generateMoveDescription(player_names, phase, lastDieRoll)
+      let newLog = [];
+      newLog.push(...prev);
+      console.log(prev, new_move, prev[prev.length - 1])
+      if (new_move.length > 0 && new_move != prev[prev.length - 1] && lastDieRoll >= 1 && lastDieRoll <= 6 ) {
+        newLog.push(new_move)
+      }
+      return newLog
+    })
+    setGameWinner(phase, player_names, player_locations)
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)
+  }
+
+  function setGameWinner(phase: number, turnOrder: string[], player_location: number[]) {
+    setGamePhase(phase);
+    // console.log("This is phase:", phase, gamePhase == 9)
+    if (phase == 9) {
+      setGameOver(true);
+      // console.log("fetching stats")
+      const rowAllEndWithH = player_location.findIndex(
+        (row: number) =>
+          row == 100
+      );
+      // console.log(rowAllEndWithH, statsRes)
+      setWinner(turnOrder[rowAllEndWithH]);
+    }
   }
 
   useEffect(() => {
@@ -172,23 +222,17 @@ export default function UpAndDownBoard({
 
           {/* Overlayed components absolutely positioned inside the relative div */}
           <PiecesLayer pieces={players.map((p) => p.piece)} />
-
-          <button
-            style={{
-              position: "absolute",
-              top: "20px",
-              left: "20px",
-              zIndex: 10,
-              padding: "10px 15px",
-              background: "#007bff",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
+          <RollOverlay
+            isMyTurn={localTurnOrder.indexOf(username ?? "") == gamePhase}
+            currentPlayerName={localTurnOrder[gamePhase]}
+            onRoll={async () => {
+              // Trigger roll logic
+              setLoading(true)
+              await handleMoveClick();
+              setLoading(false)
             }}
-            onClick={async () => { await handleMoveClick(); }}
-          >
-            Overlay Button
-          </button>
+            rolling={loading}
+          />
         </div>
       </div>
     </div>

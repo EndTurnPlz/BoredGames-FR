@@ -9,12 +9,14 @@ import GameBoardCenter from "@/components/gameCenter";
 import GameSidebarRight from "@/components/rightSidebar";
 import WaitingOverlays from "@/components/Apologies/WaitingOverlays";
 import RulesModal from "@/components/rulesModal";
-import GameOverOverlay from "@/components/GameOverOverlay";
+import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
 
 import { GET_START } from "@/utils/Apologies/config";
 import { GET_LOBBY, indexToColor } from "@/utils/config";
 import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
+import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
+import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
 export type GameStats = {
   movesMade: number[];
   pawnsKilled: number[];
@@ -93,6 +95,13 @@ export default function BoardGamePage() {
       ? UpAndDownBoard
       : () => <p>Unknown game type: {gameType}</p>;
 
+  const GameOverlayComponent = 
+     gameType === "Apologies"
+      ? ApologiesGameOverOverlay
+      : gameType === "UpsAndDowns"
+      ? UpsAndDownsGameOverOverlay
+      : () => <p>Unknown game type: {gameType}</p>;
+
   const enoughPlayers = (length: number) => {
     if (gameType === "Apologies" && length == 4) {
       return true;
@@ -153,7 +162,7 @@ export default function BoardGamePage() {
           setShowCards={setShowCards}
         />
 
-        <GameOverOverlay
+        <GameOverlayComponent
           gameOver={gameOver}
           winner={winner}
           gameStats={gameStats}
