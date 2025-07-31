@@ -160,6 +160,7 @@ export default function BoardGamePage() {
           showCards={showCards}
           setShowRules={setShowRules}
           setShowCards={setShowCards}
+          gameType={gameType ?? ""}
         />
 
         <GameOverlayComponent

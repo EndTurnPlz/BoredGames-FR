@@ -117,18 +117,9 @@ export default function UpAndDownBoard({
     }
     setBoardLayout(BoardLayout)
     const phase = phaseToInt(gameState)
-
-    await updateDie(lastDieRoll)
-    setMoveLog((prev) => {
-      const new_move = generateMoveDescription(player_names, phase, lastDieRoll)
-      let newLog = [];
-      newLog.push(...prev);
-      console.log(prev, new_move, prev[prev.length - 1])
-      if (new_move.length > 0 && new_move != prev[prev.length - 1] && lastDieRoll >= 1 && lastDieRoll <= 6 ) {
-        newLog.push(new_move)
-      }
-      return newLog
-    })
+    if (lastDieRoll >= 1 && lastDieRoll <= 6) {
+      await updateDie(lastDieRoll, player_names, phase)
+    }
     setGameWinner(phase, player_names, player_locations)
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)
@@ -180,11 +171,21 @@ export default function UpAndDownBoard({
     };
   }, []);
 
-  const updateDie = async (lastDieRoll: number) => {
+  const updateDie = async (lastDieRoll: number, players_names: string[], phase: number) => {
     setLoading(true)
     setTimeout(() => {
       setLastDieRoll(lastDieRoll)
       setLoading(false);
+      setMoveLog((prev) => {
+        const new_move = generateMoveDescription(players_names, phase, lastDieRoll)
+        let newLog = [];
+        newLog.push(...prev);
+        console.log(prev, new_move, prev[prev.length - 1])
+        if (new_move.length > 0 && new_move != prev[prev.length - 1] && lastDieRoll >= 1 && lastDieRoll <= 6) {
+          newLog.push(new_move)
+        }
+        return newLog
+      })
     }, 1000);
   }
 
