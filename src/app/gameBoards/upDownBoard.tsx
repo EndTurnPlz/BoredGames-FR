@@ -78,7 +78,8 @@ export default function UpAndDownBoard({
     if (phase == 9) {
       return ""
     }
-    const player = player_names[phase]
+    const prev_phase = (phase + player_names.length - 1) % player_names.length 
+    const player = player_names[prev_phase]
     const move_description = `${player} rolled a ${lastDieRoll}`
     return move_description
   }
