@@ -69,41 +69,23 @@ export const cardX2 = cardX1 + 3.5 * tileSize;
 export const cardY = canvasHeight / 2 - 2.5 * tileSize;
 export const cardW = 3 * tileSize;
 export const cardH = 5 * tileSize;
-
-export const GET_JOIN = (roomId: string)  => {
-  return `${API_STRING}/room/${roomId}/join`
-}
+const prefix = "/api/game/"
 
 export const GET_START = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/start`
+  return `${API_STRING}${prefix}${roomId}/start`
 }
 
 export const GET_GAMESTATS = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action`
-}
-
-export const GET_ROOMSTATE = (lobbyId: string)  => {
-  return `${API_STRING}/room/${lobbyId}/snapshot`
-}
-
-export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
-  return `${API_STRING}/room/${lobbyId}/stream?playerId=${playerId}`
+  return `${API_STRING}${prefix}${roomId}/action`
 }
 
 export const DRAW_CARD = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action/draw`
+  return `${API_STRING}${prefix}${roomId}/action/draw`
 }
 
 export const MOVE_PAWN = (roomId: string)  => {
-  return `${API_STRING}/game/${roomId}/action/move`
+  return `${API_STRING}${prefix}${roomId}/action/move`
 }
-
-export const indexToColor: Record<number, string> = {
-  0: "blue",
-  1: "yellow",
-  2: "green",
-  3: "red",
-};
 
 export const colorToIndex: Record<string, number> = {
   "blue": 0,

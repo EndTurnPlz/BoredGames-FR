@@ -1,7 +1,7 @@
 import { GameStats } from "@/app/boardGame/page";
-import { Part } from "./gameUtils";
+import { Part } from "./Apologies/gameUtils";
 
-export class GameResponseAdapter {
+export class ApologiesGameResponseAdapter {
   private raw: any;
   private snapshot: any;
 
@@ -43,7 +43,7 @@ export class GameResponseAdapter {
   }
 
   get playerConnectionStatus(): boolean[] {
-    return this.raw.PlayerConnSatus ?? this.snapshot.PlayerConnectionStatus ?? [];
+    return this.raw.PlayerConnStatus ?? this.snapshot.PlayerConnectionStatus ?? [];
   }
 
   get pieces(): string[][] {
@@ -52,6 +52,73 @@ export class GameResponseAdapter {
 
   get snapshotViewNum(): number {
     return this.snapshot.ViewNum ?? 0;
+  }
+
+  get snapshotType(): string {
+    return this.snapshot["$type"] ?? "";
+  }
+
+  get gameStats(): GameStats {
+    return this.snapshot.GameStats
+  }
+}
+
+export type Warp = {
+  Tile: string,
+  Dest: string
+}
+
+export class UpsAndDownsGameResponseAdapter {
+  private raw: any;
+  private snapshot: any;
+
+  constructor(response: any) {
+    this.raw = response;
+    this.snapshot = response.GameSnapshot ?? response.gameSnapshot ?? {};
+  }
+
+  get viewNum(): number {
+    return this.raw.ViewNum ?? 0;
+  }
+
+  get state(): string {
+    return this.raw.State ?? "";
+  }
+
+  get players(): string[] {
+    return this.raw.Players ?? this.raw.PlayerNames ?? [];
+  }
+
+  get gameSnapshot(): any {
+    return this.snapshot;
+  }
+
+  get gameState(): string {
+    return this.snapshot.GameState ?? "";
+  }
+
+  get lastDieRoll(): number {
+    return this.snapshot.LastDieRoll ?? "";
+  }
+
+  get lastCompletedMove(): any {
+    return this.snapshot.LastCompletedMove ?? null;
+  }
+
+  get turnOrder(): string[] {
+    return this.snapshot.TurnOrder ?? [];
+  }
+
+  get playerConnectionStatus(): boolean[] {
+    return this.raw.PlayerConnStatus ?? this.snapshot.PlayerConnectionStatus ?? [];
+  }
+
+  get playerLocations(): number[] {
+    return this.snapshot.PlayerLocations ?? [];
+  }
+  
+  get BoardLayout(): Warp[] {
+    return this.snapshot.BoardLayout ?? []
   }
 
   get snapshotType(): string {

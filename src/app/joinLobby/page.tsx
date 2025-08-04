@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { GET_JOIN } from "@/utils/Apologies/config";
+import { GET_JOIN } from "@/utils/config";
 import Header from "@/components/Apologies/Header";
 
 export default function JoinLobby() {

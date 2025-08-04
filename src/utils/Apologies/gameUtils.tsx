@@ -1,7 +1,8 @@
 import { Player } from "@/components/Apologies/Player/Player";
 import { coordStringToPixel, findPath } from "./outerPath";
-import { tileSize, colorToIndex, indexToColor, numberDict, zoneToColor } from "./config";
-import { RequestAdapter } from "./adapters";
+import { tileSize, colorToIndex, numberDict, zoneToColor } from "./config";
+import { indexToColor } from "../config";
+import { RequestAdapter } from "../adapters";
 
 export type GameState = {
   [color: string]: string[];

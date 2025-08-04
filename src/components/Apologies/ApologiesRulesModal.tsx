@@ -1,8 +1,9 @@
-// File: components/RulesModal.tsx
+// File: components/ApologiesRulesModal.tsx
 "use client";
+
 import { HiArrowRight, HiArrowLeft, HiOutlineBookOpen } from "react-icons/hi";
 
-export default function RulesModal({
+export default function ApologiesRulesModal({
   showRules,
   showCards,
   setShowRules,
@@ -27,6 +28,7 @@ export default function RulesModal({
         className="relative bg-slate-800/95 text-white rounded-2xl p-6 shadow-2xl max-w-xl w-full border-2 border-cyan-500/40 max-h-[60vh] overflow-y-auto pr-2 backdrop-blur-md"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Navigation Buttons */}
         {showCards && (
           <button
             onClick={() => {
@@ -59,6 +61,7 @@ export default function RulesModal({
           </div>
         )}
 
+        {/* Rules Section */}
         {showRules && (
           <>
             <h2 className="text-3xl font-bold mb-4 text-center flex items-center justify-center gap-2">
@@ -69,23 +72,16 @@ export default function RulesModal({
               <p>
                 🎯 <strong>Objective:</strong> Be the first to move all four of your pawns from Start to Home.
               </p>
-              <p>
-                🃏 Draw cards to determine how many spaces to move your pawns.
-              </p>
-              <p>
-                🚪 You can only move a pawn out of Start if you draw a 1 or 2.
-              </p>
-              <p>
-                ❗ If a pawn lands on another player&apos;s pawn, that pawn is sent back to Start.
-              </p>
-              <p>
-                🚪 You can only enter the safety zone with an exact count.
-              </p>
+              <p>🃏 Draw cards to determine how many spaces to move your pawns.</p>
+              <p>🚪 You can only move a pawn out of Start if you draw a 1 or 2.</p>
+              <p>❗ If a pawn lands on another player&apos;s pawn, that pawn is sent back to Start.</p>
+              <p>🚪 You can only enter the safety zone with an exact count.</p>
               <p>🙃 If you can&apos;t move, your turn is skipped.</p>
             </div>
           </>
         )}
 
+        {/* Cards Section */}
         {showCards && (
           <div>
             <h2 className="text-3xl font-bold mb-4 text-center">Card Effects</h2>

@@ -1,6 +1,6 @@
 // File: components/GameSidebarRight.tsx
 "use client";
-import { indexToColor } from "@/utils/Apologies/config";
+import { indexToColor } from "@/utils/config";
 import MoveLog from "./Apologies/moveLog";
 
 export default function GameSidebarRight({
@@ -8,12 +8,14 @@ export default function GameSidebarRight({
   gameStarted,
   hostId,
   handleStart,
+  enoughPlayers,
   moveLog = [],
 }: {
   players: string[];
   gameStarted: boolean;
   hostId: number;
   handleStart: () => void;
+  enoughPlayers: (length: number) => boolean;
   moveLog?: string[];
 }) {
   return (
@@ -42,7 +44,7 @@ export default function GameSidebarRight({
       </div>
       <MoveLog moveLog={moveLog} />
       <div className="mt-auto space-y-3">
-        {!gameStarted && hostId === 0 && players.length === 4 && (
+        {!gameStarted && hostId === 0 && enoughPlayers(players.length) && (
           <button
             onClick={handleStart}
             className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:scale-105 transition-all duration-200 shadow-lg"

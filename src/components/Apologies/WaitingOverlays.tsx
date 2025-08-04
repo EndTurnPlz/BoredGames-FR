@@ -3,14 +3,16 @@
 
 export default function WaitingOverlays({
   players,
+  enoughPlayers,
   gameStarted,
   hostId,
 }: {
   players: string[];
+  enoughPlayers: ((length: number) => boolean)
   gameStarted: boolean;
   hostId: number;
 }) {
-  const allJoined = players.length === 4;
+  const allJoined = enoughPlayers(players.length);
 
   if (allJoined && gameStarted) return null;
 
@@ -21,7 +23,7 @@ export default function WaitingOverlays({
         <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-slate-800/90 backdrop-blur-lg border-2 border-cyan-500/30 p-8 rounded-3xl shadow-2xl shadow-cyan-500/20 text-white text-center space-y-4 max-w-lg">
             <p className="text-xl font-bold text-cyan-100">
-              Waiting for 4 players to join...
+              Waiting for players to join...
             </p>
           </div>
         </div>

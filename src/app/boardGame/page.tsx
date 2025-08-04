@@ -4,17 +4,19 @@
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Header from "@/components/Apologies/Header";
-import GameSidebarLeft from "@/components/Apologies/leftSidebar";
-import GameBoardCenter from "@/components/Apologies/gameCenter";
-import GameSidebarRight from "@/components/Apologies/rightSidebar";
+import GameSidebarLeft from "@/components/leftSidebar";
+import GameBoardCenter from "@/components/gameCenter";
+import GameSidebarRight from "@/components/rightSidebar";
 import WaitingOverlays from "@/components/Apologies/WaitingOverlays";
-import RulesModal from "@/components/Apologies/rulesModal";
+import RulesModal from "@/components/rulesModal";
 import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
 
-import { indexToColor, GET_START } from "@/utils/Apologies/config";
-import { GET_LOBBY } from "@/utils/config";
-import UpAndDownBaord from "../gameBoards/upDownBaord";
+import { GET_START } from "@/utils/Apologies/config";
+import { GET_LOBBY, indexToColor } from "@/utils/config";
+import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
+import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
+import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
 export type GameStats = {
   movesMade: number[];
   pawnsKilled: number[];
@@ -89,9 +91,25 @@ export default function BoardGamePage() {
   const GameComponent =
     gameType === "Apologies"
       ? ApologiesBoard
-      : gameType === "Ups And Downs"
-      ? UpAndDownBaord
+      : gameType === "UpsAndDowns"
+      ? UpAndDownBoard
       : () => <p>Unknown game type: {gameType}</p>;
+
+  const GameOverlayComponent = 
+     gameType === "Apologies"
+      ? ApologiesGameOverOverlay
+      : gameType === "UpsAndDowns"
+      ? UpsAndDownsGameOverOverlay
+      : () => <p>Unknown game type: {gameType}</p>;
+
+  const enoughPlayers = (length: number) => {
+    if (gameType === "Apologies" && length == 4) {
+      return true;
+    } else if (gameType === "UpsAndDowns" && 2 <= length && length <= 8) {
+      return true;
+    }
+    return false
+  }
       
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">
@@ -126,11 +144,13 @@ export default function BoardGamePage() {
           gameStarted={gameStarted}
           hostId={hostId}
           handleStart={handleStart}
+          enoughPlayers={enoughPlayers}
           moveLog={moveLog}
         />
 
         <WaitingOverlays
           players={players}
+          enoughPlayers={enoughPlayers}
           gameStarted={gameStarted}
           hostId={hostId}
         />
@@ -140,9 +160,10 @@ export default function BoardGamePage() {
           showCards={showCards}
           setShowRules={setShowRules}
           setShowCards={setShowCards}
+          gameType={gameType ?? ""}
         />
 
-        <GameOverOverlay
+        <GameOverlayComponent
           gameOver={gameOver}
           winner={winner}
           gameStats={gameStats}

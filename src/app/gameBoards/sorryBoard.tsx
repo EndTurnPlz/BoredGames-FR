@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Player } from "../../components/Apologies/Player/Player"; // assumes Player has a draw(ctx) method
 import { findPath } from "@/utils/Apologies/outerPath";
-import { GameResponseAdapter, GameStatsAdapter } from "@/utils/Apologies/adapters";
+import { ApologiesGameResponseAdapter, GameStatsAdapter } from "@/utils/adapters";
 import {
   tileSize,
   canvasWidth,
@@ -13,7 +13,6 @@ import {
   MOVE_PAWN,
   deck_card,
   card_path,
-  GET_GAMESTREAM,
   GET_GAMESTATS,
   stringDict,
 } from "@/utils/Apologies/config";
@@ -41,6 +40,7 @@ import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/Apologies/gameUtils";
 import { GameStats } from "../boardGame/page";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
+import { GET_GAMESTREAM } from "@/utils/config";
 
 export type Piece = {
   x: number;
@@ -464,7 +464,7 @@ export default function ApologiesBoard({
     return 8;
   }
 
-  async function setGameWinner(phase: number, pieces: string[][], turnOrder: string[], gameStats: GameStatsAdapter) {
+  function setGameWinner(phase: number, pieces: string[][], turnOrder: string[], gameStats: GameStatsAdapter) {
     setGamePhase(phase);
     // console.log("This is phase:", phase, gamePhase == 9)
     if (phase == 9) {
@@ -516,7 +516,6 @@ export default function ApologiesBoard({
   function handleNewMove(prevLog: string[], old_players: Player[], new_players: Player[], newGamePhase: number, player_names: string[], lastDrawnCard: number, lastCompletedMove: Request): string[] {
     let newLog = [];
     newLog.push(...prevLog);
-    console.log("phases:", gamePhase, newGamePhase)
     // Then generate the move string for current move
     if (newGamePhase != 8) {
       const new_move = generateMoveString(
@@ -534,7 +533,6 @@ export default function ApologiesBoard({
     }
     // Add new move only if non-empty and not duplicate
     newLog = newLog.filter((msg) => !msg.includes("undefined"));
-    console.log(newLog)
     return newLog
   }
 
@@ -550,7 +548,7 @@ export default function ApologiesBoard({
   }
   
   const updateGameState = async (response: any) => {
-    const adapter = new GameResponseAdapter(response);
+    const adapter = new ApologiesGameResponseAdapter(response);
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
     console.log("reponse:", adapter);
@@ -589,7 +587,7 @@ export default function ApologiesBoard({
     });
 
 
-    await setGameWinner(gamePhase, pieces, turnOrder, gameStats)
+    setGameWinner(gamePhase, pieces, turnOrder, gameStats)
     setPlayers(new_players)
     setPlayerConnectivity(playerConnectionStatus);
     setView(viewNum)

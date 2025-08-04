@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { API_STRING, CREATE_GAME } from "@/utils/config";
-import GameCarousel from "@/components/Apologies/GameCarousel";
+import { API_STRING, CREATE_GAME, GET_CREATE } from "@/utils/config";
+import GameCarousel from "@/components/GameCarousel";
 import Header from "@/components/Apologies/Header";
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
     }
     try {
       setIsTransitioning(true);
-      const res = await fetch(`${API_STRING}${CREATE_GAME}?gameType=${gameType}`, {
+      const res = await fetch(GET_CREATE(gameType), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
