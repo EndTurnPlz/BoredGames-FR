@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_STRING, CREATE_GAME, GET_CREATE } from "@/utils/config";
 import GameCarousel from "@/components/GameCarousel";
@@ -62,6 +62,7 @@ export default function Home() {
   };
 
   return (
+    <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800">
       <Header />
 
@@ -116,5 +117,6 @@ export default function Home() {
         </footer>
       </main>
     </div>
+    </Suspense>
   );
 }

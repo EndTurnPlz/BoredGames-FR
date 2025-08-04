@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GET_JOIN } from "@/utils/config";
 import Header from "@/components/Apologies/Header";
@@ -62,6 +62,7 @@ export default function JoinLobby() {
   };
 
   return (
+    <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800">
       <Header />
 
@@ -109,5 +110,6 @@ export default function JoinLobby() {
         </footer>
       </main>
     </div>
+    </Suspense>
   );
 }

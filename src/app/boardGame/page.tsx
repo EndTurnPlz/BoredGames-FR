@@ -2,7 +2,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/Apologies/Header";
 import GameSidebarLeft from "@/components/leftSidebar";
 import GameBoardCenter from "@/components/gameCenter";
@@ -112,6 +112,7 @@ export default function BoardGamePage() {
   }
       
   return (
+    <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">
       <Header />
       <main className="flex h-screen pt-20 px-4 gap-4">
@@ -174,5 +175,6 @@ export default function BoardGamePage() {
         />
       </main>
     </div>
+    </Suspense>
   );
 }
