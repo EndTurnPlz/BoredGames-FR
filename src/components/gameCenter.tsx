@@ -13,7 +13,8 @@ export default function GameBoardCenter({
   setWinner,
   setGameStarted,
   setMoveLog,
-  setGameStats
+  setGameStats,
+  setHost
 }: {
   gameStarted: boolean;
   gameOver: boolean;
@@ -26,6 +27,7 @@ export default function GameBoardCenter({
   setGameStarted: (v: boolean) => void;
   setMoveLog: (v: string[]) => void;
   setGameStats: (v: GameStats) => void;
+  setHost: (v: string) => void;
 }) {
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative">
@@ -41,6 +43,7 @@ export default function GameBoardCenter({
           setMoveLog={setMoveLog}
           setGameStats={setGameStats}
           setWinner={setWinner}
+          setHost={setHost}
         />
       </div>
     </div>

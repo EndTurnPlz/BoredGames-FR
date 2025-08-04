@@ -17,6 +17,7 @@ import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
 import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
 import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
+
 export type GameStats = {
   movesMade: number[];
   pawnsKilled: number[];
@@ -36,8 +37,11 @@ export default function BoardGamePageClient() {
     "Player 3",
     "Player 4",
   ]);
+
+  const [host, setHost] = useState("")
+
   const [gameStarted, setGameStarted] = useState(false);
-  const [hostId, setHostId] = useState(-1);
+  const [isHost, setIsHost] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -60,13 +64,8 @@ export default function BoardGamePageClient() {
   }, [randomId]);
 
   useEffect(() => {
-    const index = players.indexOf(username ?? "");
-    setHostId(index);
-    console.log(players, index)
-    if (index != -1 && playerColor == "") {
-      setPlayerColor(indexToColor[index]);
-    }
-  }, [players, playerColor, username]);
+    setIsHost(username === host);
+  }, [host, username]);
 
   const handleStart = async () => {
     try {
@@ -137,12 +136,14 @@ export default function BoardGamePageClient() {
           setGameStarted={setGameStarted}
           setMoveLog={setMoveLog}
           setGameStats={setGameStats}
+          setHost={setHost}
         />
 
         <GameSidebarRight
           players={players}
           gameStarted={gameStarted}
-          hostId={hostId}
+          isHost={isHost}
+          hostName={host}
           handleStart={handleStart}
           enoughPlayers={enoughPlayers}
           moveLog={moveLog}
@@ -152,7 +153,7 @@ export default function BoardGamePageClient() {
           players={players}
           enoughPlayers={enoughPlayers}
           gameStarted={gameStarted}
-          hostId={hostId}
+          isHost={isHost}
         />
 
         <RulesModal

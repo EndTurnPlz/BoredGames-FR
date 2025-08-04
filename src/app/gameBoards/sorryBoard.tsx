@@ -40,7 +40,7 @@ import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/Apologies/gameUtils";
 import { GameStats } from "../boardGame/boardGame";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
-import { GET_GAMESTREAM } from "@/utils/config";
+import { GET_GAMESTREAM, indexToColor } from "@/utils/config";
 
 export type Piece = {
   x: number;
@@ -67,6 +67,7 @@ type BoardCanvasProps = {
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStats: React.Dispatch<React.SetStateAction<GameStats>>;
   setWinner: React.Dispatch<React.SetStateAction<string>>;
+  setHost: React.Dispatch<React.SetStateAction<string>>;
 };
 
 export type DrawnPiece = Piece & { drawX: number; drawY: number };
@@ -90,13 +91,13 @@ export type SecondMoveState = {
 };
 
 export default function ApologiesBoard({
-  playerColor = "red",
   setGameOver,
   setTurnOrder,
   setGameStarted,
   setMoveLog,
   setGameStats,
   setWinner,
+  setHost,
 }: BoardCanvasProps) {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
@@ -104,7 +105,10 @@ export default function ApologiesBoard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [angle, setAngle] = useState(0);
+  const [gameState, setGameState] = useState("")
+  const gameStateRef = useRef<string>(null)
   const [isPlayerTurn, setIsPlayerTurn] = useState("draw");
+  const [playerColor, setPlayerColor] = useState("green")
 
   const [topCardPath, setTopCardPath] = useState<string>(deck_card);
   const topCardPathRef = useRef<string>(deck_card);
@@ -122,7 +126,6 @@ export default function ApologiesBoard({
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
 
-  const [playerNames, setPlayerNames] = useState<string[]>([]);
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
   const gamePhaseRef = useRef<number>(8)
@@ -179,6 +182,9 @@ export default function ApologiesBoard({
   });
 
   const drawPieces = () => {
+    if (gameStateRef.current !== "GameInProgress") {
+      return
+    }
     const allPawns = players.flatMap((p) =>
       p.pieces.map((piece) => ({
         x: piece.x,
@@ -443,12 +449,16 @@ export default function ApologiesBoard({
   };
 
   useEffect(() => {
-    if (canvasRef.current) {
-      drawWithRotation(canvasRef.current, playerColor, playerColorRef.current);
+    if (gameStateRef.current !== "GameInProgress") {
+      return;
     }
-    setAngle(colorToAngleDict[playerColor]);
+    if (canvasRef.current) {
+      drawWithRotation(canvasRef.current, playerColor);
+    }
     if (playerColor != "") {
+      setAngle(colorToAngleDict[playerColor]);
       playerColorRef.current = playerColor;
+      console.log(playerColor)
       drawPieces();
     }
   }, [playerColor]);
@@ -504,13 +514,15 @@ export default function ApologiesBoard({
   }
 
   function handleRoomState(turnOrder: string[], players: string[], state: string, viewNum: number): boolean {
-    setTurnOrder(players);
+    setGameState(state)
     setLocalTurnOrder(turnOrder);
-    setPlayerNames(players)
+    setHost(players[0])
     if (state == "WaitingForPlayers") {
+      setTurnOrder(players);
       setView(viewNum)
       return false;
     } else if (state == "GameInProgress") {
+      setTurnOrder(turnOrder);
       setGameStarted(true);
     }
     return true
@@ -643,22 +655,25 @@ export default function ApologiesBoard({
   }, []);
 
   useEffect(() => {
-    if (devMode) return;
+    if (devMode || (gameState !== "GameInProgress")) return;
     // console.log("refreshed");
     const refresh = async () => {
+      const player_index = localTurnOrder.indexOf(username ?? "");
+      let color = indexToColor[player_index]
+      setPlayerColor(color)
+      console.log(color)
       if (canvasRef.current) {
         drawWithRotation(
           canvasRef.current,
-          playerColor,
-          playerColorRef.current
+          color,
         );
       }
-      setAngle(colorToAngleDict[playerColorRef.current]);
+      setAngle(colorToAngleDict[color]);
       drawPieces();
     };
 
     refresh();
-  }, []);
+  }, [gameState]);
 
   useEffect(() => {
     playersref.current = players;
@@ -672,6 +687,7 @@ export default function ApologiesBoard({
     }
   }, [isPlayerTurn]);
 
+  useSyncedRef(gameStateRef, gameState);
   useSyncedRef(drawnPiecesref, drawnPieces);
   useSyncedRef(loadingRef, loading);
   useSyncedRef(gamePhaseRef, gamePhase);
