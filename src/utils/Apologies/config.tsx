@@ -97,7 +97,7 @@ export const colorToIndex: Record<string, number> = {
 export const deck_card = "/Cards/deck.png"
 
 export const card_path = (id: string) => {
-  return `/Cards/FaceCards/${id}.png`
+  return `/BoredGames-FR/Cards/FaceCards/${id}.png`
 }
 
 export const zoneToColor: Record<string, string> = {
