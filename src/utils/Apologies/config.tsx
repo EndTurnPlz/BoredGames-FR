@@ -94,7 +94,7 @@ export const colorToIndex: Record<string, number> = {
   "red": 3
 };
 
-export const deck_card = "/Cards/deck.png"
+export const deck_card = "/BoredGames-FR/Cards/deck.png"
 
 export const card_path = (id: string) => {
   return `/BoredGames-FR/Cards/FaceCards/${id}.png`

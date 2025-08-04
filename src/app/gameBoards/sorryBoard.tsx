@@ -50,13 +50,13 @@ export type Piece = {
   id: string;
 };
 export type MoveSet = {
-  pawn: string;
-  opts: Move[];
+  Pawn: string;
+  Opts: Move[];
 };
 export type Move = {
-  from: string;
-  to: string;
-  effects: number[];
+  From: string;
+  To: string;
+  Effects: number[];
 };
 
 type BoardCanvasProps = {
@@ -117,10 +117,12 @@ export default function ApologiesBoard({
   const playerColorRef = useRef<string>("green");
 
   const [drawnPieces, setDrawnPieces] = useState<DrawnPiece[]>([]);
-
+  const drawnPiecesref = useRef<DrawnPiece[]>(null);
+  
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
 
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
   const [gamePhase, setGamePhase] = useState<number>(8);
   const gamePhaseRef = useRef<number>(8)
@@ -200,6 +202,7 @@ export default function ApologiesBoard({
       if (currentCardRef.current === 7 && currentDistanceref.current !== 7) {
         return true;
       }
+      console.log(move.selectedIdx)
       try {
         let player_Id = localStorage.getItem("userId" + randomId) ?? "";
         let lobbyId = localStorage.getItem("lobbyId") ?? "";
@@ -250,14 +253,14 @@ export default function ApologiesBoard({
   };
 
   const handleSecondPawnClick = (move: Move) => {
-    const new_idx = drawnPieces.findIndex((p) => p.id == move.from);
+    const new_idx = drawnPieces.findIndex((p) => p.id == move.From);
     setSecondMove({
       ...secondMoveRef.current,
       selectedIdx: new_idx,
-      destination: move.to,
-      effect: move.effects[0],
+      destination: move.To,
+      effect: move.Effects[0],
     });
-    const distance = findPath(move.from, move.to).length - 1;
+    const distance = findPath(move.From, move.To).length - 1;
     const current = currentDistanceref.current ?? 0;
     setCurrentDistance(current + distance);
     return true;
@@ -266,17 +269,17 @@ export default function ApologiesBoard({
   const handleTileHighlightClick = (tile: Move) => {
     if (moveRef.current.selectedIdx == -1) return false;
 
-    if (tile.effects.length > 1) {
+    if (tile.Effects.length > 1) {
       // Calculate popup position near tile
       let coords = getUnrotatedMousePosition(
-        coordMap[tile.to].x,
-        coordMap[tile.to].y,
+        coordMap[tile.To].x,
+        coordMap[tile.To].y,
         colorToAngleDict[playerColorRef.current]
       );
       setMove({
         ...moveRef.current,
-        destination: tile.to,
-        possibleEffects: tile.effects,
+        destination: tile.To,
+        possibleEffects: tile.Effects,
         effectPopup: {
           x: coords.x + tileSize / 2,
           y: coords.y - (3 * tileSize) / 2,
@@ -285,14 +288,14 @@ export default function ApologiesBoard({
     } else {
       setMove({
         ...moveRef.current,
-        destination: tile.to,
-        effect: tile.effects[0],
+        destination: tile.To,
+        effect: tile.Effects[0],
         effectPopup: null,
       });
     }
     // console.log("current Card", currentCardRef.current)
     if (currentCardRef.current === 7) {
-      const current = findPath(tile.from, tile.to).length - 1;
+      const current = findPath(tile.From, tile.To).length - 1;
       setCurrentDistance(current);
 
       const target = 7 - current;
@@ -309,10 +312,10 @@ export default function ApologiesBoard({
           drawnPieces[moveRef.current.selectedIdx] !== piece
         ) {
           const matching = moveRef.current.possibleMoves.find(
-            (m) => m.pawn === piece.id
+            (m) => m.Pawn === piece.id
           );
-          const canBeSecond = matching?.opts?.find(
-            (m) => findPath(m.from, m.to).length - 1 === target
+          const canBeSecond = matching?.Opts?.find(
+            (m) => findPath(m.From, m.To).length - 1 === target
           );
           if (canBeSecond) {
             possibleSeconds.push({ piece, move: canBeSecond });
@@ -328,6 +331,85 @@ export default function ApologiesBoard({
 
     return true;
   };
+  const selectOnlyMove = (movesets: MoveSet[], cardDrawn: number) => {
+    if (!movesets || !drawnPiecesref.current) { return; }
+    console.log(movesets)
+     if (
+        movesets.length == 1 &&
+        movesets[0].Opts.length === 1
+      ) {
+        const move = movesets[0].Opts[0];
+        const idx = drawnPiecesref.current.findIndex((p) => p.id === move.From);
+        console.log(idx, move.From, drawnPieces)
+        if (move.Effects.length > 1) {
+          // Calculate popup position near tile
+          let coords = getUnrotatedMousePosition(
+            coordMap[move.To].x,
+            coordMap[move.To].y,
+            colorToAngleDict[playerColorRef.current]
+          );
+          setMove({
+            ...moveRef.current,
+            destination: move.To,
+            highlightedTiles: [move],
+            possibleEffects: move.Effects,
+            possibleMoves: movesets,
+            selectedIdx: idx,
+            effectPopup: {
+              x: coords.x + tileSize / 2,
+              y: coords.y - (3 * tileSize) / 2,
+            },
+          });
+        } else {
+          setMove({
+            ...moveRef.current,
+            destination: move.To,
+            effect: move.Effects[0],
+            highlightedTiles: [move],
+            possibleMoves: movesets,
+            selectedIdx: idx,
+            effectPopup: null,
+          });
+          const distance = findPath(move.From, move.To).length - 1;
+          setCurrentDistance(distance)
+        }
+      } else if (
+        cardDrawn == 7 &&
+        movesets.length == 2 &&
+        movesets[0].Opts.length === 1 && 
+        movesets[1].Opts.length === 1 &&
+        movesets[0].Opts[0].Effects[0] >=5
+      ) {
+        const move = movesets[0].Opts[0];
+        const splitMove = movesets[1].Opts[0];
+
+        const idx = drawnPieces.findIndex((p) => p.id === move.From);
+        const secondIdx = drawnPieces.findIndex((p) => p.id === splitMove.From);
+        setMove({
+          ...moveRef.current,
+          destination: move.To,
+          effect: move.Effects[0],
+          highlightedTiles: [move],
+          possibleMoves: movesets,
+          selectedIdx: idx,
+          effectPopup: null,
+        });
+        setSecondMove({
+          ...secondMoveRef.current,
+          selectedIdx: secondIdx,
+          destination: splitMove.To,
+          effect: splitMove.Effects[0],
+        });
+        setCurrentDistance(7)
+
+      } else {
+        setMove({
+          ...moveRef.current,
+          possibleMoves: movesets,
+        });
+      }
+      setCurrentCard(cardDrawn)
+  }
 
   const handleDeckClick = async () => {
     // console.log("Deck clicked! Sending to backend...");
@@ -344,86 +426,6 @@ export default function ApologiesBoard({
         }
       });
 
-      const response = await res.json();
-      if (!res.ok) {
-        throw Error("failed to draw card");
-      }
-      // console.log(response);
-      if (
-        response.movesets.length == 1 &&
-        response.movesets[0].opts.length === 1
-      ) {
-        const move = response.movesets[0].opts[0];
-        const idx = drawnPieces.findIndex((p) => p.id === move.from);
-        if (move.effects.length > 1) {
-          // Calculate popup position near tile
-          let coords = getUnrotatedMousePosition(
-            coordMap[move.to].x,
-            coordMap[move.to].y,
-            colorToAngleDict[playerColorRef.current]
-          );
-          setMove({
-            ...moveRef.current,
-            destination: move.to,
-            highlightedTiles: [move],
-            possibleEffects: move.effects,
-            possibleMoves: response.movesets,
-            selectedIdx: idx,
-            effectPopup: {
-              x: coords.x + tileSize / 2,
-              y: coords.y - (3 * tileSize) / 2,
-            },
-          });
-        } else {
-          setMove({
-            ...moveRef.current,
-            destination: move.to,
-            effect: move.effects[0],
-            highlightedTiles: [move],
-            possibleMoves: response.movesets,
-            selectedIdx: idx,
-            effectPopup: null,
-          });
-          const distance = findPath(move.from, move.to).length - 1;
-          setCurrentDistance(distance)
-        }
-      } else if (
-        response.cardDrawn == 7 &&
-        response.movesets.length == 2 &&
-        response.movesets[0].opts.length === 1 && 
-        response.movesets[1].opts.length === 1 &&
-        response.movesets[0].opts[0].effects[0] >=5
-      ) {
-        const move = response.movesets[0].opts[0];
-        const splitMove = response.movesets[1].opts[0];
-
-        const idx = drawnPieces.findIndex((p) => p.id === move.from);
-        const secondIdx = drawnPieces.findIndex((p) => p.id === splitMove.from);
-        setMove({
-          ...moveRef.current,
-          destination: move.to,
-          effect: move.effects[0],
-          highlightedTiles: [move],
-          possibleMoves: response.movesets,
-          selectedIdx: idx,
-          effectPopup: null,
-        });
-        setSecondMove({
-          ...secondMoveRef.current,
-          selectedIdx: secondIdx,
-          destination: splitMove.to,
-          effect: splitMove.effects[0],
-        });
-        setCurrentDistance(7)
-
-      } else {
-        setMove({
-          ...moveRef.current,
-          possibleMoves: response.movesets,
-        });
-      }
-      localStorage.setItem("drawCard", JSON.stringify(response));
-      setCurrentCard(response.cardDrawn)
       setLoading(false);
       return true;
     } catch (err) {
@@ -501,9 +503,10 @@ export default function ApologiesBoard({
     // );
   }
 
-  function handleRoomState(players: string[], state: string, viewNum: number): boolean {
+  function handleRoomState(turnOrder: string[], players: string[], state: string, viewNum: number): boolean {
     setTurnOrder(players);
-    setLocalTurnOrder(players);
+    setLocalTurnOrder(turnOrder);
+    setPlayerNames(players)
     if (state == "WaitingForPlayers") {
       setView(viewNum)
       return false;
@@ -565,11 +568,12 @@ export default function ApologiesBoard({
     const playerConnectionStatus = adapter.playerConnectionStatus
     const lastDrawnCard = adapter.lastDrawnCard
     const lastCompletedMove = adapter.lastCompletedMove
+    const movesets = adapter.movesets
     const gamePhase = phaseToInt(gameState)
 
     const gameStats = new GameStatsAdapter(adapter.gameStats)
 
-    if (!handleRoomState(player_names, state, viewNum)) {
+    if (!handleRoomState(turnOrder, player_names, state, viewNum)) {
       return;
     }
     
@@ -585,6 +589,8 @@ export default function ApologiesBoard({
     setMoveLog((prevLog) => {
         return handleNewMove(prevLog, old_players, new_players, gamePhase, player_names, card_number, lastCompletedMove)
     });
+
+    selectOnlyMove(movesets, stringDict[lastDrawnCard.toLowerCase()])
 
 
     setGameWinner(gamePhase, pieces, turnOrder, gameStats)
@@ -628,7 +634,7 @@ export default function ApologiesBoard({
 
   useEffect(() => {
     const cardPaths = Object.values(numberDict).map(
-      (n) => `/Cards/FaceCards/${n}.png`
+      (n) => card_path(n)
     );
     cardPaths.forEach((path) => {
       const img = new Image();
@@ -649,18 +655,6 @@ export default function ApologiesBoard({
       }
       setAngle(colorToAngleDict[playerColorRef.current]);
       drawPieces();
-      const storedResponse = JSON.parse(
-        localStorage.getItem("drawCard") || "{}"
-      );
-      // console.log(storedResponse);
-      setMove((prev) => ({
-        ...prev,
-        possibleMoves: storedResponse.movesets,
-      }));
-      if (storedResponse.cardDrawn in numberDict) {
-        setTopCardPath(card_path(numberDict[storedResponse.cardDrawn]));
-        setCurrentCard(storedResponse.cardDrawn);
-      }
     };
 
     refresh();
@@ -678,6 +672,7 @@ export default function ApologiesBoard({
     }
   }, [isPlayerTurn]);
 
+  useSyncedRef(drawnPiecesref, drawnPieces);
   useSyncedRef(loadingRef, loading);
   useSyncedRef(gamePhaseRef, gamePhase);
   useSyncedRef(moveRef, move);
@@ -731,14 +726,14 @@ export default function ApologiesBoard({
 
   const handlePieceSelection = (piece: DrawnPiece, idx: number) => {
     if (piece.color !== playerColorRef.current) return false;
-    const matching = move.possibleMoves.find((m) => m.pawn === piece.id);
+    const matching = move.possibleMoves.find((m) => m.Pawn === piece.id);
 
     // console.log(matching);
     // console.log(move);
     setMove((prev) => ({
       ...prev,
       selectedIdx: idx,
-      highlightedTiles: matching?.opts ?? [],
+      highlightedTiles: matching?.Opts ?? [],
       effect: null,
       effectPopup: null,
       destination: null,
