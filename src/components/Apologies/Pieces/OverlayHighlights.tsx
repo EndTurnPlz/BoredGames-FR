@@ -1,7 +1,5 @@
 import { AnimatedOverlayCircle } from "@/components/Apologies/Player/animatedOverlay";
 import { Move, DrawnPiece } from "@/app/gameBoards/sorryBoard";
-import { coordMap, getUnrotatedMousePosition } from "@/utils/outerPath";
-import { colorToAngleDict, tileSize } from "@/utils/config";
 
 type OverlayHighlightsProps = {
   highlightedTiles: Move[];
