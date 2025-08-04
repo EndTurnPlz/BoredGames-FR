@@ -1,5 +1,5 @@
 "use client";
-import { GameStats } from "@/app/boardGame/page";
+import { GameStats } from "@/app/boardGame/boardGame";
 import dynamic from "next/dynamic";
 
 export default function GameBoardCenter({

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import UpsAndDownsCanvas, { coordsMap } from "@/utils/UpAndDown/canvasUtils";
-import { GameStats } from "../boardGame/page";
+import { GameStats } from "../boardGame/boardGame";
 import { indexToColor } from "@/utils/config";
 import { GET_GAMESTREAM } from "@/utils/config";
 import { UpsAndDownsGameResponseAdapter, Warp } from "@/utils/adapters";

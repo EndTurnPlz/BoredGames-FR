@@ -1,4 +1,4 @@
-import { GameStats } from "@/app/boardGame/page";
+import { GameStats } from "@/app/boardGame/boardGame";
 import { Part } from "./Apologies/gameUtils";
 
 export class ApologiesGameResponseAdapter {

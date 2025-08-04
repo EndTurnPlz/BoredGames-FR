@@ -1,6 +1,6 @@
 "use client";
 
-import { GameStats } from "@/app/boardGame/page";
+import { GameStats } from "@/app/boardGame/boardGame";
 
 export default function ApologiesGameOverOverlay({
   gameOver,
