@@ -40,7 +40,7 @@ import { useGameSelections } from "@/hooks/useGameSelections";
 import { GameState } from "@/utils/Apologies/gameUtils";
 import { GameStats } from "../boardGame/boardGame";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
-import { GET_GAMESTREAM, indexToColor } from "@/utils/config";
+import { GameInProgress, GET_GAMESTREAM, indexToColor } from "@/utils/config";
 
 export type Piece = {
   x: number;
@@ -517,11 +517,7 @@ export default function ApologiesBoard({
     setGameState(state)
     setLocalTurnOrder(turnOrder);
     setHost(players[0])
-    if (state == "WaitingForPlayers") {
-      setTurnOrder(players);
-      setView(viewNum)
-      return false;
-    } else if (state == "GameInProgress") {
+    if (state == GameInProgress) {
       setTurnOrder(turnOrder);
       setGameStarted(true);
     }

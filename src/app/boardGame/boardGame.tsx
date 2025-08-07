@@ -141,19 +141,8 @@ export default function BoardGamePageClient() {
 
         <GameSidebarRight
           players={players}
-          gameStarted={gameStarted}
-          isHost={isHost}
           hostName={host}
-          handleStart={handleStart}
-          enoughPlayers={enoughPlayers}
           moveLog={moveLog}
-        />
-
-        <WaitingOverlays
-          players={players}
-          enoughPlayers={enoughPlayers}
-          gameStarted={gameStarted}
-          isHost={isHost}
         />
 
         <RulesModal

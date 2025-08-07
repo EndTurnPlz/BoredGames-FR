@@ -5,19 +5,11 @@ import MoveLog from "./Apologies/moveLog";
 
 export default function GameSidebarRight({
   players,
-  gameStarted,
-  isHost,
   hostName,
-  handleStart,
-  enoughPlayers,
   moveLog = [],
 }: {
   players: string[];
-  gameStarted: boolean;
-  isHost: boolean;
   hostName: string;
-  handleStart: () => void;
-  enoughPlayers: (length: number) => boolean;
   moveLog?: string[];
 }) {
   return (
@@ -45,16 +37,6 @@ export default function GameSidebarRight({
         </div>
       </div>
       <MoveLog moveLog={moveLog} />
-      <div className="mt-auto space-y-3">
-        {!gameStarted && isHost && enoughPlayers(players.length) && (
-          <button
-            onClick={handleStart}
-            className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:scale-105 transition-all duration-200 shadow-lg"
-          >
-            Start Game
-          </button>
-        )}
-      </div>
     </div>
   );
 }
