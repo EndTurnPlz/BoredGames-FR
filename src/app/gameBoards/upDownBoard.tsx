@@ -20,6 +20,7 @@ type BoardCanvasProps = {
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStats: React.Dispatch<React.SetStateAction<GameStats>>;
   setWinner: React.Dispatch<React.SetStateAction<string>>;
+  setHost: React.Dispatch<React.SetStateAction<string>>;
 };
 
 export default function UpAndDownBoard({
@@ -30,6 +31,7 @@ export default function UpAndDownBoard({
   setMoveLog,
   setGameStats,
   setWinner,
+  setHost,
 }: BoardCanvasProps) {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
@@ -58,13 +60,16 @@ export default function UpAndDownBoard({
 
   const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([]);
 
-  function handleRoomState(players: string[], state: string, viewNum: number): boolean {
-    setTurnOrder(players);
-    setLocalTurnOrder(players);
+  function handleRoomState(players: string[], turnOrder: string[], state: string, viewNum: number): boolean {
+    setTurnOrder(turnOrder);
+    setLocalTurnOrder(turnOrder);
+    setHost(players[0])
     if (state == "WaitingForPlayers") {
+      setTurnOrder(players);
       setView(viewNum)
       return false;
     } else if (state == "GameInProgress") {
+      setTurnOrder(turnOrder);
       setGameStarted(true);
     }
     return true
@@ -104,6 +109,7 @@ export default function UpAndDownBoard({
 
     const viewNum = adapter.viewNum
     const player_names = adapter.players
+    const turnOrder = adapter.turnOrder
     const state = adapter.state
     const playerConnectionStatus = adapter.playerConnectionStatus
     const BoardLayout = adapter.BoardLayout
@@ -113,13 +119,13 @@ export default function UpAndDownBoard({
     const gameState = adapter.gameState
     updatePlayers(player_locations)
 
-    if (!handleRoomState(player_names, state, viewNum)) {
+    if (!handleRoomState(player_names, turnOrder, state, viewNum)) {
       return;
     }
     setBoardLayout(BoardLayout)
     const phase = phaseToInt(gameState)
     if (lastDieRoll >= 1 && lastDieRoll <= 6) {
-      await updateDie(lastDieRoll, player_names, phase)
+      await updateDie(lastDieRoll, turnOrder, phase)
     }
     setLastDieRoll(lastDieRoll)
     setGameWinner(phase, player_names, player_locations)

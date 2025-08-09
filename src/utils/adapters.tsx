@@ -1,5 +1,6 @@
 import { GameStats } from "@/app/boardGame/boardGame";
 import { Part } from "./Apologies/gameUtils";
+import { MoveSet } from "@/app/gameBoards/sorryBoard";
 
 export class ApologiesGameResponseAdapter {
   private raw: any;
@@ -40,6 +41,10 @@ export class ApologiesGameResponseAdapter {
 
   get turnOrder(): string[] {
     return this.snapshot.TurnOrder ?? [];
+  }
+
+  get movesets(): MoveSet[] {
+    return this.snapshot.CurrentMoveset ?? []
   }
 
   get playerConnectionStatus(): boolean[] {

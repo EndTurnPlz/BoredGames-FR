@@ -25,18 +25,18 @@ export default function OverlayHighlights({
   return (
     <>
       {highlightedTiles
-        .filter((move) => !destination || destination === move.to)
+        .filter((move) => !destination || destination === move.To)
         .map((move, index) => (
           <AnimatedOverlayCircle
             key={`highlight-${index}`}
-            coord={move.to}
+            coord={move.To}
             playerColor={playerColor}
             borderColor="purple"
-            backgroundColor={destination === move.to ? "purple" : "transparent"}
+            backgroundColor={destination === move.To ? "purple" : "transparent"}
             onClick={() => onTileClick(move)}
             zIndex={1000}
             animatePulse={!destination}
-            selected={destination === move.to}
+            selected={destination === move.To}
           />
         ))}
 

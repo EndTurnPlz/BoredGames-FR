@@ -3,43 +3,43 @@ export const mockCardResponse7 = {
     "cardDrawn": 7,
     "movesets": [
         {
-            "pawn": "d_4",
-            "opts": [
+            "Pawn": "d_4",
+            "Opts": [
                 {
-                    "from": "d_4",
-                    "to": "d_11",
-                    "effects": [
+                    "From": "d_4",
+                    "To": "d_11",
+                    "Effects": [
                         0
                     ]
                 },
                  {
-                    "from": "d_4",
-                    "to": "d_6",
-                    "effects": [
+                    "From": "d_4",
+                    "To": "d_6",
+                    "Effects": [
                         0
                     ]
                 }
             ]
         },
          {
-            "pawn": "d_3",
-            "opts": [
+            "Pawn": "d_3",
+            "Opts": [
                 {
-                    "from": "d_3",
-                    "to": "d_8",
-                    "effects": [
+                    "From": "d_3",
+                    "To": "d_8",
+                    "Effects": [
                         0
                     ]
                 }
             ]
         },
          {
-            "pawn": "d_5",
-            "opts": [
+            "Pawn": "d_5",
+            "Opts": [
                 {
-                    "from": "d_5",
-                    "to": "d_10",
-                    "effects": [
+                    "From": "d_5",
+                    "To": "d_10",
+                    "Effects": [
                         0
                     ]
                 }

@@ -25,7 +25,7 @@ export const AnimatedOverlayCircle = ({
 }: AnimatedOverlayCircleProps) => {
   const { x: rawX, y: rawY } = coordStringToPixel(coord, tileSize);
   const { x, y } = getUnrotatedMousePosition(rawX, rawY, colorToAngleDict[playerColor]);
-
+  console.log(rawX, rawY, playerColor)
   return (
     <motion.div
       style={{

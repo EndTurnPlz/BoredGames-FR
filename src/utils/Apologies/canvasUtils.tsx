@@ -99,7 +99,6 @@ export function drawBoard(ctx: CanvasRenderingContext2D, playerColor: string) {
 export function drawWithRotation(
   canvas: HTMLCanvasElement,
   color: string,
-  playerColorRef: string
 ) {
   const ctx = canvas?.getContext("2d");
   if (!canvas || !ctx) return;
@@ -111,6 +110,6 @@ export function drawWithRotation(
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate(angle);
   ctx.translate(-canvas.width / 2, -canvas.height / 2);
-  drawBoard(ctx, playerColorRef);
+  drawBoard(ctx, color);
   ctx.restore();
 }

@@ -43,7 +43,7 @@ export default function Home() {
       // Only after successful response
       setTimeout(() => {
         router.push(
-          `/boardGame?game=${gameType}&username=${encodeURIComponent(
+          `/lobbyScreen?game=${gameType}&username=${encodeURIComponent(
             username
           )}&randomId=${randomId}`
         );

@@ -5,17 +5,11 @@ import MoveLog from "./Apologies/moveLog";
 
 export default function GameSidebarRight({
   players,
-  gameStarted,
-  hostId,
-  handleStart,
-  enoughPlayers,
+  hostName,
   moveLog = [],
 }: {
   players: string[];
-  gameStarted: boolean;
-  hostId: number;
-  handleStart: () => void;
-  enoughPlayers: (length: number) => boolean;
+  hostName: string;
   moveLog?: string[];
 }) {
   return (
@@ -33,7 +27,7 @@ export default function GameSidebarRight({
                 style={{ backgroundColor: indexToColor[index] }}
               ></div>
               <span className="text-cyan-200 flex-1">{name}</span>
-              {index === 0 && (
+              {name == hostName && (
                 <span className="text-xs bg-cyan-400/20 text-cyan-300 px-2 py-1 rounded-full">
                   Host
                 </span>
@@ -43,16 +37,6 @@ export default function GameSidebarRight({
         </div>
       </div>
       <MoveLog moveLog={moveLog} />
-      <div className="mt-auto space-y-3">
-        {!gameStarted && hostId === 0 && enoughPlayers(players.length) && (
-          <button
-            onClick={handleStart}
-            className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:scale-105 transition-all duration-200 shadow-lg"
-          >
-            Start Game
-          </button>
-        )}
-      </div>
     </div>
   );
 }

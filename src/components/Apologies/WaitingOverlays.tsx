@@ -5,12 +5,12 @@ export default function WaitingOverlays({
   players,
   enoughPlayers,
   gameStarted,
-  hostId,
+  isHost,
 }: {
   players: string[];
   enoughPlayers: ((length: number) => boolean)
   gameStarted: boolean;
-  hostId: number;
+  isHost: boolean;
 }) {
   const allJoined = enoughPlayers(players.length);
 
@@ -30,7 +30,7 @@ export default function WaitingOverlays({
       )}
 
       {/* All joined, host view */}
-      {allJoined && !gameStarted && hostId === 0 && (
+      {allJoined && !gameStarted && isHost && (
         <div className="absolute inset-0 flex items-center justify-center z-50">
           <div className="bg-slate-800/90 backdrop-blur-lg border-2 border-cyan-500/30 p-8 rounded-3xl shadow-2xl shadow-cyan-500/20 text-xl font-bold text-cyan-100 text-center space-y-4">
             <p>All players have joined!</p>
@@ -39,7 +39,7 @@ export default function WaitingOverlays({
       )}
 
       {/* All joined, non-hosts view */}
-      {allJoined && !gameStarted && hostId !== 0 && (
+      {allJoined && !gameStarted && isHost && (
         <div className="absolute inset-0 flex items-center justify-center z-50">
           <div className="bg-slate-800/90 backdrop-blur-lg border-2 border-cyan-500/30 p-8 rounded-3xl shadow-2xl shadow-cyan-500/20 text-xl font-bold text-cyan-100 text-center">
             Waiting for host to start the game...
