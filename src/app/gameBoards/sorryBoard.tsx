@@ -127,6 +127,8 @@ export default function ApologiesBoard({
   const loadingRef = useRef(false);
 
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
+
   const [gamePhase, setGamePhase] = useState<number>(8);
   const gamePhaseRef = useRef<number>(8)
 
@@ -516,6 +518,7 @@ export default function ApologiesBoard({
   function handleRoomState(turnOrder: string[], players: string[], state: string, viewNum: number): boolean {
     setGameState(state)
     setLocalTurnOrder(turnOrder);
+    setPlayerNames(players)
     setHost(players[0])
     if (state == GameInProgress) {
       setTurnOrder(turnOrder);
@@ -838,7 +841,7 @@ export default function ApologiesBoard({
       )}
       <ReconnectOverlay
         playerConnectivity={playerConnectivity}
-        players={localTurnOrder}
+        players={playerNames}
       />
     </div>
   );

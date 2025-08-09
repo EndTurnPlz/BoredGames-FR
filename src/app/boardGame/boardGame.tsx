@@ -12,7 +12,7 @@ import RulesModal from "@/components/rulesModal";
 import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
 
 import { GET_START } from "@/utils/Apologies/config";
-import { GET_LOBBY, indexToColor } from "@/utils/config";
+import { APOLOGIES, GET_LOBBY, indexToColor, UPSANDDOWNS } from "@/utils/config";
 import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
 import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
@@ -88,23 +88,23 @@ export default function BoardGamePageClient() {
   };
 
   const GameComponent =
-    gameType === "Apologies"
+    gameType === APOLOGIES
       ? ApologiesBoard
-      : gameType === "UpsAndDowns"
+      : gameType === UPSANDDOWNS
       ? UpAndDownBoard
       : () => <p>Unknown game type: {gameType}</p>;
 
   const GameOverlayComponent = 
-     gameType === "Apologies"
+     gameType === APOLOGIES
       ? ApologiesGameOverOverlay
-      : gameType === "UpsAndDowns"
+      : gameType === UPSANDDOWNS
       ? UpsAndDownsGameOverOverlay
       : () => <p>Unknown game type: {gameType}</p>;
 
   const enoughPlayers = (length: number) => {
-    if (gameType === "Apologies" && length == 4) {
+    if (gameType === APOLOGIES && length == 4) {
       return true;
-    } else if (gameType === "UpsAndDowns" && 2 <= length && length <= 8) {
+    } else if (gameType === UPSANDDOWNS && 2 <= length && length <= 8) {
       return true;
     }
     return false
@@ -120,8 +120,11 @@ export default function BoardGamePageClient() {
           shareLink={shareLink}
           copied={copied}
           setCopied={setCopied}
-          gameStarted={gameStarted}
+          gameStarted={true}
           setShowRules={setShowRules}
+          handleStart={() => {}} 
+          enoughPlayers={false} 
+          isHost={false}
         />
 
         <GameBoardCenter

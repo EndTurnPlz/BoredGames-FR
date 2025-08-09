@@ -14,10 +14,13 @@ export default function LobbyPage() {
     const gameType = searchParams.get("game") ?? "";
     const username = searchParams.get("username") ?? "";
     const randomId = searchParams.get("randomId");
+    
     const [players, setPlayers] = useState<string []>([])
+    const [loading, SetLoading] = useState(false);
     
     const handleStart = async () => {
       try {
+        SetLoading(true)
         const lobbyId = localStorage.getItem("lobbyId")  ?? "";
         const playerId = localStorage.getItem("userId" + randomId) ?? "";
         const res = await fetch(GET_START(lobbyId), {
@@ -30,6 +33,7 @@ export default function LobbyPage() {
         });
         if (!res.ok) return;
       } catch (err) {
+        SetLoading(false)
         console.error("Error contacting backend:", err);
       }
     };
@@ -79,5 +83,21 @@ export default function LobbyPage() {
         }
         console.log(phase)
       }
-    return <Lobby gameName={gameType} players={players} maxPlayers={maxPlayers[gameType]} playerName={username} handleStart={handleStart}/>;
+    return (
+  <div
+    style={{
+      filter: loading ? "blur(4px)" : "none",
+      pointerEvents: loading ? "none" : "auto",
+      transition: "filter 0.3s ease"
+    }}
+  >
+    <Lobby
+      gameName={gameType}
+      players={players}
+      maxPlayers={maxPlayers[gameType]}
+      playerName={username}
+      handleStart={handleStart}
+    />
+  </div>
+);
 }

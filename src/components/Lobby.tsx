@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Header from "./Apologies/Header";
 import GameSettingsSidebar from "./settingsSideBar";
-import { GET_START } from "@/utils/Apologies/config";
 import GameSidebarLeft from "./leftSidebar";
 import { GET_LOBBY } from "@/utils/config";
 import RulesModal from "./rulesModal";
@@ -59,6 +58,9 @@ export default function Lobby({ gameName, players, maxPlayers, playerName, handl
           copied={copied}
           setCopied={setCopied}
           setShowRules={setShowRules}
+          handleStart={handleStart} 
+          enoughPlayers={enoughPlayers(players.length)} 
+          isHost={playerName == players[0]}
         />
         <RulesModal
           showRules={showRules}
@@ -83,7 +85,7 @@ export default function Lobby({ gameName, players, maxPlayers, playerName, handl
         </div>
 
         {/* Right Sidebar */}
-        <GameSettingsSidebar handleStart={handleStart} enoughPlayers={enoughPlayers(players.length)} isHost={playerName == players[0]} />
+        <GameSettingsSidebar />
       </main>
     </div>
   );
