@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_STRING, CREATE_GAME, GET_CREATE } from "@/utils/config";
 import GameCarousel from "@/components/GameCarousel";
@@ -8,11 +8,24 @@ import Header from "@/components/Apologies/Header";
 
 export default function Home() {
   const router = useRouter();
-  const [gameType, setGameType] = useState("Apologies");
+  const [gameType, setGameType] = useState("Warlocks");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [error, setError] = useState("");
   const [username, setUsername] = useState("");
+  
+  const devMode = true
 
+  useEffect(()=> {
+    if (devMode) {
+      const randomId = Math.random().toString(36).substring(2, 10);
+      router.push(
+        `/lobbyScreen?game=${gameType}&username=${encodeURIComponent(
+          username
+        )}&randomId=${randomId}`
+      );
+      return;
+    }
+    }, [])
   const handleStart = async () => {
     console.log("Sending to backend...");
     if (!username.trim() || username.length < 2) {

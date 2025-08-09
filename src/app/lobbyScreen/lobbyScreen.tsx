@@ -14,10 +14,23 @@ export default function LobbyPage() {
     const gameType = searchParams.get("game") ?? "";
     const username = searchParams.get("username") ?? "";
     const randomId = searchParams.get("randomId");
+
+    const devMode = true
     
     const [players, setPlayers] = useState<string []>([])
     const [loading, SetLoading] = useState(false);
+
     
+    useEffect(()=> {
+       if (devMode) {
+          router.push(
+            `/boardGame?game=${gameType}&username=${encodeURIComponent(
+              username
+            )}&randomId=${randomId}`
+          );
+          return;
+        }
+    }, [])
     const handleStart = async () => {
       try {
         SetLoading(true)
