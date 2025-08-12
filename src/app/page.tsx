@@ -13,7 +13,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [username, setUsername] = useState("");
   
-  const devMode = true
+  const devMode = false
 
   useEffect(()=> {
     if (devMode) {
@@ -25,7 +25,8 @@ export default function Home() {
       );
       return;
     }
-    }, [])
+  }, [])
+  
   const handleStart = async () => {
     console.log("Sending to backend...");
     if (!username.trim() || username.length < 2) {

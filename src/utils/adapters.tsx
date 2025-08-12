@@ -237,3 +237,93 @@ export class GameStatsAdapter {
     };
   }
 }
+
+export type Card = {
+  Suit: string,
+  Rank: string
+}
+
+export type Trick = {
+  CardsPlayed: string[]
+  CurrentPlayerIndex: number
+  LeadSuit: string
+  TrickLeader: number
+}
+
+export class WarlocksResponseAdapter {
+  private raw: any;
+  private snapshot: any;
+
+  constructor(response: any) {
+    this.raw = response;
+    this.snapshot = response.GameSnapshot ?? response.gameSnapshot ?? {};
+  }
+
+  get viewNum(): number {
+    return this.raw.ViewNum ?? 0;
+  }
+
+  get state(): string {
+    return this.raw.State ?? "";
+  }
+
+  get players(): string[] {
+    return this.raw.Players ?? this.raw.PlayerNames ?? [];
+  }
+
+  get gameSnapshot(): any {
+    return this.snapshot;
+  }
+
+  get gameState(): string {
+    return this.snapshot.GameState ?? "";
+  }
+
+  get lastTrickResult(): number {
+    return this.snapshot.LastTrickResult ?? "";
+  }
+
+  get playerPoints(): number[] {
+    return this.snapshot.PlayerPoints ?? null;
+  }
+
+  get turnOrder(): string[] {
+    return this.snapshot.TurnOrder ?? [];
+  }
+
+  get roundNumber(): number {
+    return this.snapshot.RoundNumber ?? [];
+  }
+
+  get thisPlayerBid(): number {
+    return this.snapshot.ThisPlayerBid ?? [];
+  }
+
+  get thisPlayerHand(): Card[] {
+    return this.snapshot.ThisPlayerHand ?? [];
+  }
+
+  get playerConnectionStatus(): boolean[] {
+    return this.raw.PlayerConnStatus ?? this.snapshot.PlayerConnectionStatus ?? [];
+  }
+
+  get playerLocations(): number[] {
+    return this.snapshot.PlayerLocations ?? [];
+  }
+  
+  get trumpSuite(): string {
+    return this.snapshot.TrumpSuite ?? []
+  }
+
+  get snapshotType(): string {
+    return this.snapshot["$type"] ?? "";
+  }
+
+  get gameStats(): GameStats {
+    return this.snapshot.GameStats
+  }
+
+  get currentTrick(): Trick {
+    return this.snapshot.CurrentTrick ?? "";
+  }
+}

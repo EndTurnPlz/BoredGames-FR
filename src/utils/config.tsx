@@ -32,7 +32,8 @@ export const indexToColor: Record<number, string> = {
 
 export const maxPlayers: Record<string, number> = {
   "Apologies": 4,
-  "UpsAndDowns": 8
+  "UpsAndDowns": 8,
+  "Warlocks": 6
 }
 
 export const GameInProgress: string = "GameInProgress"

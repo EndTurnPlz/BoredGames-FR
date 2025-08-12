@@ -15,7 +15,7 @@ export default function LobbyPage() {
     const username = searchParams.get("username") ?? "";
     const randomId = searchParams.get("randomId");
 
-    const devMode = true
+    const devMode = false
     
     const [players, setPlayers] = useState<string []>([])
     const [loading, SetLoading] = useState(false);
