@@ -1,4 +1,18 @@
-export const API_STRING = "http://localhost:5000"
+let API_STRING = "";
+
+if (typeof window !== "undefined") {
+  const hostname = window.location.hostname;
+
+  if (hostname === "localhost") {
+    API_STRING = "http://localhost:5000";
+  } else if (hostname === "endturnplz.github.io") {
+    API_STRING = "https://your-production-api.com";
+  } else {
+    API_STRING = "https://your-staging-api.com";
+  }
+}
+
+export { API_STRING };
 
 export const CREATE_GAME = "/api/room/create"
 export const START_GAME = "/startGame"
