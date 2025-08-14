@@ -243,8 +243,13 @@ export type Card = {
   Rank: string
 }
 
+export type CardInfo = {
+  Card: Card
+  IsPlayable: boolean
+}
+
 export type Trick = {
-  CardsPlayed: string[]
+  CardsPlayed: Card[]
   CurrentPlayerIndex: number
   LeadSuit: string
   TrickLeader: number
@@ -299,8 +304,16 @@ export class WarlocksResponseAdapter {
     return this.snapshot.ThisPlayerBid ?? [];
   }
 
-  get hasPlayerBid(): number {
+  get hasPlayerBid(): boolean[] {
     return this.snapshot.HasPlayerBid ?? [];
+  }
+
+  get playerBids(): number[] {
+    return this.snapshot.PlayerBids ?? [];
+  }
+
+  get thisPlayerHandWithInfo(): CardInfo[] {
+    return this.snapshot.ThisPlayerHandWithInfo ?? [];
   }
 
   get thisPlayerHand(): Card[] {
