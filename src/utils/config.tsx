@@ -1,12 +1,14 @@
 let API_STRING = "";
+let PRODUCTION_URL = "https://your-production-api.com"
+let DEV_URL = "http://localhost:5000"
 
 if (typeof window !== "undefined") {
   const hostname = window.location.hostname;
 
   if (hostname === "localhost") {
-    API_STRING = "http://localhost:5000";
+    API_STRING = DEV_URL;
   } else if (hostname === "endturnplz.github.io") {
-    API_STRING = "https://your-production-api.com";
+    API_STRING = PRODUCTION_URL;
   } else {
     API_STRING = "https://your-staging-api.com";
   }

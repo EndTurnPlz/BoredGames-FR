@@ -299,6 +299,10 @@ export class WarlocksResponseAdapter {
     return this.snapshot.ThisPlayerBid ?? [];
   }
 
+  get hasPlayerBid(): number {
+    return this.snapshot.HasPlayerBid ?? [];
+  }
+
   get thisPlayerHand(): Card[] {
     return this.snapshot.ThisPlayerHand ?? [];
   }
