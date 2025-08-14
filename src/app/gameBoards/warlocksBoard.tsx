@@ -1,7 +1,10 @@
 "use client";
 import CardObject from "@/components/Warlocks/Card";
+import BiddingOverlay from "@/components/Warlocks/Overlays/BiddingOverlay";
+import TrickOverlay from "@/components/Warlocks/Overlays/TrickOverlay";
+import TrickWinnerOverlay from "@/components/Warlocks/Overlays/TrickWinnerOverlay";
 import { useSyncedRef } from "@/hooks/useSyncedRef";
-import { Card, CardInfo, Trick, WarlocksResponseAdapter } from "@/utils/adapters";
+import { Card, CardInfo, LastTrick, Trick, WarlocksResponseAdapter } from "@/utils/adapters";
 import { GameInProgress, GET_GAMESTREAM } from "@/utils/config";
 import { CHOOSE_CARD, formatCard, SUBMIT_BET, suitEmojis, width } from "@/utils/Warlocks/config";
 import { adapter } from "next/dist/server/web/adapter";
@@ -50,6 +53,49 @@ export default function WizardBoard({
   
   const [playerIndex, setPlayerIndex] = useState<number>(-1)
   const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false)
+
+  const [showTrickOverlay, setShowTrickOverlay] = useState(false);
+  const [lastTrick, setLastTrick] = useState<LastTrick | null>( null);
+  const [showWinnerOverlay, setShowWinnerOverlay] = useState(false);
+  const [showBiddingOverlay, setShowBiddingOverlay] = useState(false);
+
+  useEffect(() => {
+  if (
+    currentTrick &&
+    currentTrick.CardsPlayed.length === 0
+  ) {
+    handleTrickEnd()
+  }
+  if (gameState === "Bid") {
+    setShowWinnerOverlay(true);
+    setTimeout(() => {
+      setShowWinnerOverlay(false);
+
+      setShowBiddingOverlay(true);
+
+      const timer = setTimeout(() => setShowBiddingOverlay(false), 2000);
+      return () => clearTimeout(timer);
+    }, 2000);
+  }
+}, [gameState, currentTrick, round]);
+
+
+const handleTrickEnd = () => {
+  if (lastTrick) {
+    setShowWinnerOverlay(true);
+    setTimeout(() => {
+      setShowWinnerOverlay(false);
+
+      setShowTrickOverlay(true);
+      setTimeout(() => setShowTrickOverlay(false), 2000);
+    }, 2000);
+  } else {
+    // Then show the round/trick overlay for 2 seconds
+    setShowTrickOverlay(true);
+    setTimeout(() => setShowTrickOverlay(false), 2000);
+  }
+
+};
 
   const devMode = false
 
@@ -125,6 +171,7 @@ export default function WizardBoard({
     const playerScores = response.playerPoints
     const playingPlayerIndex = response.currentTrick.CurrentPlayerIndex
     const currentTrick = response.currentTrick
+    const lastTrickResult = response.lastTrickResults
 
     const thisPlayerIndex: number = turnOrder.indexOf(username ?? "")
     handleRoomState(turnOrder, player_names, state, thisPlayerIndex)
@@ -139,6 +186,11 @@ export default function WizardBoard({
     setPlayerPoints(playerScores)
     getIsPlayerTurn(playingPlayerIndex, thisPlayerIndex)
     setCurrentTrick(currentTrick)
+    if (playerHand.length != round) {
+      setLastTrick(lastTrickResult)
+    } else {
+      setLastTrick(null)
+    }
     return;
   }
 
@@ -253,16 +305,16 @@ export default function WizardBoard({
       <div className="text-2xl font-bold mb-4">Lead: {lead}</div>
 
       {/* Current Trick */}
-      <div
-        className="relative inline-block p-2 rounded-lg"
-        style={{
-          width: `300px`, 
-          height: "90px", // or whatever the card height is
-        }}
-      >
         {!currentTrick || currentTrick.CardsPlayed.length === 0 ? (
           <div className="text-gray-300 text-center w-full">No cards played yet</div>
         ) : (
+          <div
+            className="relative inline-block p-2 rounded-lg"
+            style={{
+              width: `${80 * (currentTrick?.CardsPlayed.length ?? 1 - 1) + 80}px`, 
+              height: "90px", // or whatever the card height is
+            }}
+          >{
           currentTrick.CardsPlayed.map((card, i) => (
             <div
               key={i}
@@ -278,9 +330,9 @@ export default function WizardBoard({
                 onToggle={() => {}}
               />
             </div>
-          ))
+          ))}
+          </div>
         )}
-      </div>
     </div>
 
 
@@ -372,6 +424,13 @@ export default function WizardBoard({
             Choose Card
           </button>
         )}
+      <BiddingOverlay round={round} show={showBiddingOverlay} />
+      <TrickWinnerOverlay winner={localTurnOrder[lastTrick?.Winner ?? -1]} show={showWinnerOverlay} />
+      <TrickOverlay
+        round={round}
+        trickNumber={(lastTrick?.Num ?? 0) + 1}
+        show={showTrickOverlay}
+      />
       </div>
     </div>
   );

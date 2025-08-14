@@ -255,6 +255,14 @@ export type Trick = {
   TrickLeader: number
 }
 
+export type LastTrick = {
+  Cards: Card[]
+  Leader: number
+  Num: number
+  Winner: number
+}
+
+
 export class WarlocksResponseAdapter {
   private raw: any;
   private snapshot: any;
@@ -282,10 +290,6 @@ export class WarlocksResponseAdapter {
 
   get gameState(): string {
     return this.snapshot.GameState ?? "";
-  }
-
-  get lastTrickResult(): number {
-    return this.snapshot.LastTrickResult ?? "";
   }
 
   get playerPoints(): number[] {
@@ -342,5 +346,9 @@ export class WarlocksResponseAdapter {
 
   get currentTrick(): Trick {
     return this.snapshot.CurrentTrick ?? "";
+  }
+
+  get lastTrickResults(): LastTrick {
+    return this.snapshot.LastTrickResult ?? "";
   }
 }
