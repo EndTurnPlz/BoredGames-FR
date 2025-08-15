@@ -25,7 +25,9 @@ export function formatCard(rank: string, suit: string) {
     Ten: "10",
     Jack: "jack",
     Queen: "queen",
-    King: "king"
+    King: "king",
+    Warlock: "warlock",
+    Joker: "joker"
   };
 
   const rankStr = rankMap[rank] ?? rank.toLowerCase();

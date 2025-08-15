@@ -67,20 +67,29 @@ export default function WizardBoard({
     handleTrickEnd()
   }
   if (gameState === "Bid") {
-    setShowWinnerOverlay(true);
-    setTimeout(() => {
-      setShowWinnerOverlay(false);
+    if (lastTrick) {
+      setShowWinnerOverlay(true);
+      setTimeout(() => {
+        setShowWinnerOverlay(false);
 
+        setShowBiddingOverlay(true);
+
+        const timer = setTimeout(() => setShowBiddingOverlay(false), 2000);
+        return () => clearTimeout(timer);
+      }, 2000);
+    } else {
+      // Then show the round/trick overlay for 2 seconds
       setShowBiddingOverlay(true);
 
       const timer = setTimeout(() => setShowBiddingOverlay(false), 2000);
       return () => clearTimeout(timer);
-    }, 2000);
+    }
   }
 }, [gameState, currentTrick, round]);
 
 
 const handleTrickEnd = () => {
+  console.log(lastTrick)
   if (lastTrick) {
     setShowWinnerOverlay(true);
     setTimeout(() => {
