@@ -158,6 +158,55 @@ const handleTrickEnd = () => {
     };
   }, []);
 
+  function getCardDescription(cardsPlayed: Card[]): string {
+    const lastCard = cardsPlayed[cardsPlayed.length - 1]
+    if (lastCard.Rank == "Joker" || lastCard.Rank == "Warlock") {
+      return`${lastCard.Rank}`
+    }
+    return `${lastCard.Rank} of ${lastCard.Suit}`
+  }
+  function generateMoveDescription(lastTrick: LastTrick, trick: Trick, roundNumber: number, turnOrder: string[], phase: string, length: number): string[] {
+    if (phase === "Bid") {
+      return [
+       ...(lastTrick
+          ? [
+              `${turnOrder[(lastTrick.Leader + turnOrder.length) % turnOrder.length]} played ${getCardDescription(lastTrick.Cards)}`,
+              `${turnOrder[lastTrick.Winner]} won the trick`,
+            ]
+          : []),
+          `round ${roundNumber} start`
+      ];
+    } else if (trick.CardsPlayed.length != 0) {
+      return [`${turnOrder[trick.CurrentPlayerIndex]} played ${getCardDescription(trick.CardsPlayed)}`]
+    } else if (lastTrick && trick.CardsPlayed.length == 0 && lastTrick.Num <= roundNumber - length) {
+      return [`${turnOrder[(lastTrick.Leader + turnOrder.length) % turnOrder.length]} played ${getCardDescription(lastTrick.Cards)}`, 
+      `${turnOrder[lastTrick.Winner]} won the trick`]
+    }
+    return [""]
+  }
+  function updateMoveLog(lastTrick: LastTrick, trick: Trick, roundNumber: number, turnOrder: string[], phase: string, length: number) {
+    setMoveLog((prev) => {
+      const new_moves = generateMoveDescription(lastTrick, trick, roundNumber, turnOrder, phase, length)
+        let newLog = [];
+        newLog.push(...prev);
+        console.log(prev, new_moves, prev[prev.length - 1])
+        const lastEntries = prev.slice(-new_moves.length);
+
+        const isDuplicate = lastEntries.length === new_moves.length &&
+          lastEntries.every((move, i) => move === new_moves[i]);
+
+        if (isDuplicate) return prev; // don’t add duplicate moves
+
+        new_moves.forEach((move) => {
+          if (move.length > 0 && move != prev[prev.length - 1]) {
+            newLog.push(move)
+          }
+        });
+        return newLog
+
+    })
+  }
+
 
   function handleRoomState(turnOrder: string[], players: string[], state: string, playerIndex: number, playerPoints: number[]) {
     setHost(players[0])
@@ -190,12 +239,12 @@ const handleTrickEnd = () => {
   const updateGameState = (data: any) => {
     const response = new WarlocksResponseAdapter(data)
     console.log(response)
-    const turnOrder = response.turnOrder
+    const newTurnOrder = response.turnOrder
     const player_names = response.players
     const state = response.state
     
-    const gameState = response.gameState
-    const round = response.roundNumber
+    const newGameState = response.gameState
+    const roundNumber = response.roundNumber
     const bidState = response.hasPlayerBid
     const playerBids = response.playerBids
     const playerHand = response.thisPlayerHandWithInfo
@@ -208,10 +257,10 @@ const handleTrickEnd = () => {
     const currentTrick = response.currentTrick
     const lastTrickResult = response.lastTrickResults
 
-    const thisPlayerIndex: number = turnOrder.indexOf(username ?? "")
-    handleRoomState(turnOrder, player_names, state, thisPlayerIndex, playerScores)
-    setGameState(gameState)
-    setRound(round)
+    const thisPlayerIndex: number = newTurnOrder.indexOf(username ?? "")
+    handleRoomState(newTurnOrder, player_names, state, thisPlayerIndex, playerScores)
+    setGameState(newGameState)
+    setRound(roundNumber)
     setHasBid(bidState[thisPlayerIndex])
     setPlayerBids(playerBids)
     setBeforeHand(prePlayerHand)
@@ -222,7 +271,8 @@ const handleTrickEnd = () => {
     getIsPlayerTurn(playingPlayerIndex, thisPlayerIndex)
     setCurrentTrick(currentTrick)
     setPlayerConnectivity(playerConn)
-    if (playerHand.length != round) {
+    updateMoveLog(lastTrickResult, currentTrick, roundNumber, newTurnOrder, newGameState, playerHand.length)
+    if (playerHand.length != roundNumber) {
       setLastTrick(lastTrickResult)
     } else {
       setLastTrick(null)
@@ -294,14 +344,14 @@ const handleTrickEnd = () => {
     <table className="border-collapse border border-white text-xs">
       <thead>
         <tr>
-          {players.map(p => (
+          {localTurnOrder.map(p => (
             <th key={p} className="border border-white px-2">{p}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         <tr>
-          {players.map((p, index) => (
+          {localTurnOrder.map((p, index) => (
             <td key={p} className="border border-white px-2">
               {playerBids[index] ?? "-"}
             </td>
@@ -318,7 +368,7 @@ const handleTrickEnd = () => {
             <thead>
               <tr>
                 <th className="border border-white px-2">Round</th>
-                {players.map(p => (
+                {localTurnOrder.map(p => (
                   <th key={p} className="border border-white px-2">{p}</th>
                 ))}
               </tr>
@@ -326,8 +376,8 @@ const handleTrickEnd = () => {
             <tbody>
               <tr>
                 <td className="border border-white px-2">{round}</td>
-                {players.map((p, index) => (
-                  <td key={p} className="border border-white px-2">{playerPoints[index]}</td>
+                {playerPoints.map(p => (
+                  <td key={p} className="border border-white px-2">{p}</td>
                 ))}
               </tr>
             </tbody>
