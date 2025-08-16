@@ -5,7 +5,7 @@ import TrickOverlay from "@/components/Warlocks/Overlays/TrickOverlay";
 import TrickWinnerOverlay from "@/components/Warlocks/Overlays/TrickWinnerOverlay";
 import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { Card, CardInfo, LastTrick, Trick, WarlocksResponseAdapter } from "@/utils/adapters";
-import { GameInProgress, GET_GAMESTREAM } from "@/utils/config";
+import { GameEnd, GameInProgress, GET_GAMESTREAM } from "@/utils/config";
 import { CHOOSE_CARD, formatCard, SUBMIT_BET, suitEmojis, width } from "@/utils/Warlocks/config";
 import { adapter } from "next/dist/server/web/adapter";
 import { useSearchParams } from "next/navigation";
@@ -17,7 +17,8 @@ type BoardCanvasProps = {
   setTurnOrder: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
-  setWinner: React.Dispatch<React.SetStateAction<string>>;
+  setGameStats: React.Dispatch<React.SetStateAction<number[]>>;
+  setWinner: React.Dispatch<React.SetStateAction<string[]>>;
   setHost: React.Dispatch<React.SetStateAction<string>>;
 };
 
@@ -26,6 +27,7 @@ export default function WizardBoard({
   setTurnOrder,
   setGameStarted,
   setMoveLog,
+  setGameStats,
   setWinner,
   setHost,
 }: BoardCanvasProps) {
@@ -146,15 +148,27 @@ const handleTrickEnd = () => {
     };
   }, []);
 
-  function handleRoomState(turnOrder: string[], players: string[], state: string, playerIndex: number) {
+  function handleRoomState(turnOrder: string[], players: string[], state: string, playerIndex: number, playerPoints: number[]) {
     setHost(players[0])
     setPlayers(players)
     setLocalTurnOrder(turnOrder)
     console.log(username, playerIndex)
     setPlayerIndex(playerIndex)
+    setTurnOrder(turnOrder);
     if (state == GameInProgress) {
-      setTurnOrder(turnOrder);
       setGameStarted(true);
+    } else if (state == GameEnd) {
+      setGameOver(true)
+      const maxScore = Math.max(...playerPoints);
+      const winnerIndexes = playerPoints
+        .map((score, i) => (score === maxScore ? i : -1))
+        .filter(i => i !== -1);
+
+      const winners = winnerIndexes.map(i => turnOrder[i]);
+
+      console.log(winners, playerPoints);
+      setWinner(winners);
+      setGameStats(playerPoints)
     }
   }
 
@@ -183,7 +197,7 @@ const handleTrickEnd = () => {
     const lastTrickResult = response.lastTrickResults
 
     const thisPlayerIndex: number = turnOrder.indexOf(username ?? "")
-    handleRoomState(turnOrder, player_names, state, thisPlayerIndex)
+    handleRoomState(turnOrder, player_names, state, thisPlayerIndex, playerScores)
     setGameState(gameState)
     setRound(round)
     setHasBid(bidState[thisPlayerIndex])

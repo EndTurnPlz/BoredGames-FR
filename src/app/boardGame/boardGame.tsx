@@ -18,6 +18,7 @@ import ApologiesBoard from "../gameBoards/sorryBoard";
 import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
 import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
 import WizardBoard from "../gameBoards/warlocksBoard";
+import WarlocksGameOverOverlay from "@/components/Warlocks/Overlays/GameOverOverlay";
 
 export type GameStats = {
   movesMade: number[];
@@ -50,8 +51,8 @@ export default function BoardGamePageClient() {
   const [copied, setCopied] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [moveLog, setMoveLog] = useState<string[]>([]);
-  const [gameStats, setGameStats] = useState<GameStats>();
-  const [winner, setWinner] = useState<string>("");
+  const [gameStats, setGameStats] = useState<any>();
+  const [winner, setWinner] = useState<string[]>([]);
 
   useEffect(() => {
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -82,7 +83,7 @@ export default function BoardGamePageClient() {
       ? ApologiesGameOverOverlay
       : gameType === UPSANDDOWNS
       ? UpsAndDownsGameOverOverlay
-      : gameType === WARLOCKS ? UpsAndDownsGameOverOverlay
+      : gameType === WARLOCKS ? WarlocksGameOverOverlay
       : () => <p>Unknown game type: {gameType}</p>;
       
   return (
@@ -137,7 +138,7 @@ export default function BoardGamePageClient() {
           gameStats={gameStats}
           players={players}
           onRestart={() => {
-            window.location.href = "/";
+            window.location.href = "/BoredGames-FR";
           }}
         />
       </main>

@@ -53,6 +53,7 @@ export const maxPlayers: Record<string, number> = {
 }
 
 export const GameInProgress: string = "GameInProgress"
+export const GameEnd: string = "GameEnded"
 export const WaitingForPlayers: string = "WaitingForPlayers"
 
 export const APOLOGIES: string = "Apologies"

@@ -66,7 +66,7 @@ type BoardCanvasProps = {
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStats: React.Dispatch<React.SetStateAction<GameStats>>;
-  setWinner: React.Dispatch<React.SetStateAction<string>>;
+  setWinner: React.Dispatch<React.SetStateAction<string[]>>;
   setHost: React.Dispatch<React.SetStateAction<string>>;
 };
 
@@ -490,7 +490,7 @@ export default function ApologiesBoard({
           row.length > 0 && row.every((str) => str.endsWith("_H"))
       );
       // console.log(rowAllEndWithH, statsRes)
-      setWinner(turnOrder[rowAllEndWithH]);
+      setWinner([turnOrder[rowAllEndWithH]]);
     }
   }
 
@@ -719,7 +719,7 @@ export default function ApologiesBoard({
     setIsPlayerTurn("move");
     // setCurrentCard(7)
     setGameOver(true);
-    setWinner("Rohit");
+    setWinner(["Rohit"]);
     setGameStats({
       movesMade: [1, 1, 1, 2],
       pawnsKilled: [0, 3, 4, 2],

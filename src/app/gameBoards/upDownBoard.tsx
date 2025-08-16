@@ -19,7 +19,7 @@ type BoardCanvasProps = {
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStats: React.Dispatch<React.SetStateAction<GameStats>>;
-  setWinner: React.Dispatch<React.SetStateAction<string>>;
+  setWinner: React.Dispatch<React.SetStateAction<string[]>>;
   setHost: React.Dispatch<React.SetStateAction<string>>;
 };
 
@@ -144,7 +144,7 @@ export default function UpAndDownBoard({
           row == 100
       );
       // console.log(rowAllEndWithH, statsRes)
-      setWinner(turnOrder[rowAllEndWithH]);
+      setWinner([turnOrder[rowAllEndWithH]]);
     }
   }
 
