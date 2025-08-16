@@ -1,4 +1,5 @@
 "use client";
+import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
 import CardObject from "@/components/Warlocks/Card";
 import BiddingOverlay from "@/components/Warlocks/Overlays/BiddingOverlay";
 import TrickOverlay from "@/components/Warlocks/Overlays/TrickOverlay";
@@ -36,6 +37,7 @@ export default function WizardBoard({
   const randomId = searchParams.get("randomId");
 
   const [players, setPlayers] = useState<string[]>([]);
+  const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([]);
   const [localTurnOrder, setLocalTurnOrder] = useState<string[]>([]);
 
   const [trump, setTrump] = useState("None");
@@ -124,29 +126,38 @@ const handleTrickEnd = () => {
 
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
-    console.log(GET_GAMESTREAM(lobbyId, playerId));
+    let eventSource: EventSource | null = null;
+    let retryTimeout: NodeJS.Timeout | null = null;
 
-    const eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
+    const connect = () => {
+      console.log("Connecting SSE:", GET_GAMESTREAM(lobbyId, playerId));
+      eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
 
-    eventSource.onmessage = async (event) => {
-      try {
-        const data = JSON.parse(event.data); // If your server sends JSON
-        updateGameState(data);
-        // console.log("Received:", data.ViewNum, viewRef.current);
-      } catch (err) {
-        console.error("Failed to process event data:", err);
-      }
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          updateGameState(data);
+        } catch (err) {
+          console.error("Failed to process event data:", err);
+        }
+      };
+
+      eventSource.onerror = (err) => {
+        console.error("SSE error, will retry:", err);
+        eventSource?.close();
+        // retry in 2 seconds
+        retryTimeout = setTimeout(connect, 2000);
+      };
     };
 
-    eventSource.onerror = (err) => {
-      console.error("SSE error:", err);
-      eventSource.close();
-    };
+    connect();
 
     return () => {
-      eventSource.close();
+      eventSource?.close();
+      if (retryTimeout) clearTimeout(retryTimeout);
     };
   }, []);
+
 
   function handleRoomState(turnOrder: string[], players: string[], state: string, playerIndex: number, playerPoints: number[]) {
     setHost(players[0])
@@ -189,6 +200,7 @@ const handleTrickEnd = () => {
     const playerBids = response.playerBids
     const playerHand = response.thisPlayerHandWithInfo
     const prePlayerHand = response.thisPlayerHand
+    const playerConn = response.playerConnectionStatus
 
     const trumpSuite = response.trumpSuite
     const playerScores = response.playerPoints
@@ -209,6 +221,7 @@ const handleTrickEnd = () => {
     setPlayerPoints(playerScores)
     getIsPlayerTurn(playingPlayerIndex, thisPlayerIndex)
     setCurrentTrick(currentTrick)
+    setPlayerConnectivity(playerConn)
     if (playerHand.length != round) {
       setLastTrick(lastTrickResult)
     } else {
@@ -455,6 +468,10 @@ const handleTrickEnd = () => {
         show={showTrickOverlay}
       />
       </div>
+       <ReconnectOverlay
+          playerConnectivity={playerConnectivity}
+          players={players}
+        />
     </div>
   );
 }
