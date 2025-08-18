@@ -2,6 +2,7 @@
 import { HiArrowRight, HiArrowLeft, HiOutlineBookOpen } from "react-icons/hi";
 import ApologiesRulesModal from "./Apologies/ApologiesRulesModal";
 import UpsAndDownsRulesModal from "./UpsAndDowns/UpsAndDownsRulesModal";
+import WarlocksRulesModal from "./Warlocks/WarlocksRulesModal";
 
 export default function RulesModal({
   showRules,
@@ -29,6 +30,13 @@ export default function RulesModal({
       )}
       {gameType === "UpsAndDowns" && (
         <UpsAndDownsRulesModal
+          showRules={showRules}
+          showCards={showCards}
+          setShowRules={setShowRules}
+        />
+      )}
+       {gameType === "Warlocks" && (
+        <WarlocksRulesModal
           showRules={showRules}
           showCards={showCards}
           setShowRules={setShowRules}
