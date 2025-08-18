@@ -4,14 +4,11 @@ import CardObject from "@/components/Warlocks/Card";
 import BiddingOverlay from "@/components/Warlocks/Overlays/BiddingOverlay";
 import TrickOverlay from "@/components/Warlocks/Overlays/TrickOverlay";
 import TrickWinnerOverlay from "@/components/Warlocks/Overlays/TrickWinnerOverlay";
-import { useSyncedRef } from "@/hooks/useSyncedRef";
 import { Card, CardInfo, LastTrick, Trick, WarlocksResponseAdapter } from "@/utils/adapters";
 import { GameEnd, GameInProgress, GET_GAMESTREAM } from "@/utils/config";
-import { CHOOSE_CARD, formatCard, SUBMIT_BET, suitEmojis, width } from "@/utils/Warlocks/config";
-import { adapter } from "next/dist/server/web/adapter";
+import { CHOOSE_CARD, SUBMIT_BET, suitEmojis, width } from "@/utils/Warlocks/config";
 import { useSearchParams } from "next/navigation";
-import { before } from "node:test";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 type BoardCanvasProps = {
   playerColor: string;
   setGameOver: React.Dispatch<React.SetStateAction<boolean>>;
@@ -117,6 +114,11 @@ const handleTrickEnd = () => {
   
   
       setGameStarted(true);
+      setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
+      setHand([{Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}])
+      setTimeout(() => {
+        setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
+      }, 2000);
       // setCurrentCard(7)
     }, []);
   
@@ -170,16 +172,16 @@ const handleTrickEnd = () => {
       return [
        ...(lastTrick
           ? [
-              `${turnOrder[(lastTrick.Leader + turnOrder.length) % turnOrder.length]} played ${getCardDescription(lastTrick.Cards)}`,
+              `${turnOrder[(lastTrick.Leader + turnOrder.length - 1) % turnOrder.length]} played ${getCardDescription(lastTrick.Cards)}`,
               `${turnOrder[lastTrick.Winner]} won the trick`,
             ]
           : []),
           `round ${roundNumber} start`
       ];
     } else if (trick.CardsPlayed.length != 0) {
-      return [`${turnOrder[trick.CurrentPlayerIndex]} played ${getCardDescription(trick.CardsPlayed)}`]
+      return [`${turnOrder[(trick.CurrentPlayerIndex + turnOrder.length - 1) % turnOrder.length]} played ${getCardDescription(trick.CardsPlayed)}`]
     } else if (lastTrick && trick.CardsPlayed.length == 0 && lastTrick.Num <= roundNumber - length) {
-      return [`${turnOrder[(lastTrick.Leader + turnOrder.length) % turnOrder.length]} played ${getCardDescription(lastTrick.Cards)}`, 
+      return [`${turnOrder[(lastTrick.Leader + turnOrder.length - 1) % turnOrder.length]} played ${getCardDescription(lastTrick.Cards)}`, 
       `${turnOrder[lastTrick.Winner]} won the trick`]
     }
     return [""]
@@ -189,7 +191,6 @@ const handleTrickEnd = () => {
       const new_moves = generateMoveDescription(lastTrick, trick, roundNumber, turnOrder, phase, length)
         let newLog = [];
         newLog.push(...prev);
-        console.log(prev, new_moves, prev[prev.length - 1])
         const lastEntries = prev.slice(-new_moves.length);
 
         const isDuplicate = lastEntries.length === new_moves.length &&
@@ -271,6 +272,7 @@ const handleTrickEnd = () => {
     getIsPlayerTurn(playingPlayerIndex, thisPlayerIndex)
     setCurrentTrick(currentTrick)
     setPlayerConnectivity(playerConn)
+    console.log("turonder: ", playerPoints)
     updateMoveLog(lastTrickResult, currentTrick, roundNumber, newTurnOrder, newGameState, playerHand.length)
     if (playerHand.length != roundNumber) {
       setLastTrick(lastTrickResult)
@@ -376,8 +378,8 @@ const handleTrickEnd = () => {
             <tbody>
               <tr>
                 <td className="border border-white px-2">{round}</td>
-                {playerPoints.map(p => (
-                  <td key={p} className="border border-white px-2">{p}</td>
+                {playerPoints.map((p, index) => (
+                  <td key={index} className="border border-white px-2">{playerPoints[index]}</td>
                 ))}
               </tr>
             </tbody>
@@ -390,24 +392,25 @@ const handleTrickEnd = () => {
       <div className="text-2xl font-bold mb-4">Trump: {trump}</div>
       <div className="text-2xl font-bold mb-4">Lead: {lead}</div>
 
-      {/* Current Trick */}
-        {!currentTrick || currentTrick.CardsPlayed.length === 0 ? (
-          <div className="text-gray-300 text-center w-full">No cards played yet</div>
-        ) : (
-          <div
-            className="relative inline-block p-2 rounded-lg"
-            style={{
-              width: `${80 * (currentTrick?.CardsPlayed.length ?? 1 - 1) + 80}px`, 
-              height: "90px", // or whatever the card height is
-            }}
-          >{
-          currentTrick.CardsPlayed.map((card, i) => (
+    {/* Current Trick */}
+    {!currentTrick || currentTrick.CardsPlayed.length === 0 ? (
+      <div className="text-gray-300 text-center w-full">No cards played yet</div>
+    ) : (
+      <div className="relative flex justify-center">
+        <div
+          className="relative p-2 rounded-lg"
+          style={{
+            width: `${80 + (currentTrick.CardsPlayed.length - 1) * 30}px`, // total pile width
+            height: "90px", // card height
+          }}
+        >
+          {currentTrick.CardsPlayed.map((card, i) => (
             <div
               key={i}
               className="absolute top-0"
               style={{
-                left: i * 30, // shift each card to the right
-                zIndex: i,    // later cards on top
+                left: i * 30, // overlap shift
+                zIndex: i,
               }}
             >
               <CardObject
@@ -417,10 +420,11 @@ const handleTrickEnd = () => {
               />
             </div>
           ))}
-          </div>
-        )}
-    </div>
+        </div>
+      </div>
+    )}
 
+    </div>
 
 
       {/* Slider + Input for BID state */}
@@ -482,13 +486,19 @@ const handleTrickEnd = () => {
 
      {/* Bottom Row: Player Hand */}
       <div className="flex flex-col items-center space-y-2">
-        {/* Player Turn Indicator */}
-        {isPlayerTurn && (
-          <div className="text-yellow-300 font-bold mb-1">
-            It's your turn! Select a card to play.
-          </div>
+      {/* Player Turn Indicator */}
+      {/* Player Turn Indicator */}
+        {gameState !== "Bid" && (
+          isPlayerTurn ? (
+            <div className="text-yellow-300 font-bold mb-1">
+              It's your turn! Select a card to play.
+            </div>
+          ) : (
+            <div className="text-red-300 font-bold mb-1">
+              It's {localTurnOrder[currentTrick?.CurrentPlayerIndex ?? 0]}'s turn. Wait for them to play a card.
+            </div>
+          )
         )}
-
         <div className="flex justify-center space-x-2">
           {hand.map((card, i) => (
             <CardObject
