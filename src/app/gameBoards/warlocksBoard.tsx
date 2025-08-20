@@ -109,7 +109,7 @@ const handleTrickEnd = () => {
 
 };
 
-  const devMode = true
+  const devMode = false
 
     useEffect(() => {
       if (!devMode) return;
@@ -368,10 +368,10 @@ const handleTrickEnd = () => {
     </table>
   </div>
       {/* Top Row: Player 1 + Scoreboard */}
-      <div className="flex justify-between">
+      <div className="absolute top-2  left-2 justify-between">
         <div className="bg-black/30 p-2 rounded">
           <h2 className="font-bold">Scoreboard</h2>
-          <table className="border-collapse border border-white text-sm">
+          <table className=" border-collapse border border-white text-sm">
             <thead>
               <tr>
                 <th className="border border-white px-2">Round</th>
