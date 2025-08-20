@@ -1,11 +1,16 @@
 "use client";
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
+import BidsPanel from "@/components/Warlocks/BidBoard";
+import BidSelector from "@/components/Warlocks/BidSelector";
 import CardObject from "@/components/Warlocks/Card";
+import PlayArea from "@/components/Warlocks/MiddleArea";
 import BiddingOverlay from "@/components/Warlocks/Overlays/BiddingOverlay";
 import TrickOverlay from "@/components/Warlocks/Overlays/TrickOverlay";
 import TrickWinnerOverlay from "@/components/Warlocks/Overlays/TrickWinnerOverlay";
+import PlayerHand from "@/components/Warlocks/PlayerHand";
 import PlayerCircle from "@/components/Warlocks/PlayerOval";
 import PlayerOval from "@/components/Warlocks/PlayerOval";
+import Scoreboard from "@/components/Warlocks/Scoreboard";
 import { Card, CardInfo, LastTrick, Trick, WarlocksResponseAdapter } from "@/utils/adapters";
 import { GameEnd, GameInProgress, GET_GAMESTREAM } from "@/utils/config";
 import { CHOOSE_CARD, SUBMIT_BET, suitEmojis, width } from "@/utils/Warlocks/config";
@@ -253,7 +258,11 @@ const handleTrickEnd = () => {
     const roundNumber = response.roundNumber
     const bidState = response.hasPlayerBid
     const playerBids = response.playerBids
-    const playerHand = response.thisPlayerHandWithInfo
+    const playerHand = [...response.thisPlayerHandWithInfo].sort((a, b) => {
+      if (!a.IsPlayable && b.IsPlayable) return -1; // a goes before b
+      if (a.IsPlayable && !b.IsPlayable) return 1;  // b goes before a
+      return 0; // preserve order if both are same
+    });
     const prePlayerHand = response.thisPlayerHand
     const playerConn = response.playerConnectionStatus
 
@@ -346,197 +355,40 @@ const handleTrickEnd = () => {
         setSelectedIndex(-1)
       }}
     > 
-    <div className="absolute top-2 right-2 bg-black/40 p-2 rounded shadow-md">
-    <h2 className="font-bold text-sm mb-1">Bids</h2>
-    <table className="border-collapse border border-white text-xs">
-      <thead>
-        <tr>
-          {localTurnOrder.map(p => (
-            <th key={p} className="border border-white px-2">{p}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          {localTurnOrder.map((p, index) => (
-            <td key={p} className="border border-white px-2">
-              {playerBids[index] ?? "-"}
-            </td>
-          ))}
-        </tr>
-      </tbody>
-    </table>
-  </div>
-      {/* Top Row: Player 1 + Scoreboard */}
-      <div className="absolute top-2  left-2 justify-between">
-        <div className="bg-black/30 p-2 rounded">
-          <h2 className="font-bold">Scoreboard</h2>
-          <table className=" border-collapse border border-white text-sm">
-            <thead>
-              <tr>
-                <th className="border border-white px-2">Round</th>
-                {localTurnOrder.map(p => (
-                  <th key={p} className="border border-white px-2">{p}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-white px-2">{round}</td>
-                {playerPoints.map((p, index) => (
-                  <td key={index} className="border border-white px-2">{playerPoints[index]}</td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Middle: Play Area */}
-    <div className="flex-1 flex flex-col justify-center items-center space-y-6">
-      <div className="text-2xl font-bold mb-4">Trump: {trump}</div>
-      <div className="text-2xl font-bold mb-4">Lead: {lead}</div>
-
-    {/* Current Trick */}
-    {!currentTrick || currentTrick.CardsPlayed.length === 0 ? (
-      <div className="text-gray-300 text-center w-full">No cards played yet</div>
-    ) : (
-      <div className="relative flex justify-center">
-        <div
-          className="relative p-2 rounded-lg"
-          style={{
-            width: `${80 + (currentTrick.CardsPlayed.length - 1) * 30}px`, // total pile width
-            height: "90px", // card height
-          }}
-        >
-          {currentTrick.CardsPlayed.map((card, i) => (
-            <div
-              key={i}
-              className="absolute top-0"
-              style={{
-                left: i * 30, 
-                zIndex: i,
-              }}
-            >
-              <CardObject
-                card={{ Card: card, IsPlayable: true }}
-                selected={false}
-                onToggle={() => {}}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    </div>
+    <BidsPanel localTurnOrder={localTurnOrder} playerBids={playerBids} />
+    <Scoreboard
+      localTurnOrder={localTurnOrder}
+      playerPoints={playerPoints}
+      round={round}
+    />
 
 
-      {/* Slider + Input for BID state */}
+     <PlayArea trump={trump} lead={lead} currentTrick={currentTrick} />
+
+
       {gameState === "Bid" && !hasBid && (
-        <div className="flex flex-col items-center space-y-4 bg-black/30 p-6 rounded-lg">
-          <div className="flex justify-center space-x-2">
-          {beforeHand.map((card, i) => (
-            <div
-              key={i}
-              className={`relative`}
-              style={{ marginLeft: i === 0 ? 0 : '-40px' }} // overlap by ~1/3
-            >
-            <CardObject
-              key={i}
-              card={{Card: card, IsPlayable: true}}
-              selected={false}
-              onToggle={() => {}}
-            />
-            </div>
-          ))}
-        </div>
-          <label className="text-lg font-bold">
-            How many tricks will you win?
-          </label>
-
-          {/* Slider */}
-          <input
-            type="range"
-            min="0"
-            max={round}
-            step="1"
-            value={bid}
-            onChange={(e) => setBid(Number(e.target.value))}
-            className="w-64"
-          />
-
-
-          {/* Manual number input */}
-          <input
-            type="number"
-            min="0"
-            max={round}
-            value={bid}
-            onChange={(e) => {
-              let val = Number(e.target.value);
-              if (val < 0) val = 0;
-              if (val > round) val = round;
-              setBid(val);
-            }}
-            className="w-24 text-black rounded p-2 text-center text-xl"
-          />
-          <button
-            onClick={() => {
-              handleSubmitBet();
-              // TODO: send bid to server
-            }}
-            className="mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:scale-105 transition"
-          >
-            Submit Bid
-          </button>
-        </div>
-        
+        <BidSelector
+          beforeHand={beforeHand}
+          round={round}
+          bid={bid}
+          setBid={setBid}
+          handleSubmitBet={handleSubmitBet}
+        />
       )}
 
 
      {/* Bottom Row: Player Hand */}
-      <div className="flex flex-col items-center space-y-2">
-      {/* Player Turn Indicator */}
-      {/* Player Turn Indicator */}
-        {gameState !== "Bid" && (
-          isPlayerTurn ? (
-            <div className="text-yellow-300 font-bold mb-1">
-              It's your turn! Select a card to play.
-            </div>
-          ) : (
-            <div className="text-red-300 font-bold mb-1">
-              It's {localTurnOrder[currentTrick?.CurrentPlayerIndex ?? 0]}'s turn. Wait for them to play a card.
-            </div>
-          )
-        )}
-        <div className="flex justify-center space-x-2">
-          {hand.map((card, i) => (
-             <div
-              key={i}
-              className={`relative`}
-              style={{ marginLeft: i === 0 ? 0 : '-40px' }} // overlap by ~1/3
-            >
-              <CardObject
-                key={i}
-                card={card}
-                selected={selectedIndex === i && isPlayerTurn}
-                onToggle={() => handleToggle(i)}
-              />
-             </div>
-          ))}
-        </div>
+      <PlayerHand
+        hand={hand}
+        selectedIndex={selectedIndex}
+        isPlayerTurn={isPlayerTurn}
+        localTurnOrder={localTurnOrder}
+        currentTrick={currentTrick}
+        handleToggle={handleToggle}
+        handleChooseCard={handleChooseCard}
+        gameState={gameState}
+      />
 
-
-        {/* Choose Card Button */}
-        {selectedIndex !== -1 && isPlayerTurn && (
-          <button
-            onClick={handleChooseCard}
-            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:scale-105 transition"
-          >
-            Choose Card
-          </button>
-        )}
       <BiddingOverlay round={round} show={showBiddingOverlay} />
       <TrickWinnerOverlay winner={localTurnOrder[lastTrick?.Winner ?? -1]} show={showWinnerOverlay} />
       <TrickOverlay
@@ -544,15 +396,14 @@ const handleTrickEnd = () => {
         trickNumber={(lastTrick?.Num ?? 0) + 1}
         show={showTrickOverlay}
       />
-      </div>
-       <ReconnectOverlay
-          playerConnectivity={playerConnectivity}
-          players={players}
-        />
-        {gameState != "Bid" && (
-          <PlayerCircle players={localTurnOrder} currentPlayerIndex={playerIndex} />
-          )
-        }
+      <ReconnectOverlay
+        playerConnectivity={playerConnectivity}
+        players={players}
+      />
+      {gameState != "Bid" && (
+        <PlayerCircle players={localTurnOrder} currentPlayerIndex={playerIndex} />
+        )
+      }
     
 </div>
   );
