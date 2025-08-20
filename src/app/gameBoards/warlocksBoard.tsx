@@ -116,8 +116,11 @@ const handleTrickEnd = () => {
   
   
       setGameStarted(true);
-      setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
-      setHand([{Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}])
+      setGameState("Bid")
+      setBeforeHand([{Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}]);
+
+      // setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
+      // setHand([{Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}])
       setTimeout(() => {
         setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
       }, 2000);
@@ -434,12 +437,18 @@ const handleTrickEnd = () => {
         <div className="flex flex-col items-center space-y-4 bg-black/30 p-6 rounded-lg">
           <div className="flex justify-center space-x-2">
           {beforeHand.map((card, i) => (
+            <div
+              key={i}
+              className={`relative`}
+              style={{ marginLeft: i === 0 ? 0 : '-40px' }} // overlap by ~1/3
+            >
             <CardObject
               key={i}
               card={{Card: card, IsPlayable: true}}
               selected={false}
               onToggle={() => {}}
             />
+            </div>
           ))}
         </div>
           <label className="text-lg font-bold">
