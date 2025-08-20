@@ -109,7 +109,7 @@ const handleTrickEnd = () => {
 
 };
 
-  const devMode = false
+  const devMode = true
 
     useEffect(() => {
       if (!devMode) return;
@@ -117,7 +117,7 @@ const handleTrickEnd = () => {
   
       setGameStarted(true);
       setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
-      setHand([{Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}])
+      setHand([{Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}, {Card: {Rank: "Eight", Suit: "Spades"}, IsPlayable: true}])
       setTimeout(() => {
         setCurrentTrick({CardsPlayed: [{Rank: "Eight", Suit: "Spades"}, {Rank: "Eight", Suit: "Spades"}], LeadSuit: "Spades", TrickLeader: 0, CurrentPlayerIndex: 0})
       }, 2000);
@@ -411,7 +411,7 @@ const handleTrickEnd = () => {
               key={i}
               className="absolute top-0"
               style={{
-                left: i * 30, // overlap shift
+                left: i * 30, 
                 zIndex: i,
               }}
             >
@@ -503,12 +503,18 @@ const handleTrickEnd = () => {
         )}
         <div className="flex justify-center space-x-2">
           {hand.map((card, i) => (
-            <CardObject
+             <div
               key={i}
-              card={card}
-              selected={selectedIndex === i && isPlayerTurn}
-              onToggle={() => handleToggle(i)}
-            />
+              className={`relative`}
+              style={{ marginLeft: i === 0 ? 0 : '-40px' }} // overlap by ~1/3
+            >
+              <CardObject
+                key={i}
+                card={card}
+                selected={selectedIndex === i && isPlayerTurn}
+                onToggle={() => handleToggle(i)}
+              />
+             </div>
           ))}
         </div>
 
