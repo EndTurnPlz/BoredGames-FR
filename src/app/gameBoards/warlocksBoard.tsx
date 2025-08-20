@@ -4,6 +4,8 @@ import CardObject from "@/components/Warlocks/Card";
 import BiddingOverlay from "@/components/Warlocks/Overlays/BiddingOverlay";
 import TrickOverlay from "@/components/Warlocks/Overlays/TrickOverlay";
 import TrickWinnerOverlay from "@/components/Warlocks/Overlays/TrickWinnerOverlay";
+import PlayerCircle from "@/components/Warlocks/PlayerOval";
+import PlayerOval from "@/components/Warlocks/PlayerOval";
 import { Card, CardInfo, LastTrick, Trick, WarlocksResponseAdapter } from "@/utils/adapters";
 import { GameEnd, GameInProgress, GET_GAMESTREAM } from "@/utils/config";
 import { CHOOSE_CARD, SUBMIT_BET, suitEmojis, width } from "@/utils/Warlocks/config";
@@ -532,6 +534,11 @@ const handleTrickEnd = () => {
           playerConnectivity={playerConnectivity}
           players={players}
         />
-    </div>
+        {gameState != "Bid" && (
+          <PlayerCircle players={localTurnOrder} currentPlayerIndex={playerIndex} />
+          )
+        }
+    
+</div>
   );
 }
