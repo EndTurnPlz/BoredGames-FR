@@ -1,5 +1,5 @@
 let API_STRING = "";
-let PRODUCTION_URL = "https://your-production-api.com"
+let PRODUCTION_URL = "https://boredgames.endturnplz.win"
 let DEV_URL = "http://localhost:5000"
 
 if (typeof window !== "undefined") {
