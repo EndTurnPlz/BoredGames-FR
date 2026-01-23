@@ -3,8 +3,21 @@ export const API_STRING = "http://localhost:5000"
 export const CREATE_GAME = "/api/room/create"
 export const START_GAME = "/startGame"
 
+let FRONTEND = "";
+let FRONTEND_PROD = "https://endturnplz.github.io/BoredGames-FR/"
+let FRONTEND_DEV = "http://localhost:3000/BoredGames-FR"
+
+const hostname = window.location.hostname;
+
+if (hostname === "localhost") {
+  FRONTEND = FRONTEND_DEV;
+} else if (hostname === "endturnplz.github.io") {
+  FRONTEND = FRONTEND_PROD;
+}
+
+
 export const GET_LOBBY = (gameType: string, lobbyId: string) => {
-    return `http://localhost:3000/BoredGames-FR/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
+    return `${FRONTEND}/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
 }
 
 export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
