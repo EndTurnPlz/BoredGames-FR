@@ -598,7 +598,7 @@ export default function ApologiesBoard({
     getIsPlayerTurn(turnOrder, gameState, username)
 
     setMoveLog((prevLog) => {
-        return handleNewMove(prevLog, old_players, new_players, gamePhase, player_names, card_number, lastCompletedMove)
+        return handleNewMove(prevLog, old_players, new_players, gamePhase, localTurnOrder, card_number, lastCompletedMove)
     });
 
     selectOnlyMove(movesets, stringDict[lastDrawnCard.toLowerCase()])
