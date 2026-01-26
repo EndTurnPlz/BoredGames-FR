@@ -1,26 +1,13 @@
-let API_STRING = "";
-let PRODUCTION_URL = "https://boredgames.endturnplz.win"
-let DEV_URL = "http://localhost:5000"
-
-if (typeof window !== "undefined") {
-  const hostname = window.location.hostname;
-
-  if (hostname === "localhost") {
-    API_STRING = DEV_URL;
-  } else if (hostname === "endturnplz.github.io") {
-    API_STRING = PRODUCTION_URL;
-  } else {
-    API_STRING = "https://your-staging-api.com";
-  }
-}
-
-export { API_STRING };
+export const API_STRING = "https://boredgames.endturnplz.win"
 
 export const CREATE_GAME = "/api/room/create"
 export const START_GAME = "/startGame"
 
+let FRONTEND_URL = "https://endturnplz.github.io/BoredGames-FR/"
+
+
 export const GET_LOBBY = (gameType: string, lobbyId: string) => {
-    return `http://localhost:3000/BoredGames-FR/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
+    return `${FRONTEND_URL}/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
 }
 
 export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
