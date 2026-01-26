@@ -1,10 +1,13 @@
-export const API_STRING = "https://boredgames.endturnplz.win"
+export const API_STRING = process.env.NODE_ENV === "production"
+  ? "https://boredgames.endturnplz.win"
+  : "http://localhost:5000";
 
 export const CREATE_GAME = "/api/room/create"
 export const START_GAME = "/startGame"
 
-let FRONTEND_URL = "https://endturnplz.github.io/BoredGames-FR/"
-
+export const FRONTEND_URL = process.env.NODE_ENV === "production"
+  ? "https://endturnplz.github.io/BoredGames-FR/"
+  : "http://localhost:3000/BoredGames-FR/";
 
 export const GET_LOBBY = (gameType: string, lobbyId: string) => {
     return `${FRONTEND_URL}/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
