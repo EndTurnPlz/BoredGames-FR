@@ -10,7 +10,7 @@ export const FRONTEND_URL = process.env.NODE_ENV === "production"
   : "http://localhost:3000/BoredGames-FR/";
 
 export const GET_LOBBY = (gameType: string, lobbyId: string) => {
-    return `${FRONTEND_URL}/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
+    return `${FRONTEND_URL}joinLobby?game=${gameType}&lobbyId=${lobbyId}`
 }
 
 export const GET_GAMESTREAM = (lobbyId: string, playerId: string)  => {
