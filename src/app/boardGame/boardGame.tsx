@@ -12,11 +12,13 @@ import RulesModal from "@/components/rulesModal";
 import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
 
 import { GET_START } from "@/utils/Apologies/config";
-import { APOLOGIES, GET_LOBBY, indexToColor, UPSANDDOWNS } from "@/utils/config";
+import { APOLOGIES, GET_LOBBY, indexToColor, UPSANDDOWNS, WARLOCKS } from "@/utils/config";
 import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
 import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
 import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
+import WizardBoard from "../gameBoards/warlocksBoard";
+import WarlocksGameOverOverlay from "@/components/Warlocks/Overlays/GameOverOverlay";
 
 export type GameStats = {
   movesMade: number[];
@@ -49,8 +51,8 @@ export default function BoardGamePageClient() {
   const [copied, setCopied] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [moveLog, setMoveLog] = useState<string[]>([]);
-  const [gameStats, setGameStats] = useState<GameStats>();
-  const [winner, setWinner] = useState<string>("");
+  const [gameStats, setGameStats] = useState<any>();
+  const [winner, setWinner] = useState<string[]>([]);
 
   useEffect(() => {
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -67,48 +69,22 @@ export default function BoardGamePageClient() {
     setIsHost(username === host);
   }, [host, username]);
 
-  const handleStart = async () => {
-    try {
-      const lobbyId = localStorage.getItem("lobbyId")  ?? "";
-      const playerId = localStorage.getItem("userId" + randomId) ?? "";
-      const res = await fetch(GET_START(lobbyId), {
-        method: "POST",
-        headers: 
-        { 
-          "Content-Type": "application/json",
-          "X-Player-Key": playerId
-        },
-      });
-
-      if (!res.ok) return;
-      setGameStarted(true);
-    } catch (err) {
-      console.error("Error contacting backend:", err);
-    }
-  };
-
   const GameComponent =
     gameType === APOLOGIES
       ? ApologiesBoard
       : gameType === UPSANDDOWNS
       ? UpAndDownBoard
-      : () => <p>Unknown game type: {gameType}</p>;
+      : gameType === WARLOCKS ? 
+        WizardBoard :
+        () => <p>Unknown game type: {gameType}</p>;
 
   const GameOverlayComponent = 
      gameType === APOLOGIES
       ? ApologiesGameOverOverlay
       : gameType === UPSANDDOWNS
       ? UpsAndDownsGameOverOverlay
+      : gameType === WARLOCKS ? WarlocksGameOverOverlay
       : () => <p>Unknown game type: {gameType}</p>;
-
-  const enoughPlayers = (length: number) => {
-    if (gameType === APOLOGIES && length == 4) {
-      return true;
-    } else if (gameType === UPSANDDOWNS && 2 <= length && length <= 8) {
-      return true;
-    }
-    return false
-  }
       
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">
@@ -162,7 +138,7 @@ export default function BoardGamePageClient() {
           gameStats={gameStats}
           players={players}
           onRestart={() => {
-            window.location.href = "/";
+            window.location.href = "/BoredGames-FR";
           }}
         />
       </main>

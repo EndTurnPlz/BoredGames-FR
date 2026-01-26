@@ -22,7 +22,7 @@ export default function GameBoardCenter({
   gameType: string | null;
   playerColor: string;
   setGameOver: (v: boolean) => void;
-  setWinner: (v: string) => void;
+  setWinner: (v: string[]) => void;
   setPlayers: (v: string[]) => void;
   setGameStarted: (v: boolean) => void;
   setMoveLog: (v: string[]) => void;

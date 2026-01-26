@@ -24,7 +24,7 @@ export default function GameCarousel({
         tags: ["board game", "strategy", "multiplayer"],
       },
       {
-        name: "Whitejack",
+        name: "Warlocks",
         description: "A fun card game",
         icon: "🃏",
         tags: ["card game", "fun", "multiplayer"],

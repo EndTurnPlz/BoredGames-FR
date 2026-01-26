@@ -1,7 +1,7 @@
 // File: components/ApologiesRulesModal.tsx
 "use client";
 
-import { HiArrowRight, HiArrowLeft, HiOutlineBookOpen } from "react-icons/hi";
+import { HiArrowLeft, HiOutlineBookOpen } from "react-icons/hi";
 
 export default function UpsAndDownsRulesModal({
   showRules,

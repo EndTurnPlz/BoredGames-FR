@@ -1,10 +1,13 @@
-export const API_STRING = "https://boredgames.endturnplz.win"
+export const API_STRING = process.env.NODE_ENV === "production"
+  ? "https://boredgames.endturnplz.win"
+  : "http://localhost:5000";
 
 export const CREATE_GAME = "/api/room/create"
 export const START_GAME = "/startGame"
 
-let FRONTEND_URL = "https://endturnplz.github.io/BoredGames-FR/"
-
+export const FRONTEND_URL = process.env.NODE_ENV === "production"
+  ? "https://endturnplz.github.io/BoredGames-FR/"
+  : "http://localhost:3000/BoredGames-FR/";
 
 export const GET_LOBBY = (gameType: string, lobbyId: string) => {
     return `${FRONTEND_URL}/joinLobby?game=${gameType}&lobbyId=${lobbyId}`
@@ -35,11 +38,14 @@ export const indexToColor: Record<number, string> = {
 
 export const maxPlayers: Record<string, number> = {
   "Apologies": 4,
-  "UpsAndDowns": 8
+  "UpsAndDowns": 8,
+  "Warlocks": 6
 }
 
 export const GameInProgress: string = "GameInProgress"
+export const GameEnd: string = "GameEnded"
 export const WaitingForPlayers: string = "WaitingForPlayers"
 
 export const APOLOGIES: string = "Apologies"
 export const UPSANDDOWNS: string = "UpsAndDowns"
+export const WARLOCKS: string = "Warlocks"

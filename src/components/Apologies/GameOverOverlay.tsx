@@ -10,7 +10,7 @@ export default function ApologiesGameOverOverlay({
   onRestart,
 }: {
   gameOver: boolean;
-  winner: string;
+  winner: string[];
   gameStats: GameStats | undefined;
   players: string[]
   onRestart: () => void;
@@ -36,7 +36,7 @@ export default function ApologiesGameOverOverlay({
     <div className="absolute inset-0 z-80 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
       <div className="bg-slate-800/90 backdrop-blur-lg border-2 border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/20 max-w-xl w-full text-center space-y-6">
         <h2 className="text-4xl font-bold text-cyan-100">Game Over</h2>
-        <h2 className="text-4xl font-bold text-yellow-400">🏆 {winner} Won</h2>
+        <h2 className="text-4xl font-bold text-yellow-400">🏆 {winner[0]} Won</h2>
 
         <div className="text-lg text-cyan-200 bg-slate-700/70 p-4 rounded-xl border border-cyan-400/30 shadow-inner space-y-4">
           <p>

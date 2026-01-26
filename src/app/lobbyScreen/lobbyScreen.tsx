@@ -3,7 +3,7 @@
 import Lobby from "@/components/Lobby";
 import { ApologiesGameResponseAdapter } from "@/utils/adapters";
 import { GET_START } from "@/utils/Apologies/config";
-import { GameInProgress, GET_GAMESTREAM, GET_LOBBY, maxPlayers } from "@/utils/config";
+import { GameEnd, GameInProgress, GET_GAMESTREAM, GET_LOBBY, maxPlayers } from "@/utils/config";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,10 +14,23 @@ export default function LobbyPage() {
     const gameType = searchParams.get("game") ?? "";
     const username = searchParams.get("username") ?? "";
     const randomId = searchParams.get("randomId");
+
+    const devMode = false
     
     const [players, setPlayers] = useState<string []>([])
     const [loading, SetLoading] = useState(false);
+
     
+    useEffect(()=> {
+       if (devMode) {
+          router.push(
+            `/boardGame?game=${gameType}&username=${encodeURIComponent(
+              username
+            )}&randomId=${randomId}`
+          );
+          return;
+        }
+    }, [])
     const handleStart = async () => {
       try {
         SetLoading(true)
@@ -78,6 +91,12 @@ export default function LobbyPage() {
               `/boardGame?game=${gameType}&username=${encodeURIComponent(
                 username
               )}&randomId=${randomId}`
+            );
+          }, 500);
+        } else if (phase == GameEnd) {
+          setTimeout(() => {
+            router.push(
+              `/`
             );
           }, 500);
         }

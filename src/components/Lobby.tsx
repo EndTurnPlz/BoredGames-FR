@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "./Apologies/Header";
 import GameSettingsSidebar from "./settingsSideBar";
 import GameSidebarLeft from "./leftSidebar";
-import { GET_LOBBY } from "@/utils/config";
+import { APOLOGIES, GET_LOBBY, UPSANDDOWNS, WARLOCKS } from "@/utils/config";
 import RulesModal from "./rulesModal";
 
 type LobbyProps = {
@@ -28,9 +28,11 @@ export default function Lobby({ gameName, players, maxPlayers, playerName, handl
   const [showCards, setShowCards] = useState(false);
 
   const enoughPlayers = (length: number) => {
-    if (gameName === "Apologies" && length == 4) {
+    if (gameName === APOLOGIES && length == 4) {
       return true;
-    } else if (gameName === "UpsAndDowns" && 2 <= length && length <= 8) {
+    } else if (gameName === UPSANDDOWNS && 2 <= length && length <= 8) {
+      return true;
+    } else if (gameName === WARLOCKS && 3 <= length && length <= 6) {
       return true;
     }
     return false

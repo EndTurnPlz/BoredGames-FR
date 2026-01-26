@@ -66,7 +66,7 @@ type BoardCanvasProps = {
   setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
   setMoveLog: React.Dispatch<React.SetStateAction<string[]>>;
   setGameStats: React.Dispatch<React.SetStateAction<GameStats>>;
-  setWinner: React.Dispatch<React.SetStateAction<string>>;
+  setWinner: React.Dispatch<React.SetStateAction<string[]>>;
   setHost: React.Dispatch<React.SetStateAction<string>>;
 };
 
@@ -490,7 +490,7 @@ export default function ApologiesBoard({
           row.length > 0 && row.every((str) => str.endsWith("_H"))
       );
       // console.log(rowAllEndWithH, statsRes)
-      setWinner(turnOrder[rowAllEndWithH]);
+      setWinner([turnOrder[rowAllEndWithH]]);
     }
   }
 
@@ -615,29 +615,35 @@ export default function ApologiesBoard({
 
     const playerId = localStorage.getItem("userId" + randomId) ?? "";
     const lobbyId = localStorage.getItem("lobbyId") ?? "";
-    // console.log(GET_GAMESTREAM(lobbyId, playerId));
+    let eventSource: EventSource | null = null;
+    let retryTimeout: NodeJS.Timeout | null = null;
 
-    const eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
+    const connect = () => {
+      console.log("Connecting SSE:", GET_GAMESTREAM(lobbyId, playerId));
+      eventSource = new EventSource(GET_GAMESTREAM(lobbyId, playerId));
 
-    eventSource.onmessage = async (event) => {
-      try {
-        const data = JSON.parse(event.data); // If your server sends JSON
-        if (data.ViewNum !== viewRef.current) {
-          await updateGameState(data);
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          updateGameState(data);
+        } catch (err) {
+          console.error("Failed to process event data:", err);
         }
-        // console.log("Received:", data.ViewNum, viewRef.current);
-      } catch (err) {
-        console.error("Failed to process event data:", err);
-      }
+      };
+
+      eventSource.onerror = (err) => {
+        console.error("SSE error, will retry:", err);
+        eventSource?.close();
+        // retry in 2 seconds
+        retryTimeout = setTimeout(connect, 2000);
+      };
     };
 
-    eventSource.onerror = (err) => {
-      console.error("SSE error:", err);
-      eventSource.close();
-    };
+    connect();
 
     return () => {
-      eventSource.close();
+      eventSource?.close();
+      if (retryTimeout) clearTimeout(retryTimeout);
     };
   }, []);
 
@@ -719,7 +725,7 @@ export default function ApologiesBoard({
     setIsPlayerTurn("move");
     // setCurrentCard(7)
     setGameOver(true);
-    setWinner("Rohit");
+    setWinner(["Rohit"]);
     setGameStats({
       movesMade: [1, 1, 1, 2],
       pawnsKilled: [0, 3, 4, 2],
