@@ -40,6 +40,7 @@ export default function JoinLobbyClient() {
       setError("");
       const randomId = Math.random().toString(36).substring(2, 10);
       localStorage.setItem("userId" + randomId, data.playerId);
+      localStorage.setItem("lobbyId", lobbyID);
       setTimeout(() => {
         router.push(
           `/lobbyScreen?game=${gameType}&username=${encodeURIComponent(
