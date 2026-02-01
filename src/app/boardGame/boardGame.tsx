@@ -12,13 +12,14 @@ import RulesModal from "@/components/rulesModal";
 import GameOverOverlay from "@/components/Apologies/GameOverOverlay";
 
 import { GET_START } from "@/utils/Apologies/config";
-import { APOLOGIES, GET_LOBBY, indexToColor, UPSANDDOWNS, WARLOCKS } from "@/utils/config";
+import { APOLOGIES, GET_LOBBY, indexToColor, SLUMLORDS, UPSANDDOWNS, WARLOCKS } from "@/utils/config";
 import UpAndDownBoard from "../gameBoards/upDownBoard";
 import ApologiesBoard from "../gameBoards/sorryBoard";
 import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
 import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
 import WizardBoard from "../gameBoards/warlocksBoard";
 import WarlocksGameOverOverlay from "@/components/Warlocks/Overlays/GameOverOverlay";
+import SlumlordBoard from "../gameBoards/slumloardBoard";
 
 export type GameStats = {
   movesMade: number[];
@@ -75,7 +76,9 @@ export default function BoardGamePageClient() {
       : gameType === UPSANDDOWNS
       ? UpAndDownBoard
       : gameType === WARLOCKS ? 
-        WizardBoard :
+        WizardBoard : 
+        gameType === SLUMLORDS ?
+        SlumlordBoard : 
         () => <p>Unknown game type: {gameType}</p>;
 
   const GameOverlayComponent = 

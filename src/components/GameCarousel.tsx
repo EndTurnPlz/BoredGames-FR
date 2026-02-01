@@ -30,10 +30,10 @@ export default function GameCarousel({
         tags: ["card game", "fun", "multiplayer"],
       },
       {
-        name: "Chezz",
-        description: "The classic strategy game for two players",
+        name: "Slumlords",
+        description: "Classic board game",
         icon: "♛",
-        tags: ["board game", "strategy", "classic", "two player"],
+        tags: ["board game", "strategy", "classic", "multiplayer"],
       },
       {
         name: "Ups And Downs",
