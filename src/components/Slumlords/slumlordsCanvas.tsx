@@ -22,6 +22,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
   const cornerSize = sideHeight
 
   const difference = sideHeight - sideWidth
+  const diffPercentage = difference / boardSize * 100;
+
+  const tileWidthPct = 100 / (length - 2); // side tiles width in %
+  const cornerPct = sideHeightRatio * 100; // corner tile width i
   const tileNames = [
     // Top row (left → right)
     "Street Corner", "Tin Roof", "Broken Alley", "Community Pot", "Rusty Lane",
@@ -83,10 +87,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: -cornerSize,
-            left: -cornerSize,
-            width: cornerSize,
-            height: cornerSize
+            top: `${-cornerPct}%`,
+            left:`${-cornerPct}%`,
+            width: `${cornerPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -99,10 +103,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: -cornerSize,
-            left: (idx) * sideWidth,
-            width: sideWidth,
-            height: cornerSize
+            top: `${-cornerPct}%`,
+            left: `${idx * tileWidthPct}%`,
+            width: `${tileWidthPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -114,10 +118,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rotation={180}
           style={{
             position: "absolute",
-            top: -cornerSize,
-            left: (length - 2) * sideWidth,
-            width: cornerSize,
-            height: cornerSize
+            top: `${-cornerPct}%`,
+            left: `${(length - 2) * tileWidthPct}%`,
+            width: `${cornerPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -131,10 +135,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top:  (idx) * sideWidth - difference / 2,
-            left:  (length - 2) * sideWidth + difference / 2,
-            width: sideWidth,
-            height: sideHeight
+            top:  `${(idx) * tileWidthPct - diffPercentage / 2}%`,
+            left: `${(length - 2) * tileWidthPct + diffPercentage / 2}%`,
+            width: `${tileWidthPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -147,10 +151,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top:  (length - 2) * sideWidth,
-            left: (length - 2) * sideWidth,
-            width: cornerSize,
-            height: cornerSize
+            top:  `${(length - 2) * tileWidthPct}%`,
+            left: `${(length - 2) * tileWidthPct}%`,
+            width: `${cornerPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -164,10 +168,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: (length - 2) * sideWidth,
-            left:  (idx) * sideWidth,
-            width: sideWidth,
-            height: cornerSize
+            top: `${(length - 2) * tileWidthPct}%`,
+            left: `${idx * tileWidthPct}%`,
+            width: `${tileWidthPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -179,10 +183,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rotation={0}
           style={{
             position: "absolute",
-            top: (length - 2) * sideWidth,
-            left: -cornerSize,
-            width: cornerSize,
-            height: cornerSize
+            top: `${(length - 2) * tileWidthPct}%`,
+            left: `${-cornerPct}%`,
+            width: `${cornerPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}
@@ -196,10 +200,10 @@ export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardPr
           rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: idx * sideWidth - difference / 2,
-            left: -cornerSize + difference / 2,
-            width: sideWidth,
-            height: sideHeight
+            top: `${idx * tileWidthPct - diffPercentage / 2}%`,
+            left: `${-cornerPct + diffPercentage / 2}%`,
+            width: `${tileWidthPct}%`,
+            height: `${cornerPct}%`
           }}
         />
       ))}

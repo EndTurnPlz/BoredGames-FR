@@ -112,6 +112,7 @@ export default function SlumlordBoard({
 
     useEffect(() => {
         setPlayers(tempPlayers);
+        movePlayer("Alice", 5);
         if (!devMode) return;
 
         const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -120,6 +121,15 @@ export default function SlumlordBoard({
     
 
     }, []);
+
+    function movePlayer(playerId: string, newPosition: number) {
+        setPlayers((prev) =>
+                prev.map((p) =>
+                p.id === playerId ? { ...p, position: newPosition } : p
+            )
+        );
+        console.log(players);
+    }
 
     function getPlayerOffsets(players: PlayerData[], player: PlayerData) {
         // Get all players on the same tile
@@ -145,56 +155,50 @@ export default function SlumlordBoard({
         return { xOffset, yOffset };
     }
 
-    function getTileXY(position: number, boardLength: number, circleSize: number) {
-        const tileWidth = boardSize / (boardLength - 2);
-        const tileHeight = sideHeightRatio * boardSize;
-        const offset = circleSize / 2;
+    function getTileXYPercent(position: number, length: number, circleSize: number) {
+        const tileWidthPct = 100 / (length - 2);
+        const sideHeightPct = sideHeightRatio * 100;
 
-        const right = 2 * tileHeight + tileWidth * (length - 2);
-        const bottom = 2 * tileHeight + (length - 2) * tileWidth;
-        if (position == 0) {
-            return { x: tileHeight / 2 - offset , y: tileHeight / 2 - offset}
-        } else if (position < length - 1) {
-            return { x: (position - 1) * tileWidth + tileHeight + tileWidth / 2 - offset, y: tileHeight / 2 - offset};
-        } else if (position == length - 1) {
-            return { x: (length - 2) * tileWidth + tileHeight * 3 / 2 - offset, y: tileHeight / 2 - offset};
-        } else if (position < 2 * length - 2) {
-            return { x: tileHeight + tileWidth * (length - 2) + tileHeight / 2 - offset, y: tileHeight + (position - length) * tileWidth + tileWidth / 2 - offset};
-        } else if (position == 2 * length - 2) {
-            return { x: right - tileHeight / 2 - offset, y: bottom - tileHeight / 2 - offset};
-        } else if (position < 3 * length - 3) {
-            return { x: right - tileHeight - (position - (2 * length - 2) - 1) * tileWidth - tileWidth / 2 - offset, y: bottom - tileHeight / 2 - offset};
-        } else if (position == 3 * length - 3) {
-            return { x: tileHeight / 2 - offset, y: bottom - tileHeight / 2 - offset};
-        } else {
-            return { x: tileHeight / 2 - offset, y: bottom - tileHeight - (position - (3 * length - 3) - 1) * tileWidth - tileWidth / 2 - offset};
+        const right = (length - 2) * tileWidthPct + sideHeightPct * 0.5;
+        const bottom = (length - 2) * tileWidthPct + sideHeightPct / 2;
+
+        if (position === 0) return { x: -sideHeightPct / 2, y: -sideHeightPct / 2 };
+        if (position < length - 1) return { x: (position - 1) * tileWidthPct + tileWidthPct / 2, y: -sideHeightPct / 2 };
+        if (position === length - 1) return { x: right, y: -sideHeightPct / 2 };
+        if (position < 2 * length - 2) return { x: right, y: (position - length) * tileWidthPct + tileWidthPct / 2 };
+        if (position === 2 * length - 2) return { x: right, y: bottom };
+        if (position < 3 * length - 3) return { x: right - 0.5 * sideHeightPct - (position - (2 * length - 2) - 1) * tileWidthPct - tileWidthPct / 2, y: bottom };
+        if (position === 3 * length - 3) return { x: -sideHeightPct / 2, y: bottom };
+        return { x: -sideHeightPct / 2, y: bottom - 0.5 * sideHeightPct - (position - (3 * length - 3) - 1) * tileWidthPct - tileWidthPct / 2 };
         }
-    }
+
 
     return (
         <div className="flex flex-col items-center">
-            <div className="min-h-screen flex items-center justify-center bg-white-200">
-            <div>
-                {/* 🔧 This is the key wrapper */}
-
-                <SlumlordCanvas boardSize={boardSize} length={length}/>
-                {players.map((p) => {
-                    const { x, y } = getTileXY(p.position, length, playerCircleSize / 2);
+           <div className="flex flex-col items-center min-h-screen justify-center bg-white-200">
+                <div className="relative w-[80vw] max-w-[600px] aspect-square">
+                    <SlumlordCanvas length={11} />
+                    
+                    {players.map((p) => {
+                    const { x, y } = getTileXYPercent(p.position, 11, playerCircleSize);
                     const { xOffset, yOffset } = getPlayerOffsets(players, p);
-
+                    
+                    // Convert offsets to % of board
+                    const xPctOffset = (xOffset / boardSize) * 100;
+                    const yPctOffset = (yOffset / boardSize) * 100;
+                    
                     return (
                         <Player
                         key={p.id}
                         player={p}
-                        x={x + xOffset}
-                        y={y + yOffset}
+                        x={x + xPctOffset}
+                        y={y + yPctOffset}
                         size={playerCircleSize}
                         />
                     );
-                })}
-                
+                    })}
+                </div>
             </div>
-        </div>
             <ReconnectOverlay
             playerConnectivity={playerConnectivity}
             players={localTurnOrder}
