@@ -1,8 +1,7 @@
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
-import SlumloardCanvas from "@/components/Slumlords/slumlordsCanvas";
-import SlumloradCanvas from "@/components/Slumlords/slumlordsCanvas";
-import { Player } from "@/components/UpsAndDowns/Player/Player";
+import SlumlordCanvas from "@/components/Slumlords/slumlordsCanvas";
 import { GET_GAMESTREAM } from "@/utils/config";
+import { boardSize } from "@/utils/Slumlords/config";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -121,11 +120,9 @@ export default function SlumlordBoard({
             <div className="min-h-screen flex items-center justify-center bg-white-200">
             <div>
                 {/* 🔧 This is the key wrapper */}
-                <div style={{ position: "relative", width: 600, height: 600 }}>
 
-                <SlumloardCanvas/>
+                <SlumlordCanvas boardSize={boardSize}/>
                 
-                </div>
             </div>
         </div>
             <ReconnectOverlay

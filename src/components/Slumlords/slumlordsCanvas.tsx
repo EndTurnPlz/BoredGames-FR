@@ -1,5 +1,6 @@
 "use client";
 
+import { DEFAULT_RENT } from "@/utils/Slumlords/config";
 import BoardTile from "./buttonTile";
 
 type Tile = {
@@ -11,23 +12,39 @@ type Tile = {
 
 type BoardProps = {
   boardSize?: number; // in pixels
+  length?: number
 };
 
-export default function MonopolyBoard({ boardSize = 600 }: BoardProps) {
-  const cornerSize = 80;
-  const sideWidth = 55;
-  const sideHeight = 80;
+export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardProps) {
+  const sideHeightRatio = 80 / 600;
+  const sideWidth = boardSize / (length - 2);
 
+  const sideHeight = sideHeightRatio * boardSize
+  const cornerSize = sideHeight
+
+  const difference = sideHeight - sideWidth
   const tileNames = [
-    "Go","Mediterranean Ave","Community Chest","Baltic Ave","Income Tax",
-    "Reading Railroad","Oriental Ave","Chance","Vermont Ave","Connecticut Ave",
-    "Jail","St. Charles Place","Electric Company","States Ave","Virginia Ave",
-    "Pennsylvania Railroad","St. James Place","Community Chest","Tennessee Ave","New York Ave",
-    "Free Parking","Kentucky Ave","Chance","Indiana Ave","Illinois Ave",
-    "B&O Railroad","Atlantic Ave","Ventnor Ave","Water Works","Marvin Gardens",
-    "Go To Jail","Pacific Ave","North Carolina Ave","Community Chest","Pennsylvania Ave",
-    "Short Line","Chance","Park Place","Luxury Tax","Boardwalk"
+    // Top row (left → right)
+    "Street Corner", "Tin Roof", "Broken Alley", "Community Pot", "Rusty Lane",
+    "Abandoned Tracks", "Open Drain", "Chance Hustle", "Crowded Crossing", "Market Shacks",
+    "Detention Cell",
+
+    // Right column (top → bottom)
+    "Brick Yard", "Power Hook", "Concrete Block", "Water Tap",
+    "Bus Depot", "Pawn Shop", "Community Pot", "Food Stall",
+    "Crowded Flats", "Main Bazaar",
+
+    // Bottom row (right → left)
+    "Open Ground", "Metal Lane", "Chance Hustle", "Flooded Road",
+    "Garbage Dump", "Freight Tracks", "Street Market",
+    "Rain Shelter", "Water Line", "Power Cut Zone",
+
+    // Left column (bottom → top)
+    "Police Raid", "Back Alley", "Community Pot", "Construction Camp",
+    "Wage Corner", "Public Toilet", "Tea Stall",
+    "Rickshaw Stand", "Chance Hustle", "Night Shelter"
   ];
+
 
   const colors = [
     "#fefefe","#8B4513","#fefefe","#8B4513","#fefefe",
@@ -37,22 +54,25 @@ export default function MonopolyBoard({ boardSize = 600 }: BoardProps) {
     "#fefefe","#FF0000","#fefefe","#FF0000","#FF0000",
     "#000","#FFFF00","#FFFF00","#fefefe","#FFFF00",
     "#fefefe","#00FF00","#00FF00","#fefefe","#00FF00",
-    "#000","#fefefe","#1E90FF","#fefefe","#1E90FF"
+    "#000","#fefefe","#1E90FF","#fefefe","#1E90FF",
+    "#000","#fefefe","#1E90FF","#fefefe"
   ];
 
   const prices = [
     0,60,0,60,200,200,100,0,100,120,
     0,140,150,140,160,200,180,0,180,200,
     0,220,0,220,240,200,260,260,150,280,
-    0,300,300,0,320,200,0,350,100,400
+    0,300,300,0,320,200,0,350,100,400,
+    0,350,100,400
   ];
 
-  const tiles: Tile[] = Array.from({ length: 40 }, (_, i) => ({
+  const tiles: Tile[] = Array.from({ length: length * length - 4 }, (_, i) => ({
     id: i,
     name: tileNames[i],
     price: prices[i],
     color: colors[i]
   }));
+
 
   return (
     <div style={{ position: "relative", width: boardSize, height: boardSize, background: "#1a1a1a" }}>
@@ -61,40 +81,42 @@ export default function MonopolyBoard({ boardSize = 600 }: BoardProps) {
           key={tile.id}
           {...tile}
           rotation={90}
+          rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            top: -cornerSize,
+            left: -cornerSize,
             width: cornerSize,
             height: cornerSize
           }}
         />
       ))}
       {/* Top Row */}
-      {tiles.slice(1, 10).map((tile, idx) => (
+      {tiles.slice(1, length - 1).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={180}
+          rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: 0,
-            left: cornerSize + (idx) * sideWidth,
-            width: idx === 10 ? cornerSize : sideWidth,
+            top: -cornerSize,
+            left: (idx) * sideWidth,
+            width: sideWidth,
             height: cornerSize
           }}
         />
       ))}
 
-      {tiles.slice(10, 11).map((tile, idx) => (
+      {tiles.slice(length - 1, length).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={180}
           style={{
             position: "absolute",
-            top: 0,
-            left: cornerSize + (9) * sideWidth,
+            top: -cornerSize,
+            left: (length - 2) * sideWidth,
             width: cornerSize,
             height: cornerSize
           }}
@@ -102,30 +124,32 @@ export default function MonopolyBoard({ boardSize = 600 }: BoardProps) {
       ))}
 
       {/* Right Column */}
-      {tiles.slice(21, 30).map((tile, idx) => (
+      {tiles.slice(2* length - 1, 3 * length - 3).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={270}
+          rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: cornerSize + (idx) * sideWidth - 12.5,
-            left: cornerSize + (9) * sideWidth + 12.5,
+            top:  (idx) * sideWidth - difference / 2,
+            left:  (length - 2) * sideWidth + difference / 2,
             width: sideWidth,
             height: sideHeight
           }}
         />
       ))}
 
-      {tiles.slice(30, 31).map((tile, idx) => (
+      {tiles.slice(3 * length - 3, 3 * length - 2).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={270}
+          rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: cornerSize + (9) * sideWidth,
-            left: cornerSize + (9) * sideWidth,
+            top:  (length - 2) * sideWidth,
+            left: (length - 2) * sideWidth,
             width: cornerSize,
             height: cornerSize
           }}
@@ -133,30 +157,31 @@ export default function MonopolyBoard({ boardSize = 600 }: BoardProps) {
       ))}
 
       {/* Bottom Row */}
-      {tiles.slice(31, 40).map((tile, idx) => (
+      {tiles.slice(3 * length - 2, 4 * length - 4).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={0}
+          rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            bottom: -sideHeight + 25,
-            left: cornerSize + (idx) * sideWidth,
+            top: (length - 2) * sideWidth,
+            left:  (idx) * sideWidth,
             width: sideWidth,
             height: cornerSize
           }}
         />
       ))}
 
-      {tiles.slice(20,21).map((tile, idx) => (
+      {tiles.slice(2 * length - 2, 2 * length - 1).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={0}
           style={{
             position: "absolute",
-            bottom: -sideHeight + 25,
-            left: 0,
+            top: (length - 2) * sideWidth,
+            left: -cornerSize,
             width: cornerSize,
             height: cornerSize
           }}
@@ -164,15 +189,16 @@ export default function MonopolyBoard({ boardSize = 600 }: BoardProps) {
       ))}
 
       {/* Left Column */}
-      {tiles.slice(11, 20).map((tile, idx) => (
+      {tiles.slice(length, 2 * length - 2).map((tile, idx) => (
         <BoardTile
           key={tile.id}
           {...tile}
           rotation={90}
+          rent={DEFAULT_RENT}
           style={{
             position: "absolute",
-            top: cornerSize + idx * sideWidth-12.5,
-            left: 12.5,
+            top: idx * sideWidth - difference / 2,
+            left: -cornerSize + difference / 2,
             width: sideWidth,
             height: sideHeight
           }}

@@ -19,7 +19,7 @@ import ApologiesGameOverOverlay from "@/components/Apologies/GameOverOverlay";
 import UpsAndDownsGameOverOverlay from "@/components/UpsAndDowns/GameOverOverlay";
 import WizardBoard from "../gameBoards/warlocksBoard";
 import WarlocksGameOverOverlay from "@/components/Warlocks/Overlays/GameOverOverlay";
-import SlumlordBoard from "../gameBoards/slumloardBoard";
+import SlumlordBoard from "../gameBoards/slumlordBoard";
 
 export type GameStats = {
   movesMade: number[];
@@ -87,7 +87,7 @@ export default function BoardGamePageClient() {
       : gameType === UPSANDDOWNS
       ? UpsAndDownsGameOverOverlay
       : gameType === WARLOCKS ? WarlocksGameOverOverlay
-      : () => <p>Unknown game type: {gameType}</p>;
+      : () => <p></p>;
       
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-950">

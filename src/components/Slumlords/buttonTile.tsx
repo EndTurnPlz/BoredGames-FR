@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import TileOverlay from "./buttonOverlay";
 
 const tileStyle: React.CSSProperties = {
   border: "1px solid rgba(255,255,255,0.3)",
@@ -10,7 +11,7 @@ const tileStyle: React.CSSProperties = {
   fontSize: 12,
   userSelect: "none",
   position: "relative",
-  overflow: "hidden",
+  overflow: "visible",
   justifyContent: "flex-start",
   alignItems: "center",
   borderRadius: 4,
@@ -48,12 +49,21 @@ const priceStyle: React.CSSProperties = {
 
 type Rotation = 0 | 90 | 180 | 270;
 
+type RentInfo = {
+  base: number;
+  oneHouse: number;
+  twoHouse: number;
+  threeHouse: number;
+  fourHouse: number;
+  hotel: number;
+};
+
 type BoardTileProps = {
   name: string;
   price?: number;
   color?: string;
   rotation?: Rotation;
-  onClick?: () => void;
+  rent?: RentInfo;
   style?: React.CSSProperties;
 };
 
@@ -62,12 +72,43 @@ export default function BoardTile({
   price,
   color,
   rotation = 0,
-  onClick,
+  rent,
   style
 }: BoardTileProps) {
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [renderOverlay, setRenderOverlay] = useState(false);
+
+  const tileRef = useRef<HTMLButtonElement>(null);
+
+  function openOverlay() {
+    setRenderOverlay(true);
+    setShowOverlay(true);
+  }
+
+  function closeOverlay() {
+    setShowOverlay(false);
+    setTimeout(() => setRenderOverlay(false), 160); // match animation duration
+  }
+
+  useEffect(() => {
+    if (!showOverlay) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (!tileRef.current) return;
+
+      if (!tileRef.current.contains(e.target as Node)) {
+        closeOverlay();
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showOverlay]);
+
   return (
     <button
-      onClick={onClick}
+      ref={tileRef}
+      onClick={() => openOverlay()}
       style={{
         ...tileStyle,
         transform: `rotate(${rotation}deg)`,
@@ -76,14 +117,22 @@ export default function BoardTile({
         ...style
       }}
     >
-      {/* Color band at the top */}
       {color && <div style={{ ...colorBand, backgroundColor: color }} />}
 
-      {/* Text content */}
       <div style={contentStyle}>
         <div style={nameStyle}>{name}</div>
         {price !== undefined && <div style={priceStyle}>${price}</div>}
       </div>
+
+      {renderOverlay && rent && tileRef.current && (
+        <TileOverlay
+          rent={rent}
+          rotation={rotation}
+          anchorRect={tileRef.current.getBoundingClientRect()}
+          isVisible={showOverlay}
+        />
+      )}
+
     </button>
   );
 }
