@@ -1,9 +1,12 @@
 import ReconnectOverlay from "@/components/Apologies/Overlays/ReconnectOverlay";
+import Player from "@/components/Slumlords/Player";
 import SlumlordCanvas from "@/components/Slumlords/slumlordsCanvas";
 import { GET_GAMESTREAM } from "@/utils/config";
-import { boardSize } from "@/utils/Slumlords/config";
+import { boardSize, playerCircleSize, sideHeightRatio } from "@/utils/Slumlords/config";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { PlayerData } from "@/utils/Slumlords/types";
+import { tempPlayers } from "@/utils/Slumlords/tempPlayers";
 
 type SlumlordProps = {
   playerColor: string;
@@ -38,6 +41,8 @@ export default function SlumlordBoard({
     const gamePhaseRef = useRef<number>(8)
 
     let devMode = true;
+    const [players, setPlayers] = useState<PlayerData[]>([]);
+    const [length, setLength] = useState<number>(11);
 
     const [view, setView] = useState(-1);
     const viewRef = useRef<number | null>(null);
@@ -106,6 +111,7 @@ export default function SlumlordBoard({
 
 
     useEffect(() => {
+        setPlayers(tempPlayers);
         if (!devMode) return;
 
         const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -115,13 +121,77 @@ export default function SlumlordBoard({
 
     }, []);
 
+    function getPlayerOffsets(players: PlayerData[], player: PlayerData) {
+        // Get all players on the same tile
+        const sameTile = players.filter((p) => p.position === player.position);
+
+        if (!sameTile || sameTile.length == 1) {
+            return { xOffset: 0, yOffset: 0 };
+        }
+
+        // Index of this player in that group
+        const index = sameTile.findIndex((p) => p.id === player.id);
+
+        // Offset spacing in pixels
+        const spacing = playerCircleSize / 2;
+
+        // Example: spread players in a circle around tile center
+        const angle = (index / sameTile.length) * Math.PI * 2; // angle in radians
+        const radius = playerCircleSize / 2; // distance from tile center
+
+        const xOffset = Math.cos(angle) * radius;
+        const yOffset = Math.sin(angle) * radius;
+
+        return { xOffset, yOffset };
+    }
+
+    function getTileXY(position: number, boardLength: number, circleSize: number) {
+        const tileWidth = boardSize / (boardLength - 2);
+        const tileHeight = sideHeightRatio * boardSize;
+        const offset = circleSize / 2;
+
+        const right = 2 * tileHeight + tileWidth * (length - 2);
+        const bottom = 2 * tileHeight + (length - 2) * tileWidth;
+        if (position == 0) {
+            return { x: tileHeight / 2 - offset , y: tileHeight / 2 - offset}
+        } else if (position < length - 1) {
+            return { x: (position - 1) * tileWidth + tileHeight + tileWidth / 2 - offset, y: tileHeight / 2 - offset};
+        } else if (position == length - 1) {
+            return { x: (length - 2) * tileWidth + tileHeight * 3 / 2 - offset, y: tileHeight / 2 - offset};
+        } else if (position < 2 * length - 2) {
+            return { x: tileHeight + tileWidth * (length - 2) + tileHeight / 2 - offset, y: tileHeight + (position - length) * tileWidth + tileWidth / 2 - offset};
+        } else if (position == 2 * length - 2) {
+            return { x: right - tileHeight / 2 - offset, y: bottom - tileHeight / 2 - offset};
+        } else if (position < 3 * length - 3) {
+            return { x: right - tileHeight - (position - (2 * length - 2) - 1) * tileWidth - tileWidth / 2 - offset, y: bottom - tileHeight / 2 - offset};
+        } else if (position == 3 * length - 3) {
+            return { x: tileHeight / 2 - offset, y: bottom - tileHeight / 2 - offset};
+        } else {
+            return { x: tileHeight / 2 - offset, y: bottom - tileHeight - (position - (3 * length - 3) - 1) * tileWidth - tileWidth / 2 - offset};
+        }
+    }
+
     return (
         <div className="flex flex-col items-center">
             <div className="min-h-screen flex items-center justify-center bg-white-200">
             <div>
                 {/* 🔧 This is the key wrapper */}
 
-                <SlumlordCanvas boardSize={boardSize}/>
+                <SlumlordCanvas boardSize={boardSize} length={length}/>
+                {players.map((p) => {
+                    const { x, y } = getTileXY(p.position, length, playerCircleSize / 2);
+                    const { xOffset, yOffset } = getPlayerOffsets(players, p);
+
+                    return (
+                        <Player
+                        key={p.id}
+                        player={p}
+                        x={x + xOffset}
+                        y={y + yOffset}
+                        size={playerCircleSize}
+                        />
+                    );
+                })}
                 
             </div>
         </div>

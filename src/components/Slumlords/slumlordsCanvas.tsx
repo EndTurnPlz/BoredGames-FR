@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_RENT } from "@/utils/Slumlords/config";
+import { DEFAULT_RENT, sideHeightRatio } from "@/utils/Slumlords/config";
 import BoardTile from "./buttonTile";
 
 type Tile = {
@@ -16,7 +16,6 @@ type BoardProps = {
 };
 
 export default function SlumlordCanvas({ boardSize = 600, length = 11 }: BoardProps) {
-  const sideHeightRatio = 80 / 600;
   const sideWidth = boardSize / (length - 2);
 
   const sideHeight = sideHeightRatio * boardSize
