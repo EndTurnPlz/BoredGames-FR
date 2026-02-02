@@ -112,7 +112,6 @@ export default function SlumlordBoard({
 
     useEffect(() => {
         setPlayers(tempPlayers);
-        movePlayer("Alice", 5);
         if (!devMode) return;
 
         const playerId = localStorage.getItem("userId" + randomId) ?? "";
@@ -122,14 +121,46 @@ export default function SlumlordBoard({
 
     }, []);
 
-    function movePlayer(playerId: string, newPosition: number) {
-        setPlayers((prev) =>
-                prev.map((p) =>
-                p.id === playerId ? { ...p, position: newPosition } : p
-            )
-        );
-        console.log(players);
+    function movePlayer(playerName: string, targetPosition: number) {
+        setPlayers((prevPlayers) => {
+            const player = prevPlayers.find((p) => p.name === playerName);
+            if (!player) return prevPlayers;
+
+            const currentPosition = player.position;
+            if (currentPosition === targetPosition) return prevPlayers; // done
+
+            const step = currentPosition < targetPosition ? 1 : -1;
+
+            // increment by 1
+            const newPlayers = prevPlayers.map((p) =>
+                p.name === playerName ? { ...p, position: currentPosition + step } : p
+            );
+
+            // schedule next step
+            setTimeout(() => {
+                // call movePlayer again with the same target
+                movePlayer(playerName, targetPosition);
+            }, 1); // 0.5s per step
+
+            return newPlayers;
+        });
     }
+
+
+    useEffect(() => {
+        //Moving animation test
+        if (players.length === 0 || !devMode) return; // wait until players exist
+
+        let move = 20;
+
+        const moveAlice = () => {
+            movePlayer("Alice", move);
+        };
+
+        const timer = setTimeout(moveAlice, 2000);
+
+        return () => clearTimeout(timer);
+    }, [players]);
 
     function getPlayerOffsets(players: PlayerData[], player: PlayerData) {
         // Get all players on the same tile
@@ -177,10 +208,10 @@ export default function SlumlordBoard({
         <div className="flex flex-col items-center">
            <div className="flex flex-col items-center min-h-screen justify-center bg-white-200">
                 <div className="relative w-[80vw] max-w-[600px] aspect-square">
-                    <SlumlordCanvas length={11} />
+                    <SlumlordCanvas length={length} />
                     
                     {players.map((p) => {
-                    const { x, y } = getTileXYPercent(p.position, 11, playerCircleSize);
+                    const { x, y } = getTileXYPercent(p.position, length, playerCircleSize);
                     const { xOffset, yOffset } = getPlayerOffsets(players, p);
                     
                     // Convert offsets to % of board

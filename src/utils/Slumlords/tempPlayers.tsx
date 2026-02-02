@@ -14,7 +14,7 @@ export const tempPlayers: PlayerData[] = [
     name: "Bob",
     color: "#457b9d", // blue
     money: 1500,
-    position: 10,
+    position: 0,
     properties: []
   },
   {
@@ -22,7 +22,7 @@ export const tempPlayers: PlayerData[] = [
     name: "Charlie",
     color: "#2a9d8f", // teal
     money: 1500,
-    position: 39,
+    position: 0,
     properties: []
   },
   {
@@ -30,7 +30,7 @@ export const tempPlayers: PlayerData[] = [
     name: "Diana",
     color: "#f4a261", // orange
     money: 1500,
-    position: 39,
+    position: 0,
     properties: []
   },
 ];
