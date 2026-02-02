@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { PlayerData } from "@/utils/Slumlords/types";
 import { tempPlayers } from "@/utils/Slumlords/tempPlayers";
 import PropertyDecisionOverlay, { Property } from "@/components/Slumlords/buyOverlay";
+import TradeOverlay from "@/components/Slumlords/tradeOverlay";
 
 type SlumlordProps = {
   playerColor: string;
@@ -52,6 +53,14 @@ export default function SlumlordBoard({
 
     const [propertyDecisionOpen, setPropertyDecisionOpen] = useState(false);
     const [activeProperty, setActiveProperty] = useState<Property | null>(null);
+
+    const [tradeOpen, setTradeOpen] = useState(false);
+    const [tradeTargetPlayer, setTradeTargetPlayer] = useState<PlayerData | null>(null);
+
+    function startTradeWith(player: PlayerData) {
+        setTradeTargetPlayer(player);
+        setTradeOpen(true);
+    }
 
     function handleRoomState(players: string[], turnOrder: string[], state: string, viewNum: number): boolean {
         setTurnOrder(turnOrder);
@@ -156,13 +165,11 @@ export default function SlumlordBoard({
         if (players.length === 0 || !devMode) return; // wait until players exist
 
         const timer = setTimeout(() => {
-        setActiveProperty({
-            name: "Park Place",
-            price: 350,
-            rent: 35,
-            color: "#1e40af",
-            });
-            setPropertyDecisionOpen(true);
+            // Pick a target player for testing
+            const otherPlayer = players.find((p) => p.name !== "Alice") || players[0];
+
+            setTradeTargetPlayer(otherPlayer);
+            setTradeOpen(true);
         }, 4000);
 
         return () => clearTimeout(timer);
@@ -250,6 +257,28 @@ export default function SlumlordBoard({
                             onClose={() => setPropertyDecisionOpen(false)}
                         />
                     )}
+                    {tradeOpen && tradeTargetPlayer && (
+                        <TradeOverlay
+                            you={{
+                            id: "me",
+                            name: "Alice",
+                            cash: 500, // replace with your actual cash
+                            properties: players.find((p) => p.name === "Alice")?.properties || [],
+                            }}
+                            other={{
+                                id: tradeTargetPlayer.id,
+                                name: tradeTargetPlayer.name,
+                                cash: tradeTargetPlayer.money,
+                                properties: tradeTargetPlayer.properties,
+                            }}
+                            onCancel={() => setTradeOpen(false)}
+                            onConfirm={(trade) => {
+                            console.log("Trade proposed:", trade);
+                            setTradeOpen(false);
+                            // send to server / update game state
+                            }}
+                        />
+                        )}
                 </div>
             </div>
             <ReconnectOverlay
