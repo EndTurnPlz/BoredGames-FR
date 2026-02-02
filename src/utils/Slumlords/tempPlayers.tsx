@@ -8,9 +8,6 @@ export const tempYourProperties = [
   { name: "Marvin Gardens", price: 280, rent: 24, color: "#f59e0b" },
   { name: "Ventnor Avenue", price: 260, rent: 22, color: "#f97316" },
   { name: "Mediterranean Avenue", price: 60, rent: 2, color: "#ef4444" },
-  { name: "Marvin Gardens", price: 280, rent: 24, color: "#f59e0b" },
-  { name: "Ventnor Avenue", price: 260, rent: 22, color: "#f97316" },
-  { name: "Mediterranean Avenue", price: 60, rent: 2, color: "#ef4444" },
 ];
 
 export const tempOtherProperties = [
