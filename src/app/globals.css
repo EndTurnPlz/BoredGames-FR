@@ -38,3 +38,103 @@ body {
   from { opacity: 1; transform: scale(1); }
   to   { opacity: 0; transform: scale(0.96); }
 }
+
+
+.decision-card {
+  width: 600px;
+  max-width: 90vw;
+  padding: 40px;
+  border-radius: 20px;
+
+  /* 🔥 Glassy dark card */
+  background: rgba(17, 24, 39, 0.9);
+
+  /* ✨ Subtle border */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  /* 🌫️ Blur behind the card */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+}
+
+
+.buy,
+.sell,
+.skip {
+  flex: 1;
+  padding: 16px;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.buy {
+  background: #22c55e;
+  color: #022c22;
+}
+
+.buy:hover { box-shadow: 0 0 12px rgba(34, 197, 94, 0.6); }
+
+.sell {
+  background: #ef4444;
+  color: #450a0a;
+}
+
+.skip {
+  background: #6b7280;
+  color: white;
+}
+
+/* Overlay fade */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease-in forwards;
+}
+
+/* Card pop */
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes popOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+}
+
+.animate-pop-in {
+  animation: popIn 0.2s ease-out forwards;
+}
+
+.animate-pop-out {
+  animation: popOut 0.2s ease-in forwards;
+}

@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { PlayerData } from "@/utils/Slumlords/types";
 import { tempPlayers } from "@/utils/Slumlords/tempPlayers";
+import PropertyDecisionOverlay, { Property } from "@/components/Slumlords/buyOverlay";
 
 type SlumlordProps = {
   playerColor: string;
@@ -48,6 +49,9 @@ export default function SlumlordBoard({
     const viewRef = useRef<number | null>(null);
 
     const [playerConnectivity, setPlayerConnectivity] = useState<boolean[]>([]);
+
+    const [propertyDecisionOpen, setPropertyDecisionOpen] = useState(false);
+    const [activeProperty, setActiveProperty] = useState<Property | null>(null);
 
     function handleRoomState(players: string[], turnOrder: string[], state: string, viewNum: number): boolean {
         setTurnOrder(turnOrder);
@@ -151,13 +155,15 @@ export default function SlumlordBoard({
         //Moving animation test
         if (players.length === 0 || !devMode) return; // wait until players exist
 
-        let move = 20;
-
-        const moveAlice = () => {
-            movePlayer("Alice", move);
-        };
-
-        const timer = setTimeout(moveAlice, 2000);
+        const timer = setTimeout(() => {
+        setActiveProperty({
+            name: "Park Place",
+            price: 350,
+            rent: 35,
+            color: "#1e40af",
+            });
+            setPropertyDecisionOpen(true);
+        }, 4000);
 
         return () => clearTimeout(timer);
     }, [players]);
@@ -211,23 +217,39 @@ export default function SlumlordBoard({
                     <SlumlordCanvas length={length} />
                     
                     {players.map((p) => {
-                    const { x, y } = getTileXYPercent(p.position, length, playerCircleSize);
-                    const { xOffset, yOffset } = getPlayerOffsets(players, p);
-                    
-                    // Convert offsets to % of board
-                    const xPctOffset = (xOffset / boardSize) * 100;
-                    const yPctOffset = (yOffset / boardSize) * 100;
-                    
-                    return (
-                        <Player
-                        key={p.id}
-                        player={p}
-                        x={x + xPctOffset}
-                        y={y + yPctOffset}
-                        size={playerCircleSize}
-                        />
-                    );
+                        const { x, y } = getTileXYPercent(p.position, length, playerCircleSize);
+                        const { xOffset, yOffset } = getPlayerOffsets(players, p);
+                        
+                        // Convert offsets to % of board
+                        const xPctOffset = (xOffset / boardSize) * 100;
+                        const yPctOffset = (yOffset / boardSize) * 100;
+                        
+                        return (
+                            <Player
+                            key={p.id}
+                            player={p}
+                            x={x + xPctOffset}
+                            y={y + yPctOffset}
+                            size={playerCircleSize}
+                            />
+                        );
                     })}
+                    {propertyDecisionOpen && activeProperty && (
+                        <PropertyDecisionOverlay
+                            property={activeProperty}
+                            canBuy={true}
+                            canSell={true}
+                            onBuy={() => {
+                                console.log("BUY", activeProperty);
+                                setPropertyDecisionOpen(false);
+                            }}
+                            onSell={() => {
+                                console.log("SELL", activeProperty);
+                                setPropertyDecisionOpen(false);
+                            }}
+                            onClose={() => setPropertyDecisionOpen(false)}
+                        />
+                    )}
                 </div>
             </div>
             <ReconnectOverlay
